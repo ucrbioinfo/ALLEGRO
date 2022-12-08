@@ -87,7 +87,7 @@ def graph_score_dist(
 
     matplotlib.pyplot.figure(figsize=(10, 3))
 
-    matplotlib.pyplot.hist(average_scores_for_n_trials)
+    matplotlib.pyplot.hist(average_scores_for_n_trials, edgecolor='black', linewidth=1.2)
     
     matplotlib.pyplot.title(title)
     matplotlib.pyplot.xlabel('Average score')
@@ -161,22 +161,22 @@ def output_csv(
 
     df = pandas.DataFrame({
         'budget': [beta],
-        # 'avg_score_over_all_trials': [solver.average_score_for_all_trials],
-        # 'avg_score_over_each_trial': [solver.average_score_for_each_trial],
-        # 'avg_num_while_iters_for_n_trials': [avg_num_while_iters_for_n_trials],
-        # 'num_while_iters_for_each_trial': [solver.num_while_iters_for_each_trial],
+        'avg_score_over_all_trials': [solver.average_score_for_all_trials],
+        'avg_score_over_each_trial': [solver.average_score_for_each_trial],
+        'avg_num_while_iters_for_n_trials': [avg_num_while_iters_for_n_trials],
+        'num_while_iters_for_each_trial': [solver.num_while_iters_for_each_trial],
         'fractional_glop_vals': [solver.fractional_glop_vals],
-        # 'solver_time': [solver.solver_time],
-        # 'exhaustive_time': [solver.exhaustive_time],
-        # 'random_rounding_time': [solver.randomized_rounding_time],
-        # 'num_non_zero_feasible': [solver.num_non_zero_feasible],
-        # 'num_non_zero_feasible_under_one': [solver.num_feasible_guides_with_prob_lt_one],
-        # 'num_exhausted_combos': [solver.num_exhausted_combos],
-        # 'solved_with_exhaustive': ['Yes' if solver.solved_with_exhaustive else 'No'],
-        # 'size_of_solutions_for_n_trials': [solver.set_size_for_each_trial],
-        # 'num_species_constraints': [len(solver.species)],
-        # 'num_guide_variables': [solver.k],
-        # 'num_rounding_trials': [solver.num_trials],
+        'solver_time': [solver.solver_time],
+        'exhaustive_time': [solver.exhaustive_time],
+        'random_rounding_time': [solver.randomized_rounding_time],
+        'num_non_zero_feasible': [solver.num_non_zero_feasible],
+        'num_non_zero_feasible_under_one': [solver.num_feasible_guides_with_prob_lt_one],
+        'num_exhausted_combos': [solver.num_exhausted_combos],
+        'solved_with_exhaustive': ['Yes' if solver.solved_with_exhaustive else 'No'],
+        'size_of_solutions_for_n_trials': [solver.set_size_for_each_trial],
+        'num_species_constraints': [len(solver.species)],
+        'num_guide_variables': [solver.k],
+        'num_rounding_trials': [solver.num_trials],
     })
 
     write_header_if_file_doesnt_exist = not os.path.exists(output_path)  # otherwise append w/ mode='a'
@@ -211,7 +211,8 @@ def main() -> int:
         beta=args.beta, 
         solver_engine=args.solver_engine,
         exhaustive_threshold=args.exhaustive_threshold,
-        num_trials=args.num_trials
+        num_trials=args.num_trials,
+        objective=args.objective
     )
 
     solution = solver.solve()
