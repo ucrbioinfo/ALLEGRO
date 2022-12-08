@@ -1,0 +1,8 @@
+__pycache__
+unused/
+.fna
+output/
+cds/
+genomes/
+test.txt
+txt.txt

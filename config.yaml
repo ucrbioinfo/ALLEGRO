@@ -1,0 +1,40 @@
+# Some attributes are required conditionally. These are annotated via comments.
+
+# Required settings
+experiment_name: 'test'
+mode: 'from_orthogroups'  # 'from_genome', 'from_orthogroups'
+scorer: 'chopchop'  # TODO add deepguide(?) - options: 'chopchop', 'random', 'dummy'
+solver_engine: 'GLOP'
+cas: 'cas9'  # support for cas9 for now -- cas12a in the works
+pam_regex: r'(?=(GG))'  # PAM for cas9 -- cas12a in the works
+
+beta: 92  # The final size of the guides set must be <= than this. Think of it as your budget.
+
+# If we have more feasible guides than this, use approximate rounding. Otherwise, search all combinatorial possibilities.
+# The number of exhaustive calculations for 25 feasible guides is 2^25 = 33,554,432 -- For 30 guides it is a billion (1,073,741,824)
+# For 123 guides: 2^123 - 1 possibilities in the worst case
+# Increasing this gives you an exact answer, but may take a VERY (very) long time as it increases exponentially.
+exhaustive_threshold: 0
+
+# Only used if the number of feasible guides is above the exhaustive_threshold below.
+# How many times to run the approximation algorithm?
+num_trials: 10000
+
+traceback: False
+graph: True
+output_csv: True
+
+# Required for all modes
+input_species_path: 'data/input/input_species.csv'
+input_genomes_directory: 'data/input/genomes/'
+output_directory: 'data/output/'
+
+# Required if mode is set to 'from_orthogroups' -- ignored otherwise
+orthogroups_path: 'data/input/orthogroups/Orthogroups.tsv'
+input_cds_directory: 'data/input/cds/orthogroups/'  # Files inside must end with _cds.fna or _cds.faa or _cds.fasta
+
+# Required if scorer is set to 'chopchop' -- ignored otherwise
+absolute_path_to_chopchop: '/home/amohs002/projects/research/chopchop/chopchop.py'
+absolute_path_to_bowtie_build: '/home/amohs002/projects/research/chopchop/bowtie/bowtie-build'
+absolute_path_to_genomes_directory: '/home/amohs002/projects/research/ALLEGRO/data/input/genomes/'
+chopchop_scoring_method: 'DOENCH_2016'
