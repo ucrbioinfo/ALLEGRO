@@ -17,7 +17,8 @@ class Solver(SolverBase):
         beta: int, 
         solver_engine: str, 
         exhaustive_threshold: int,
-        num_trials: int) -> None:
+        num_trials: int,
+        objective: str='max') -> None:
         
         self.coversets = coverset_parser.get_coversets()  # TODO these should be a class 
         self.species = coverset_parser.get_species_set()
@@ -25,6 +26,7 @@ class Solver(SolverBase):
         self.exhaustive_threshold = exhaustive_threshold
         self.solved_with_exhaustive: bool = False
         self.num_trials = num_trials
+        self.objective = objective
         
         self.solver = pywraplp.Solver.CreateSolver(solver_engine)
 
@@ -85,19 +87,30 @@ class Solver(SolverBase):
         print('Creating objectives...')
 
         objective_1_terms = list()
-        objective_2_terms = list()
 
-        for seq, var in vars.items():
-            objective_1_terms.append(1 * var)
-            objective_2_terms.append(self.coversets[seq][0] * var)
+        if self.objective == 'max':
+            objective_2_terms = list()
 
-        objective_1 = self.solver.Sum(objective_1_terms)
-        objective_2 = self.solver.Sum(objective_2_terms)
+            for seq, var in vars.items():
+                objective_1_terms.append(1 * var)
+                objective_2_terms.append(self.coversets[seq][0] * var)
 
-        self.solver.Add(objective_1 <= self.beta)
+            objective_1 = self.solver.Sum(objective_1_terms)
+            objective_2 = self.solver.Sum(objective_2_terms)
 
-        self.solver.Maximize(objective_2)
-        #self.solver.Minimize(objective_1)
+            self.solver.Add(objective_1 <= self.beta)
+
+            self.solver.Maximize(objective_2)
+
+        elif self.objective == 'min':
+            print('Minimizing set size (weighted set cover). Ignoring beta...')
+
+            for seq, var in vars.items():
+                objective_1_terms.append(self.coversets[seq][0] * var)
+            
+            objective_1 = self.solver.Sum(objective_1_terms)
+
+            self.solver.Minimize(objective_1)
 
         # -------- SOLVE ----------------------------
         print('Solving...')
