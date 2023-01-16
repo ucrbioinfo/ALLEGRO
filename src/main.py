@@ -6,10 +6,10 @@ import pandas
 import argparse
 import matplotlib.pyplot
 
-matplotlib.pyplot.rcParams['figure.dpi'] = 300
-
-from cover_set_parsers.coversets import Coversets
 from solvers.solver import Solver
+from cover_set_parsers.coversets import Coversets
+
+matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -122,11 +122,12 @@ def write_solution_to_file(
         output_path = os.path.join(output_directory, new_experiment_name + '.txt')
         i += 1
 
+
     # Writing the new output file.
     print('Writing to file:', output_path)
     with open(output_path, 'w') as f:
         f.write('We can cut the following species: {species}.\n'.format(
-            species=str(parser.get_species_names()),
+            species=str(parser.species_names),
             )
         )
 
