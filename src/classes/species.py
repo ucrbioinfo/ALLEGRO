@@ -1,5 +1,3 @@
-import os
-
 from classes.guide import Guide
 from classes.guide_container import GuideContainer
 from classes.guide_container_factory import GuideContainerFactory
