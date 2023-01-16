@@ -1,8 +1,11 @@
 __pycache__
+.vscode/
 unused/
 .fna
 output/
+output_used_for_quals/
 cds/
 genomes/
+datasets/
 test.txt
 txt.txt
