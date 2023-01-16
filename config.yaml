@@ -1,15 +1,19 @@
 # Some attributes are required conditionally. These are annotated via comments.
 
 # Required settings
-experiment_name: 'min_with_20'
+experiment_name: '20_thursday'
 mode: 'from_orthogroups'  # 'from_genome', 'from_orthogroups'
-objective: 'max'
-scorer: 'chopchop'  # TODO add deepguide - options: 'chopchop', 'random', 'dummy' -- dummy assigns a score of 1 to all guides
+objective: 'min'  # default: 'max' uses beta -- 'min' does not use beta
+scorer: 'chopchop'  # options: default: 'chopchop', 'random', 'dummy' -- dummy assigns a score of 1 to all guides
 solver_engine: 'GLOP'
-cas: 'cas9'  # options: 'cas9'
-pam_regex: r'(?=(GG))'  # PAM for cas9 is: r'(?=(GG))'
+cas: 'cas9'  # default: 'cas9'
+pam_regex: r'(?=(GG))'  # default for cas9: r'(?=(GG))'
 
-beta: 10  # The final size of the guides set must be <= than this. Think of it as your budget.
+beta: 10  #  Used with objective: 'max' -- The final size of the guides set must be <= than this. Think of it as your budget.
+
+input_species_path: 'data/input/input_species_20.csv'
+input_genomes_directory: 'data/input/genomes/'
+output_directory: 'data/output/'
 
 #  Search all combinatorial possibilities unless there are more feasible solutions than this (then use randomized rounding)
 exhaustive_threshold: 0
@@ -18,14 +22,9 @@ exhaustive_threshold: 0
 # How many times to run the randomized rounding algorithm?
 num_trials: 10000
 
-graph: True
+graph: False
 output_csv: True
 traceback: False
-
-# Required for all modes
-input_species_path: 'data/input/input_species_20.csv'
-input_genomes_directory: 'data/input/genomes/'
-output_directory: 'data/output/'
 
 # Required if mode is set to 'from_orthogroups' -- ignored otherwise
 orthogroups_path: 'data/input/orthogroups/Orthogroups.tsv'
