@@ -25,7 +25,7 @@ class Coversets:
         self.seq_to_guides_dict: dict[str, list[Guide]] = dict()
 
         scorer_factory = ScorerFactory()
-        scorer_obj = scorer_factory.get_scorer(
+        scorer_obj = scorer_factory.make_scorer(
             scorer_name=scorer_name, 
             scorer_settings=scorer_settings,
             )
@@ -44,7 +44,7 @@ class Coversets:
             genome_path = os.path.join(input_genome_directory, row.genome_file_name)
             cds_path = os.path.join(input_cds_directory, row.cds_file_name)
 
-            # {0: Species(name='kmarxianus'), 1: Species(name=scerevisiae), ...}
+            # {0: Species(name='kmarxianus'), 1: Species(name='scerevisiae'), ...}
             self.int_to_species_dict[idx] = Species(
                 guide_scorer=scorer_obj,
                 guide_container_factory=guide_container_factory,
@@ -60,8 +60,8 @@ class Coversets:
             guide_objects_list = species_object.get_cas9_guides()  # TODO: Add support for another cas variant
 
             for guide_object in guide_objects_list:
-                guide_score = guide_object.get_score()
-                sequence = guide_object.get_sequence()
+                guide_score = guide_object.score
+                sequence = guide_object.sequence
 
                 # TODO: A little hacky whacky
                 if sequence in self.cover_sets:
@@ -69,7 +69,7 @@ class Coversets:
                 else:
                     self.cover_sets[sequence] = tuple((guide_score, set({species_id})))  # type: ignore
 
-                self.seq_to_guides_dict.setdefault(guide_object.get_sequence(), list()).append(guide_object)
+                self.seq_to_guides_dict.setdefault(sequence, list()).append(guide_object)
                 
 
     def get_coversets(self) -> dict[str, tuple[float, set[int]]]:
