@@ -35,16 +35,8 @@ class Guide:
         return self.endonuclease
 
 
-    def get_score(self) -> float:
-        return self.score
-
-
     def get_strand(self) -> str:
         return self.strand
-
-
-    def get_sequence(self) -> str:
-        return self.sequence
 
 
     def get_container(self) -> GuideContainer:
