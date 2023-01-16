@@ -1,3 +1,5 @@
+# Script used by ALLEGRO. No need to run it manually.
+
 import re
 import numpy
 from Bio.Seq import Seq
