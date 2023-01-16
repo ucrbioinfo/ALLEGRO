@@ -117,7 +117,7 @@ class ChopChopWrapper(Scorer):
             guide_container.get_sequence(),
         )
 
-        # This may introduce problems -- What if a guide on F strand matches with one on R?
+        # This may introduce problems -- What if a guide on the F strand matches with one on R?
         container_seqs_in_chopchop_output = chopchop_output[
             chopchop_output['Target sequence'].isin(guide_sequences_from_container)
         ]
