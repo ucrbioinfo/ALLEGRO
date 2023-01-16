@@ -77,6 +77,7 @@ class Gene(GuideContainer):
 
     def get_integer_id(self) -> int:
         return self.integer_id
+        
 
     def get_guides(self) -> list[Guide]:
         return self.guide_objects
