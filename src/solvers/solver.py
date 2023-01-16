@@ -4,13 +4,12 @@ import itertools
 from timeit import default_timer
 from ortools.linear_solver import pywraplp
 
-from solvers.solver_base import SolverBase
 from cover_set_parsers.coversets import Coversets
 
 
 # For some reason, Google ORTools does not like its objects being passed around.
 # So, everything goes in this class.
-class Solver(SolverBase):
+class Solver:
     def __init__(
         self, 
         coverset_parser: Coversets, 
@@ -47,7 +46,6 @@ class Solver(SolverBase):
         self.randomized_rounding_time: float = 0.0
 
         
-
     def solve(self) -> set[str]:
         print('Solver working...')
         
@@ -103,10 +101,10 @@ class Solver(SolverBase):
             self.solver.Maximize(objective_2)
 
         elif self.objective == 'min':
-            print('Minimizing set size (weighted set cover). Ignoring beta...')
+            print('Minimizing set size (unweighted set cover). Ignoring beta...')
 
             for seq, var in vars.items():
-                objective_1_terms.append(self.coversets[seq][0] * var)
+                objective_1_terms.append(1 * var)
             
             objective_1 = self.solver.Sum(objective_1_terms)
 
