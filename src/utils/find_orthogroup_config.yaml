@@ -17,7 +17,7 @@ auxotroph_tags: [
   'KLMA_50610'
 ]
 
-species: 'kmarxianus'  # species must match with species.fna in cds path and a column name in Orthogroups.tsv
+species: 'kluyveromyces_marxianus'  # species must match with species.fna in cds path and a column name in Orthogroups.tsv
 gene_names: [
   'ILV1', 'ILV3', 'URA3',
   'HIS2', 'HIS4', 'HIS7',
