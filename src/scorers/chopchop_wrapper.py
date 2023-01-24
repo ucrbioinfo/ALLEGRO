@@ -11,6 +11,7 @@ from utils.find_cas9_guides_in_seq import find_guides_on_both_strands
 
 class ChopChopWrapper(Scorer):
     def __init__(self, settings: dict[str, str]) -> None:
+        self.output_directory = settings['output_directory']
         self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
         self.absolute_path_to_bowtie_build = settings['absolute_path_to_bowtie_build']
         self.absolute_path_to_genomes_directory = settings['absolute_path_to_genomes_directory']
@@ -23,8 +24,11 @@ class ChopChopWrapper(Scorer):
         if species_name not in self.already_made_bowtie_index_for_these_species:
             self.already_made_bowtie_index_for_these_species.add(species_name)
 
-            output_directory = 'data/output/bowtie_indices/'
+            output_directory = self.output_directory + 'bowtie_indices/'
             absolute_path_to_species_genome = os.path.join(self.absolute_path_to_genomes_directory, species_name + '_genomic.fna')
+
+            if not os.path.exists(output_directory):
+                os.makedirs(output_directory)
 
             print('Running bowtie-build for', species_name)
             # conda run -n chopchop path_to/bowtie/bowtie-build ../../data/input/genomes/hpolymorpha_genomic.fna hpoly
@@ -64,10 +68,10 @@ class ChopChopWrapper(Scorer):
     def score_sequence(self, guide_container: GuideContainer) -> list[tuple[str, str, float]]: 
         silence = True
         
-        species_name = guide_container.get_species().get_name()
-        container_name = guide_container.get_string_id()
+        species_name = guide_container.species_name
+        container_name = guide_container.string_id
 
-        output_directory = os.path.join('data/output/chopchop_scores/', species_name, '')
+        output_directory = os.path.join(self.output_directory, 'chopchop_scores/', species_name, '')
         output_path = os.path.join(output_directory, container_name + '_scores' + '.csv')
         target_fasta_path = os.path.join(output_directory, container_name + '_seq.fasta')
 
@@ -87,7 +91,7 @@ class ChopChopWrapper(Scorer):
                 )
         except (FileNotFoundError, pandas.errors.EmptyDataError):
             # make chromosome fasta file
-            sequence = SeqRecord(Seq(guide_container.get_sequence()), id=guide_container.get_string_id())
+            sequence = SeqRecord(Seq(guide_container.sequence), id=guide_container.string_id)
             with open(target_fasta_path, 'w') as f:
                 SeqIO.write(sequence, f, 'fasta')
 
@@ -114,7 +118,7 @@ class ChopChopWrapper(Scorer):
 
         # Select only the guide strings we are interested in from chopchop output
         guide_sequences_from_container = find_guides_on_both_strands(
-            guide_container.get_sequence(),
+            guide_container.sequence,
         )
 
         # This may introduce problems -- What if a guide on the F strand matches with one on R?
