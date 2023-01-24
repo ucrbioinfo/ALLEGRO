@@ -8,13 +8,13 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
 
-def hash_gene_to_prot_id(
+def map_gene_to_prot_id(
     cds_path: str, 
     gene_re=r'\[gene=(.*?)\]', 
     prot_id_re=r'\[protein_id=(.*?)\]'
     ) -> dict:
 
-    hash = dict()
+    map = dict()
     cds = list(SeqIO.parse(open(cds_path), 'fasta'))
 
     for record in cds:
@@ -24,20 +24,20 @@ def hash_gene_to_prot_id(
             prot_id = re.search(prot_id_re, record.description)
             
             if prot_id:
-                hash[gene_match.group(1)] = prot_id.group(1)
+                map[gene_match.group(1)] = prot_id.group(1)
             else:
-                hash[gene_match.group(1)] = ''
+                map[gene_match.group(1)] = ''
     
-    return hash
+    return map
 
 
-def hash_locus_tag_to_prot_id(
+def map_locus_tag_to_prot_id(
     cds_path: str, 
     tag_re=r'\[locus_tag=(.*?)\]', 
     prot_id_re=r'\[protein_id=(.*?)\]'
     ) -> dict:
 
-    hash = dict()
+    map = dict()
     cds = list(SeqIO.parse(open(cds_path), 'fasta'))
 
     for record in cds:
@@ -47,11 +47,11 @@ def hash_locus_tag_to_prot_id(
             prot_id = re.search(prot_id_re, record.description)
             
             if prot_id:
-                hash[tag_match.group(1)] = prot_id.group(1)
+                map[tag_match.group(1)] = prot_id.group(1)
             else:
-                hash[tag_match.group(1)] = ''
+                map[tag_match.group(1)] = ''
     
-    return hash
+    return map
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -79,7 +79,11 @@ def main() -> int:
     args = parse_arguments()
 
     output_directory = os.path.join(args.cds_directory, 'orthogroups', '')
-    ortho_path = 'data/input/orthogroups/Orthogroups.tsv'
+
+    if not os.path.exists(output_directory):
+        os.mkdir(output_directory)
+
+    ortho_path = args.ortho_path
 
     print('Reading Orthogroups.tsv from {path}'.format(
         path=ortho_path,
@@ -100,7 +104,7 @@ def main() -> int:
     print('{n} species loaded.'.format(n=n_species))
     print('Species names {name}'.format(name=species_names.values.tolist()))
 
-    file_paths = [args.cds_directory + name for name in os.listdir(args.cds_directory) if name.split('_')[0] in species_names]
+    file_paths = [args.cds_directory + name for name in os.listdir(args.cds_directory) if name[0:name.find('_cds.fna')] in species_names]
 
     path_dict = dict()
     for name in species_names:
@@ -116,10 +120,10 @@ def main() -> int:
     name_to_prot_id = dict()
     prot_id_to_name = dict()
 
-    gene_to_prot_id_hash = hash_gene_to_prot_id(path_dict[args.species])
+    gene_to_prot_id = map_gene_to_prot_id(path_dict[args.species])
     for auxo in args.auxotroph_names:
-        if auxo in gene_to_prot_id_hash:
-            id = gene_to_prot_id_hash[auxo]
+        if auxo in gene_to_prot_id:
+            id = gene_to_prot_id[auxo]
 
             if len(shared[shared[args.species] == id]) > 0:
                 name_to_prot_id[auxo] = id
@@ -132,10 +136,10 @@ def main() -> int:
             print('Auxo gene name', auxo, 'not found in', path_dict[args.species])
 
 
-    tag_to_prot_id_hash = hash_locus_tag_to_prot_id(path_dict[args.species])
+    tag_to_prot_id = map_locus_tag_to_prot_id(path_dict[args.species])
     for auxo in args.auxotroph_tags:
-        if auxo in tag_to_prot_id_hash:
-            id = tag_to_prot_id_hash[auxo]
+        if auxo in tag_to_prot_id:
+            id = tag_to_prot_id[auxo]
 
             if len(shared[shared[args.species] == id]) > 0:
                 name_to_prot_id[auxo] = id
@@ -163,6 +167,8 @@ def main() -> int:
         prot_id_to_orthogroup[id] = group
         orthogroup_to_prot_id[group] = id
 
+    prot_id_to_ortho_name = dict()
+
     for gene_name in args.gene_names:
         print('Selecting for gene {name}'.format(name=gene_name))
         print('Associated protein_id is {id}'.format(id=name_to_prot_id[gene_name]))
@@ -170,9 +176,21 @@ def main() -> int:
         print(df[df[args.species] == name_to_prot_id[gene_name]])
         print()
 
+        for prot_id_list in df[df[args.species] == name_to_prot_id[gene_name]].values.tolist():
+            flat_list = []
+
+            for sublist in prot_id_list[1:]:
+                if type(sublist) is not float:
+                    for item in sublist.split():
+                        flat_list.append(item)
+
+            for i in flat_list:
+                prot_id_to_ortho_name[i] = str(gene_name + '_prot_id=' + name_to_prot_id[gene_name])
+
     name_to_selected_ids = {name: name_to_prot_id[name] for name in args.gene_names}
 
     species_name_to_prot_ids = shared[shared[args.species].isin(name_to_selected_ids.values())].iloc[:, 1:].to_dict(orient='list')  # type: ignore
+
 
     dir = os.listdir(output_directory)
     # Checking if the list is empty or not
@@ -182,6 +200,7 @@ def main() -> int:
             for f in dir:
                 if any([f.endswith('.fna'), f.endswith('.fa'), f.endswith('.fasta')]):
                     os.remove(os.path.join(output_directory, f))
+
 
     found_id_for_these = list()
     for name in species_names:
@@ -195,16 +214,13 @@ def main() -> int:
 
             if prot_id_in_record:
                 if prot_id_in_record.group(1) in prot_ids:
-                    # print('Found prot_id {id} for species {name} in {path}'.format(
-                    #     id=prot_id_in_record.group(1), 
-                    #     name=name, path=cds_path,
-                    #     )
-                    # )
+
+                    ortho_to = prot_id_to_ortho_name[prot_id_in_record.group(1)]
 
                     sequence = SeqRecord(
                         record.seq, 
                         id=prot_id_in_record.group(1), 
-                        description=record.description,
+                        description=(record.description + ' ' + '[orthologous_to=' + ortho_to + '] [ref_species=' + args.species + ']'),
                     )
                     output_path = os.path.join(output_directory, name + '_cds.fna')
 
@@ -221,10 +237,24 @@ def main() -> int:
 
     print(found_id_for_these)
 
-    print('Missing:')
-    print(set(species_names) - set(found_id_for_these))
-    print('You should remove these from input_species.csv')
+    not_found = set(species_names) - set(found_id_for_these)
 
+    input_species_file = [f for f in os.listdir('data/input/') if f.endswith('input_species.csv')][0]
+
+    if len(not_found) > 0:
+        print('Missing:')
+        print(set(species_names) - set(found_id_for_these))
+
+        response = input('Remove these from ' + input_species_file + ' ? (Y/n)') or 'y'
+
+        if response == 'Y' or response == 'y':
+            df = pd.read_csv('data/input/' + input_species_file)
+            df = df.drop(df[df['species_name'].isin(not_found)].index.tolist()).reset_index(drop=True)
+            df.to_csv('data/input/final_' + input_species_file, index=False)
+            print('Done. See file', 'data/input/final_' + input_species_file, 'Use this as input in config.yml')
+    else:
+        print('Done. All species had at least one gene orthologous to at least one gene in find_orthogroup_config.yml list.')
+    
     return 0
 
 if __name__ == '__main__':
