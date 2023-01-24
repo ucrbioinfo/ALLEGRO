@@ -185,12 +185,11 @@ def main() -> int:
                         flat_list.append(item)
 
             for i in flat_list:
-                prot_id_to_ortho_name[i] = str(gene_name + '_prot_id=' + name_to_prot_id[gene_name])
+                prot_id_to_ortho_name[i] = (gene_name, name_to_prot_id[gene_name])
 
     name_to_selected_ids = {name: name_to_prot_id[name] for name in args.gene_names}
 
     species_name_to_prot_ids = shared[shared[args.species].isin(name_to_selected_ids.values())].iloc[:, 1:].to_dict(orient='list')  # type: ignore
-
 
     dir = os.listdir(output_directory)
     # Checking if the list is empty or not
@@ -215,12 +214,12 @@ def main() -> int:
             if prot_id_in_record:
                 if prot_id_in_record.group(1) in prot_ids:
 
-                    ortho_to = prot_id_to_ortho_name[prot_id_in_record.group(1)]
+                    ortho_to_name, ortho_to_pro_id = prot_id_to_ortho_name[prot_id_in_record.group(1)]
 
                     sequence = SeqRecord(
                         record.seq, 
                         id=prot_id_in_record.group(1), 
-                        description=(record.description + ' ' + '[orthologous_to=' + ortho_to + '] [ref_species=' + args.species + ']'),
+                        description=(record.description + ' ' + '[orthologous_to_gene=' + ortho_to_name + '] [orthologous_to_ref_protein=' + ortho_to_pro_id + '] [ref_species=' + args.species + ']'),
                     )
                     output_path = os.path.join(output_directory, name + '_cds.fna')
 
