@@ -325,7 +325,9 @@ class Solver:
 
         print('\nSize:', len(winners))
         print('Average score: {avg:.2f}'.format(avg=numpy.mean(self.winner_scores)))
-        print('Species covered: (union of the solution set): {s}\n'.format(s=sol_set))
+
+        if len(sol_set) < 50:
+            print('Species covered: (union of the solution set): {s}\n'.format(s=sol_set))
 
         return winners
 
