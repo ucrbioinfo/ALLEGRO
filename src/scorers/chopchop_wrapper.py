@@ -12,10 +12,10 @@ from utils.find_cas9_guides_in_seq import find_guides_on_both_strands
 class ChopChopWrapper(Scorer):
     def __init__(self, settings: dict[str, str]) -> None:
         self.output_directory = settings['output_directory']
+        self.scoring_method = settings['chopchop_scoring_method']
         self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
         self.absolute_path_to_bowtie_build = settings['absolute_path_to_bowtie_build']
         self.absolute_path_to_genomes_directory = settings['absolute_path_to_genomes_directory']
-        self.scoring_method = settings['chopchop_scoring_method']
 
         self.already_made_bowtie_index_for_these_species: set[str] = set()
 
@@ -66,7 +66,7 @@ class ChopChopWrapper(Scorer):
 
 
     def score_sequence(self, guide_container: GuideContainer) -> list[tuple[str, str, float]]: 
-        silence = True
+        silent = True
         
         species_name = guide_container.species_name
         container_name = guide_container.string_id
@@ -82,7 +82,7 @@ class ChopChopWrapper(Scorer):
         try:
             chopchop_output = pandas.read_csv(output_path, sep='\t')
             
-            if not silence:
+            if not silent:
                 print('Scores for {species} {gene} already exist in {path}. Reading existing scores.'.format(
                     species=species_name, 
                     gene=container_name, 
