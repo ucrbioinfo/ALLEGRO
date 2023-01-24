@@ -39,7 +39,6 @@ class Coversets:
         species_df = pandas.read_csv(input_species_csv_file_path)
 
         # Make the species objects
-        # TODO: Add support for another cas variant -- move this section to a function specific to cas9
         for row in species_df.itertuples():
             idx = row.Index
             self.species_set.add(idx)  # {0, 1, ..., num_species-1}
