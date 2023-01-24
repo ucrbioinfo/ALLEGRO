@@ -11,10 +11,6 @@ from abc import ABC, abstractmethod
 
 class GuideContainer(ABC):
 
-    # the Species object that this container is attached to.
-    species: Species
-    species_name: str
-
     # the sequence of this guide container. This is a the CDS sequence
     # for a Gene object, and a chromosome sequence for a Chromosome object.
     sequence: str
@@ -23,14 +19,19 @@ class GuideContainer(ABC):
     # E.g., NW_022983474.1 for some chromosome fasta entry.
     string_id: str
     integer_id: int
-    
-    guide_objects: list[Guide]
-    
+
+    # the Species object that this container is attached to.
+    species: Species
+    species_name: str
+
     # The Guide scorer object assigned to this container.
     # See the 'src/scorers/' directory for a list.
     # Could be CHOPCHOP or DeepGuide or etc.
     # This option is affected by the setting in config.yaml
     guide_scorer: Scorer
+    
+    guide_objects: list[Guide]
+
 
     @abstractmethod
     def get_cas9_guides(self) -> list[Guide]:
