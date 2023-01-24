@@ -116,7 +116,7 @@ def write_solution_to_file(
     ) -> None:
 
     output_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
-    output_csv_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
+    output_csv_path = os.path.join(output_directory, experiment_name + '_b{b}.csv'.format(b=beta))
 
 
     i = 1  # If an output file with the same name already exists, make a new numbered one.
@@ -154,7 +154,7 @@ def write_solution_to_file(
     for key in list_of_attributes_dicts[0].keys():
         aggregate_dict[key] = [d[key] for d in list_of_attributes_dicts]    
     
-    pandas.DataFrame.from_dict(aggregate_dict).to_csv(output_csv_path)
+    pandas.DataFrame.from_dict(aggregate_dict).to_csv(output_csv_path, index=False)
     
     print('Done. Check {path} for the output.'.format(path=output_csv_path))
 
