@@ -9,6 +9,7 @@ import matplotlib.pyplot
 from solvers.solver import Solver
 from cover_set_parsers.coversets import Coversets
 
+
 matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
 
@@ -34,10 +35,10 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def graph_size_dist(
-    size_of_solutions_for_n_trials: list[int], 
     beta: int,
     exp_name: str, 
     output_dir: str,
+    size_of_solutions_for_n_trials: list[int],
     ) -> None:
 
     print('Drawing size distribution graph...')
@@ -74,10 +75,10 @@ def graph_size_dist(
 
 
 def graph_score_dist(
-    average_scores_for_n_trials: list[float],
     beta: int,
     exp_name: str, 
     output_dir: str,
+    average_scores_for_n_trials: list[float],
     ) -> None:
 
     print('Drawing score distribution graph...')
@@ -107,50 +108,61 @@ def print_solution(solution: set[str], parser: Coversets) -> None:
 
 
 def write_solution_to_file(
-    solution: set[str], 
-    output_directory: str, 
-    experiment_name: str,
     beta: int,
     parser: Coversets,
+    solution: set[str], 
+    experiment_name: str,
+    output_directory: str,
     ) -> None:
 
     output_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
+    output_csv_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
+
 
     i = 1  # If an output file with the same name already exists, make a new numbered one.
     while os.path.isfile(output_path):
         new_experiment_name = experiment_name + '_b{b}_'.format(b=beta) + str(i)
         output_path = os.path.join(output_directory, new_experiment_name + '.txt')
+        output_csv_path = os.path.join(output_directory, new_experiment_name + '.csv')
         i += 1
 
 
     # Writing the new output file.
     print('Writing to file:', output_path)
     with open(output_path, 'w') as f:
-        f.write('We can cut the following species: {species}.\n'.format(
+        f.write('We can cut the following {n} species: {species}.\n'.format(
+            n=len(parser.species_names),
             species=str(parser.species_names),
             )
         )
 
-        f.write('Using the following {n} guides: {guides}.\n\n'.format(
+        f.write('Using the following {n} guides: {guides}.\n'.format(
             n=str(len(solution)),
             guides=str(solution),
             )
         )
 
-        for guide_seq in solution:
-            guide_objects = parser.get_guides_from_seq(guide_seq)
-            
-            for guide_object in guide_objects:
-                guide_object.write_info_to_open_file(f)
-                f.write('\n')
-                
-    print('Done. Check {path} for the output.'.format(path=output_path))
+    list_of_attributes_dicts: list[dict] = list()
+
+    for guide_seq in solution:
+        guide_objects = parser.get_guides_from_seq(guide_seq)
+        
+        for guide_object in guide_objects:
+            list_of_attributes_dicts.append(guide_object.get_attributes_dict())
+
+    aggregate_dict = dict()
+    for key in list_of_attributes_dicts[0].keys():
+        aggregate_dict[key] = [d[key] for d in list_of_attributes_dicts]    
+    
+    pandas.DataFrame.from_dict(aggregate_dict).to_csv(output_csv_path)
+    
+    print('Done. Check {path} for the output.'.format(path=output_csv_path))
 
 
 def output_csv(
-    output_directory: str, 
-    experiment_name: str,
     beta: int,
+    experiment_name: str,
+    output_directory: str, 
     solver,
     ) -> None:
     
@@ -192,67 +204,69 @@ def main() -> int:
     match args.scorer:
         case 'chopchop':
             scorer_settings = {
-                'absolute_path_to_bowtie_build': args.absolute_path_to_bowtie_build,
-                'absolute_path_to_chopchop': args.absolute_path_to_chopchop,
-                'absolute_path_to_genomes_directory': args.absolute_path_to_genomes_directory,
+                'output_directory': args.output_directory,
                 'chopchop_scoring_method': args.chopchop_scoring_method,
+                'absolute_path_to_chopchop': args.absolute_path_to_chopchop,
+                'absolute_path_to_bowtie_build': args.absolute_path_to_bowtie_build,
+                'absolute_path_to_genomes_directory': args.absolute_path_to_genomes_directory,
             }
 
     coversets = Coversets(
         guide_source=args.mode,
+        cas_variant = args.cas,
         scorer_name=args.scorer,
         scorer_settings=scorer_settings,
+        input_cds_directory=args.input_cds_directory,
         input_species_csv_file_path=args.input_species_path,
         input_genome_directory=args.input_genomes_directory,
-        input_cds_directory=args.input_cds_directory,
     )
 
     solver = Solver(
+        beta=args.beta,
+        objective=args.objective,
         coverset_parser=coversets,
-        beta=args.beta, 
+        num_trials=args.num_trials,
         solver_engine=args.solver_engine,
         exhaustive_threshold=args.exhaustive_threshold,
-        num_trials=args.num_trials,
-        objective=args.objective
     )
 
     solution = solver.solve()
 
     if args.traceback:
         print_solution(
-            solution=solution,
             parser=coversets,
+            solution=solution,
         )
 
     if args.graph and len(solution) > 0 and not solver.solved_with_exhaustive:
         graph_size_dist(
-            size_of_solutions_for_n_trials=solver.set_size_for_each_trial,
             beta=solver.beta,
             exp_name=args.experiment_name, 
             output_dir=args.output_directory,
+            size_of_solutions_for_n_trials=solver.set_size_for_each_trial,
         )
 
         graph_score_dist(
-            average_scores_for_n_trials=solver.average_score_for_each_trial,
             beta=solver.beta,
             exp_name=args.experiment_name, 
             output_dir=args.output_directory,
+            average_scores_for_n_trials=solver.average_score_for_each_trial,
         )
     
     write_solution_to_file(
-        solution=solution, 
-        output_directory=args.output_directory, 
-        experiment_name=args.experiment_name,
         beta=args.beta,
         parser=coversets,
+        solution=solution,
+        experiment_name=args.experiment_name,
+        output_directory=args.output_directory,
     )
 
     if args.output_csv:
         output_csv(
-            output_directory=args.output_directory,
-            experiment_name=args.experiment_name,
-            beta=args.beta,
             solver=solver,
+            beta=args.beta,
+            experiment_name=args.experiment_name,
+            output_directory=args.output_directory,
         )
 
     return 0
