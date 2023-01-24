@@ -5,74 +5,55 @@ if typing.TYPE_CHECKING:
     from classes.species import Species
 
 from classes.guide import Guide
-from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
+from classes.guide_container import GuideContainer
 
 
 class Chromosome(GuideContainer):
     def __init__(
         self,
-        species: Species,
-        guide_scorer: Scorer,
         sequence: str,
         string_id: str,
         integer_id: int,
+        species: Species,
+        guide_scorer: Scorer,
         ) -> None:
 
-        self.species = species
-        self.guide_scorer = guide_scorer
         self.sequence = sequence
         self.string_id = string_id
         self.integer_id = integer_id
+        self.species = species
+        self.guide_scorer = guide_scorer
 
-        self.guide_objects: list[Guide] = list()
+        self.cas9_guide_objects: list[Guide] = list()
 
+
+    @property
+    def species_name(self) -> str:
+        return self.species.name
+        
 
     def get_cas9_guides(self) -> list[Guide]:
-        guide_strand_score_tuple_list = self.guide_scorer.score_sequence(self)
+        if len(self.cas9_guide_objects) == 0:
+            guide_strand_score_tuple_list = self.guide_scorer.score_sequence(self)
 
-        for guide_strand_score_tuple in guide_strand_score_tuple_list:
-            self.guide_objects.append(Guide(
-                pam='GG',
-                endonuclease='cas9',
-                score=guide_strand_score_tuple[2],
-                strand=guide_strand_score_tuple[1],
-                sequence=guide_strand_score_tuple[0],
-                container=self,
+            for guide_strand_score_tuple in guide_strand_score_tuple_list:
+                self.cas9_guide_objects.append(Guide(
+                    pam='GG',
+                    endonuclease='cas9',
+                    score=guide_strand_score_tuple[2],
+                    strand=guide_strand_score_tuple[1],
+                    sequence=guide_strand_score_tuple[0],
+                    container=self,
+                    )
                 )
-            )
         
-        return self.guide_objects
-
-
-    def get_species(self) -> Species:
-        return self.species
-
-
-    def get_sequence(self) -> str:
-        return self.sequence
-
-
-    def get_string_id(self) -> str:
-        return self.string_id
-
-    
-    def get_integer_id(self) -> int:
-        return self.integer_id
-
-
-    def get_guides(self) -> list[Guide]:
-        return self.guide_objects
+        return self.cas9_guide_objects
 
 
     def get_attributes_dict(self) -> dict:
         return dict({
-            'species': self.species,
-            'sequence': self.sequence,
-            'string_id': self.string_id,
-            'integer_id': self.integer_id
+            'genome_string_id': self.string_id,
+            'genome_integer_id': self.integer_id,
+            'genome_species_name': self.species_name,
         })
-
-
-    def get_gene_name(self) -> str:
-        return ''
