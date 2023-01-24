@@ -40,11 +40,11 @@ class Chromosome(GuideContainer):
             for guide_strand_score_tuple in guide_strand_score_tuple_list:
                 self.cas9_guide_objects.append(Guide(
                     pam='GG',
+                    container=self,
                     endonuclease='cas9',
                     score=guide_strand_score_tuple[2],
                     strand=guide_strand_score_tuple[1],
                     sequence=guide_strand_score_tuple[0],
-                    container=self,
                     )
                 )
         
