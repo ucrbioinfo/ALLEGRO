@@ -19,8 +19,8 @@ class Solver:
         num_trials: int,
         objective: str='max') -> None:
         
-        self.coversets = coverset_parser.get_coversets()  # TODO these should be a class 
-        self.species = coverset_parser.get_species_set()
+        self.coversets = coverset_parser.cover_sets  # TODO these should be a class 
+        self.species = coverset_parser.species_set
         self.k = len(self.coversets)
         self.exhaustive_threshold = exhaustive_threshold
         self.solved_with_exhaustive: bool = False
