@@ -2,43 +2,54 @@ from __future__ import annotations
 import typing
 
 if typing.TYPE_CHECKING:
+    from classes.guide import Guide
     from classes.species import Species
-
-from classes.guide import Guide
-
-
-class GuideContainer:
-    def __init__(self) -> None:
-        pass
-
-
-    def get_species(self) -> Species:
-        raise NotImplementedError
-
+    from scorers.scorer_base import Scorer
     
-    def get_sequence(self) -> str:
-        raise NotImplementedError
+from abc import ABC, abstractmethod
 
+
+class GuideContainer(ABC):
+
+    # the Species object that this container is attached to.
+    species: Species
+    species_name: str
+
+    # the sequence of this guide container. This is a the CDS sequence
+    # for a Gene object, and a chromosome sequence for a Chromosome object.
+    sequence: str
+
+    # return: the string id of this guide container.
+    # E.g., NW_022983474.1 for some chromosome fasta entry.
+    string_id: str
+    integer_id: int
     
-    def get_string_id(self) -> str:
-        raise NotImplementedError
-
+    guide_objects: list[Guide]
     
-    def get_integer_id(self) -> int:
-        raise NotImplementedError
+    # The Guide scorer object assigned to this container.
+    # See the 'src/scorers/' directory for a list.
+    # Could be CHOPCHOP or DeepGuide or etc.
+    # This option is affected by the setting in config.yaml
+    guide_scorer: Scorer
 
-
+    @abstractmethod
     def get_cas9_guides(self) -> list[Guide]:
-        raise NotImplementedError
+        '''
+        return: a list of Guide objects which have a score, sequence, and strand.
+        Get these by calling self.guide_scorer.score_sequence(self) first. 
+        '''
 
 
-    def get_guides(self) -> list[Guide]:
-        raise NotImplementedError
-
-
+    @abstractmethod
     def get_attributes_dict(self) -> dict:
-        raise NotImplementedError
+        '''
+        return: the attributes dictionary for this container.
+        For example,
 
-
-    def get_gene_name(self) -> str:
-        raise NotImplementedError
+        return dict({
+            'genome_sequence': self.sequence,
+            'genome_string_id': self.string_id,
+            'genome_integer_id': self.integer_id,
+            'genome_species_name': self.species.name,
+        })
+        '''
