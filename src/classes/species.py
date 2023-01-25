@@ -11,6 +11,7 @@ class Species:
         name: str,
         cds_path: str,
         genome_path: str,
+        guide_source: str,
         guide_scorer: Scorer,
         guide_container_factory: GuideContainerFactory,
         ) -> None:
@@ -19,7 +20,8 @@ class Species:
         self.name = name
         self.cds_path = cds_path
         self.genome_path = genome_path
-        self.guide_scorer = guide_scorer
+        self.guide_source = guide_source  # from_orthogroups, or from_genome
+        self.guide_scorer = guide_scorer  # chopchop, or other options in config.yaml
         self.guide_container_factory = guide_container_factory
 
         self.guide_containers: list[GuideContainer] = list()
