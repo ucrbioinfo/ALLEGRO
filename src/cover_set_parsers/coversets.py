@@ -15,8 +15,8 @@ class Coversets:
         guide_source: str,
         input_cds_directory: str,
         input_genome_directory: str, 
-        scorer_settings: dict[str, str], 
-        input_species_csv_file_path: str, 
+        scorer_settings: dict[str, str],
+        input_species_csv_file_path: str,
         ) -> None:
 
         self.species_set: set[int] = set()
@@ -33,7 +33,7 @@ class Coversets:
             scorer_settings=scorer_settings,
             )
 
-        guide_container_factory = GuideContainerFactory(guide_source=guide_source)
+        guide_container_factory = GuideContainerFactory()
 
         print('Reading species input file from {path}'.format(path=input_species_csv_file_path))
         species_df = pandas.read_csv(input_species_csv_file_path)
@@ -51,11 +51,12 @@ class Coversets:
             self.int_to_species_dict[idx] = Species(
                 id=idx,
                 cds_path=cds_path,
-                name=row.species_name,
                 guide_scorer=scorer,
+                name=row.species_name,
                 genome_path=genome_path,
+                guide_source=guide_source,
                 guide_container_factory=guide_container_factory,
-                )
+            )
 
         print('Creating coversets for each species.')
 
@@ -72,21 +73,27 @@ class Coversets:
                     raise NotImplementedError
 
             for guide_object in guide_objects_list:
-                guide_score = guide_object.score
                 sequence = guide_object.sequence
+
+                self.seq_to_guides_dict.setdefault(sequence, list()).append(guide_object)
+
+                # If we have multiple guides with the same sequence from different species,
+                # assign their average score to a unique representative guide 
+                # that is input to the solver.
+                list_of_guides_with_this_sequence = self.seq_to_guides_dict[sequence]
+                average_score = self.get_average_score_for_guide_objects(list_of_guides_with_this_sequence)
 
                 # TODO: A little hacky whacky -- cover_sets should be an object?
                 if sequence in self.cover_sets:
                     self.cover_sets[sequence][1].add(species_id)
                 else:
-                    self.cover_sets[sequence] = tuple((guide_score, set({species_id})))  # type: ignore
-
-                self.seq_to_guides_dict.setdefault(sequence, list()).append(guide_object)
+                    self.cover_sets[sequence] = tuple((average_score, set({species_id})))  # type: ignore
                 
 
-    def get_species_from_int(self, i: int) -> Species:
-        return self.int_to_species_dict[i]
+    def get_average_score_for_guide_objects(self, guides_list: list[Guide]) -> float:
+        avg = 0.0
 
-    
-    def get_guides_from_seq(self, seq: str) -> list[Guide]:
-        return self.seq_to_guides_dict[seq]
+        for obj in guides_list:
+            avg += obj.score
+
+        return avg / len(guides_list)
