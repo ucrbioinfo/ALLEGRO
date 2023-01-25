@@ -45,6 +45,7 @@ class Chromosome(GuideContainer):
                     score=guide_strand_score_tuple[2],
                     strand=guide_strand_score_tuple[1],
                     sequence=guide_strand_score_tuple[0],
+                    genomic_location=guide_strand_score_tuple[3],
                     )
                 )
         
