@@ -100,7 +100,7 @@ def graph_score_dist(
 
 def print_solution(solution: set[str], parser: Coversets) -> None:
     for guide_seq in solution:
-        guide_objects = parser.get_guides_from_seq(guide_seq)
+        guide_objects = parser.seq_to_guides_dict[guide_seq]
         
         for guide_object in guide_objects:
             guide_object.print_info()
@@ -145,7 +145,7 @@ def write_solution_to_file(
     list_of_attributes_dicts: list[dict] = list()
 
     for guide_seq in solution:
-        guide_objects = parser.get_guides_from_seq(guide_seq)
+        guide_objects = parser.seq_to_guides_dict[guide_seq]
         
         for guide_object in guide_objects:
             list_of_attributes_dicts.append(guide_object.get_attributes_dict())
@@ -199,8 +199,8 @@ def output_csv(
 
 def main() -> int:
     args = parse_arguments()
-
     scorer_settings = dict()
+
     match args.scorer:
         case 'chopchop':
             scorer_settings = {
@@ -210,6 +210,8 @@ def main() -> int:
                 'absolute_path_to_bowtie_build': args.absolute_path_to_bowtie_build,
                 'absolute_path_to_genomes_directory': args.absolute_path_to_genomes_directory,
             }
+        case _:
+            scorer_settings = None
 
     coversets = Coversets(
         guide_source=args.mode,
