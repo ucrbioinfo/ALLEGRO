@@ -13,18 +13,18 @@ from classes.guide_container import GuideContainer
 
 
 class GuideContainerFactory:
-    def __init__(self, guide_source: str) -> None:
-        self.guide_source = guide_source
-
+    def __init__(self) -> None:
+        pass
 
     def make_guide_containers(self, species_object: Species) -> list[GuideContainer]:
         guide_container_list: list[GuideContainer] = list()
 
         cds_path = species_object.cds_path
         genome_path = species_object.genome_path
+        guide_source = species_object.guide_source
         guide_scorer_obj = species_object.guide_scorer
 
-        match self.guide_source:
+        match guide_source:
             case 'from_orthogroups':
                 records = list(SeqIO.parse(open(cds_path), 'fasta'))
 
