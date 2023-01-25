@@ -6,7 +6,7 @@ from Bio.SeqRecord import SeqRecord
 
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
-from utils.find_cas9_guides_in_seq import find_guides_on_both_strands
+from utils.find_cas9_guides_in_seq import GuideFinder
 
 
 class ChopChopWrapper(Scorer):
@@ -65,7 +65,7 @@ class ChopChopWrapper(Scorer):
         return output_path
 
 
-    def score_sequence(self, guide_container: GuideContainer) -> list[tuple[str, str, float]]: 
+    def score_sequence(self, guide_container: GuideContainer) -> list[tuple[str, str, float, int]]: 
         silent = True
         
         species_name = guide_container.species_name
@@ -114,17 +114,24 @@ class ChopChopWrapper(Scorer):
         equivalent_strand = dict({'+': 'F', '-': 'R'})
         chopchop_output['F/R'] = chopchop_output['Strand'].map(equivalent_strand)
 
-        chopchop_output = chopchop_output[['Target sequence', 'F/R', 'Efficiency']]
-
-        # Select only the guide strings we are interested in from chopchop output
-        guide_sequences_from_container = find_guides_on_both_strands(
-            guide_container.sequence,
+        chopchop_output['Genomic location'] = chopchop_output['Genomic location'].apply(
+            lambda x: int(x.split(':')[1])
         )
 
-        # This may introduce problems -- What if a guide on the F strand matches with one on R?
-        container_seqs_in_chopchop_output = chopchop_output[
-            chopchop_output['Target sequence'].isin(guide_sequences_from_container)
+        chopchop_output = chopchop_output[
+            ['Target sequence', 'F/R', 'Efficiency', 'Genomic location']
         ]
 
-        return list(container_seqs_in_chopchop_output.itertuples(index=False, name=None))
+        # Select only the guide strings we are interested in from chopchop output
+        # gf = GuideFinder()
+        # guide_sequences_from_container = gf.find_guides_on_both_strands(
+        #     guide_container.sequence,
+        # )
+
+        # # This may introduce problems -- What if a guide on the F strand matches with one on R?
+        # container_seqs_in_chopchop_output = chopchop_output[
+        #     chopchop_output['Target sequence'].isin(guide_sequences_from_container)
+        # ]
+
+        return list(chopchop_output.itertuples(index=False, name=None))
     
