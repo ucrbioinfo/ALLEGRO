@@ -10,11 +10,15 @@ class ScorerFactory:
         pass
 
 
-    def make_scorer(self, scorer_name: str, scorer_settings: dict[str, str]) -> Scorer:
+    def make_scorer(self, scorer_name: str, scorer_settings: dict[str, str] = None) -> Scorer:
         print('Selected scorer:', scorer_name)
 
         match scorer_name:
             case 'chopchop':
+                if scorer_settings == None:
+                    print('Error: CHOPCHOP requires scorer_settings.')
+                    raise ValueError
+
                 return ChopChopWrapper(scorer_settings)
             case 'random':
                 return RandomScorer()  # Assigns all guides a random score between [0, 10)
