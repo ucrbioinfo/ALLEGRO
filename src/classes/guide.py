@@ -14,6 +14,7 @@ class Guide:
         score: float,
         sequence: str,
         endonuclease: str,
+        genomic_location: int,
         container: GuideContainer,
         sequence_with_context: str = '',
         ) -> None:
@@ -24,6 +25,7 @@ class Guide:
         self.sequence = sequence
         self.container = container
         self.endonuclease = endonuclease
+        self.genomic_location = genomic_location
         self.sequence_with_context = sequence_with_context
 
 
@@ -49,6 +51,7 @@ class Guide:
             'guide_strand': self.strand,
             'guide_sequence': self.sequence,
             'guide_endonuclease': self.endonuclease,
+            'guide_genomic_location': self.genomic_location,
             'guide_sequence_with_context': self.sequence_with_context,
         })
 
