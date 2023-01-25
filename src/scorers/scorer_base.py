@@ -6,5 +6,5 @@ class Scorer:
         pass
     
 
-    def score_sequence(self, guide_container: GuideContainer) -> list[tuple[str, str, float]]:
+    def score_sequence(self, guide_container: GuideContainer) -> list[tuple[str, str, float, int]]:
         raise NotImplementedError
