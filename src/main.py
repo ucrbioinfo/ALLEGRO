@@ -13,12 +13,7 @@ matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
 
 def parse_arguments() -> argparse.Namespace:
-    config_parser = argparse.ArgumentParser(
-        prog='ALLEGRO: An algorithm for a linear program to enhance guide RNA optimization',
-        description='Find the smallest set of guide RNAs that cut through all species.',
-        epilog="For more info, see https://github.com/AmirUCR/allegro",
-        add_help=False,
-    )
+    config_parser = argparse.ArgumentParser(add_help=False)
 
     config_parser.add_argument(
         '-c',
@@ -34,7 +29,12 @@ def parse_arguments() -> argparse.Namespace:
     if config_args.config:
         config_arg_dict.update(yaml.load(config_args.config, Loader=yaml.FullLoader))
 
-    parser = argparse.ArgumentParser(parents=[config_parser])
+    parser = argparse.ArgumentParser(
+        prog='ALLEGRO: An algorithm for a linear program to enhance guide RNA optimization',
+        description='Find the smallest set of guide RNAs that cut through all species.',
+        epilog="For more info, visit https://github.com/AmirUCR/allegro",
+        parents=[config_parser],
+    )
 
     parser.add_argument(
         '-n',
