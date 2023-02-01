@@ -1,4 +1,5 @@
 import os
+import json
 import pandas
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -15,10 +16,25 @@ class ChopChopWrapper(Scorer):
         self.output_directory = settings['output_directory']
         self.scoring_method = settings['chopchop_scoring_method']
         self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
-        self.absolute_path_to_bowtie_build = settings['absolute_path_to_bowtie_build']
         self.absolute_path_to_genomes_directory = settings['absolute_path_to_genomes_directory']
 
         self.already_made_bowtie_index_for_these_species: set[str] = set()
+
+
+    def configure_chopchop(self) -> None:
+        abs_path_to_bowtie = os.path.join(self.absolute_path_to_chopchop, 'bowtie/bowtie')
+        abs_path_of_bowtie_indices = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', self.output_directory, 'bowtie_indices'))
+        abs_path_to_chopchop_config_local_json = os.path.join(self.absolute_path_to_chopchop, 'config_local.json')
+
+        content = dict()
+        with open(abs_path_to_chopchop_config_local_json, 'r') as f:
+            content = json.load(f)
+
+        content['PATH']['BOWTIE'] = abs_path_to_bowtie
+        content['PATH']['BOWTIE_INDEX_DIR'] = abs_path_of_bowtie_indices
+
+        with open(abs_path_to_chopchop_config_local_json, 'w') as f:
+            json.dump(content, f, indent=2)
 
         
     def make_species_bowtie_index(self, species_name: str) -> None:
@@ -33,7 +49,7 @@ class ChopChopWrapper(Scorer):
 
             print('Running bowtie-build for', species_name)
             # conda run -n chopchop path_to/bowtie/bowtie-build ../../data/input/genomes/hpolymorpha_genomic.fna hpoly
-            os.system('conda run -n chopchop' + ' ' + self.absolute_path_to_bowtie_build + ' ' + absolute_path_to_species_genome + ' ' + species_name + ' ' + '-q')
+            os.system('conda run -n chopchop' + ' ' + self.absolute_path_to_chopchop + 'bowtie/bowtie-build ' + absolute_path_to_species_genome + ' ' + species_name + ' ' + '-q')
             os.system('mv *.ebwt' + ' ' + output_directory)
             print('Bowtie is done.')
 
@@ -46,8 +62,10 @@ class ChopChopWrapper(Scorer):
         output_path: str,
         ) -> str:
 
+        self.configure_chopchop()
+
         command = 'conda run -n chopchop ' + \
-        self.absolute_path_to_chopchop + \
+        self.absolute_path_to_chopchop + "chopchop.py" + \
         ' -F' + \
         ' -Target ' + target_fasta_path + \
         ' -o ' + output_directory + \
