@@ -9,7 +9,6 @@ import matplotlib.pyplot
 from solvers.solver import Solver
 from cover_set_parsers.coversets import Coversets
 
-
 matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
 
@@ -23,7 +22,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         '--config',
         type=argparse.FileType(mode='r'),
-        default='config.yaml', 
+        default='config.yaml',
         help='The config file to use. Must be placed in the root folder.',
     )
 
@@ -120,19 +119,6 @@ def parse_arguments() -> argparse.Namespace:
         type=str,
         help=("Point to the directory where chopchop is located. Download " +
         "chopchop from here https://bitbucket.org/valenlab/chopchop/src/master/"),
-    )
-
-    parser.add_argument(
-        '--absolute_path_to_bowtie_build',
-        type=str,
-        help=("Only used when chopchop is selected as the scorer. Absolute path to " + 
-        "bowtie. Bowtie is included with chopchop https://bitbucket.org/valenlab/chopchop/src/master/"),
-    )
-
-    parser.add_argument(
-        '--absolute_path_to_chopchop_config_local_json',
-        type=str,
-        help="Only used when chopchop is the selected scorer. Points to the config_local.json for chopchop."
     )
 
     parser.add_argument(
@@ -343,7 +329,6 @@ def main() -> int:
                 'output_directory': args.output_directory,
                 'chopchop_scoring_method': args.chopchop_scoring_method,
                 'absolute_path_to_chopchop': args.absolute_path_to_chopchop,
-                'absolute_path_to_bowtie_build': args.absolute_path_to_bowtie_build,
                 'absolute_path_to_genomes_directory': args.absolute_path_to_genomes_directory,
             }
         case _:
