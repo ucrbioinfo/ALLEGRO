@@ -60,14 +60,18 @@ class Coversets:
 
         print('Creating coversets for each species.')
 
+        count = 0
         # For each species, get the cas9 guide objects, and create coversets from their sequences
         for species_id, species_object in self.int_to_species_dict.items():
+            if count % 50 == 0: print('Done with', count, 'species...')
+            count += 1
 
             guide_objects_list: list[Guide] = list()
 
             match cas_variant:
                 case 'cas9':
                     guide_objects_list = species_object.get_cas9_guides()
+                
                 case 'cas12a' | 'cpf1' | _:
                     print('No such cas variant as', cas_variant, 'implemented in coversets.py')
                     raise NotImplementedError
@@ -88,9 +92,14 @@ class Coversets:
                     self.cover_sets[sequence][1].add(species_id)
                 else:
                     self.cover_sets[sequence] = tuple((average_score, set({species_id})))  # type: ignore
+        
+        print('Created coversets for all species.')
                 
 
-    def get_average_score_for_guide_objects(self, guides_list: list[Guide]) -> float:
+    def get_average_score_for_guide_objects(
+        self,
+        guides_list: list[Guide],
+        ) -> float:
         avg = 0.0
 
         for obj in guides_list:
