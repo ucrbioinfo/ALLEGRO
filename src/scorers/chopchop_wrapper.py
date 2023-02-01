@@ -6,11 +6,12 @@ from Bio.SeqRecord import SeqRecord
 
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
-from utils.find_cas9_guides_in_seq import GuideFinder
 
 
 class ChopChopWrapper(Scorer):
     def __init__(self, settings: dict[str, str]) -> None:
+        super().__init__()
+
         self.output_directory = settings['output_directory']
         self.scoring_method = settings['chopchop_scoring_method']
         self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
@@ -65,7 +66,10 @@ class ChopChopWrapper(Scorer):
         return output_path
 
 
-    def score_sequence(self, guide_container: GuideContainer) -> list[tuple[str, str, float, int]]: 
+    def score_sequence(
+        self,
+        guide_container: GuideContainer,
+        ) -> tuple[list[str], list[str], list[int], list[float]]: 
         silent = True
         
         species_name = guide_container.species_name
@@ -108,8 +112,6 @@ class ChopChopWrapper(Scorer):
         chopchop_output = pandas.read_csv(output_path, sep='\t')
         chopchop_output['Target sequence'] = chopchop_output['Target sequence'].str[0:-3]
 
-        #chopchop_output['Efficiency'] = (chopchop_output['Efficiency'] / 100).round(2)
-
         # Map +/- to F/R -- make a new column.
         equivalent_strand = dict({'+': 'F', '-': 'R'})
         chopchop_output['F/R'] = chopchop_output['Strand'].map(equivalent_strand)
@@ -118,20 +120,14 @@ class ChopChopWrapper(Scorer):
             lambda x: int(x.split(':')[1])
         )
 
-        chopchop_output = chopchop_output[
-            ['Target sequence', 'F/R', 'Efficiency', 'Genomic location']
-        ]
-
-        # Select only the guide strings we are interested in from chopchop output
-        # gf = GuideFinder()
-        # guide_sequences_from_container = gf.find_guides_on_both_strands(
-        #     guide_container.sequence,
-        # )
-
         # # This may introduce problems -- What if a guide on the F strand matches with one on R?
         # container_seqs_in_chopchop_output = chopchop_output[
         #     chopchop_output['Target sequence'].isin(guide_sequences_from_container)
         # ]
 
-        return list(chopchop_output.itertuples(index=False, name=None))
+        return (chopchop_output['Target sequence'].values.tolist(),
+                chopchop_output['F/R'].values.tolist(),
+                chopchop_output['Genomic location'].values.tolist(),
+                chopchop_output['Efficiency'].values.tolist()
+        )
     
