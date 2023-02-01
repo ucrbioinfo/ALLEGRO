@@ -14,7 +14,7 @@ def map_gene_to_prot_id(
     prot_id_re=r'\[protein_id=(.*?)\]'
     ) -> dict:
 
-    map = dict()
+    map: dict[str, str] = dict()
     cds = list(SeqIO.parse(open(cds_path), 'fasta'))
 
     for record in cds:
@@ -35,9 +35,9 @@ def map_locus_tag_to_prot_id(
     cds_path: str, 
     tag_re=r'\[locus_tag=(.*?)\]', 
     prot_id_re=r'\[protein_id=(.*?)\]'
-    ) -> dict:
+    ) -> dict[str, str]:
 
-    map = dict()
+    map: dict[str, str] = dict()
     cds = list(SeqIO.parse(open(cds_path), 'fasta'))
 
     for record in cds:
