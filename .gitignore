@@ -4,6 +4,8 @@ unused/
 .fna
 output/
 output_used_for_quals/
+339_output_ortho/
+339_output_genome/
 cds/
 genomes/
 datasets/
