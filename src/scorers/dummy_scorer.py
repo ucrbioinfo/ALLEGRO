@@ -8,11 +8,21 @@ class DummyScorer(Scorer):
         super().__init__()
         
 
-    def score_sequence(self, guide_container: GuideContainer) -> list[tuple[str, str, float]]:
+    def score_sequence(
+        self,
+        guide_container: GuideContainer
+        ) -> tuple[list[str], list[str], list[int], list[float]]:
         '''
-        Assigns all guides a score of 1.0
+        Assigns all guides in param `guide_container` a score of 1.0
         '''
+
         sequence = guide_container.get_sequence()
         gf = GuideFinder()
-        guide_strand_score_tupe_list = gf.find_guides_and_indicate_strand(sequence=sequence)
-        return guide_strand_score_tupe_list
+
+        (guides_list, 
+        strands_list, 
+        locations_list) = gf.find_guides_and_indicate_strand(sequence=sequence)
+        
+        one_scores = [1.0] * len(guides_list)
+        
+        return guides_list, strands_list, locations_list, one_scores
