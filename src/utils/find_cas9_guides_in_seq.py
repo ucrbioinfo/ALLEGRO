@@ -104,7 +104,7 @@ class GuideFinder:
         sequence: str,
         pam_regex: str = r'(?=(GG))',
         toward_5_prime: int = 21,
-        ) -> tuple(list[str], list[str], list[int]):
+        ) -> tuple[list[str], list[str], list[int]]:
         '''
         ## Args:
             sequence: A nucleotide/DNA sequence to find substrings of guide RNA in.

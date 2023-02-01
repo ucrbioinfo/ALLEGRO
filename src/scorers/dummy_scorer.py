@@ -16,7 +16,7 @@ class DummyScorer(Scorer):
         Assigns all guides in param `guide_container` a score of 1.0
         '''
 
-        sequence = guide_container.get_sequence()
+        sequence = guide_container.sequence
         gf = GuideFinder()
 
         (guides_list, 
