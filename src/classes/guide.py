@@ -59,6 +59,10 @@ class Guide:
         return guide_attributes | self.container.get_attributes_dict()
 
 
-    # Returns a Species object. To get the species name, use the @species_name property.
     def get_species(self) -> Species:
+        '''
+        ## Returns
+            A Species object. To get the species name as a str, use the class'
+             `species_name`` property.
+        '''
         return self.container.get_species()
