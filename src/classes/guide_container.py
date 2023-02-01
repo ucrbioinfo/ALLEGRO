@@ -20,8 +20,7 @@ class GuideContainer(ABC):
     string_id: str
     integer_id: int
 
-    # the Species object that this container is attached to.
-    species: Species
+    species: Species  # the Species object that this container is attached to.
     species_name: str
 
     # The Guide scorer object assigned to this container.
