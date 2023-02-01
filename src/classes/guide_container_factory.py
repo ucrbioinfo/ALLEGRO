@@ -25,7 +25,7 @@ class GuideContainerFactory:
         guide_scorer_obj = species_object.guide_scorer
 
         match guide_source:
-            case 'from_orthogroups':
+            case 'from_orthogroups' | 'from_all_cds':
                 records = list(SeqIO.parse(open(cds_path), 'fasta'))
 
                 gene_regex = r'\[gene=(.*?)\]'
@@ -90,6 +90,6 @@ class GuideContainerFactory:
                     
             case _:
                 print('No such source as {source}. Check config.yaml'.format(source=self.guide_source))
-                raise NotImplementedError
+                raise ValueError
 
         return guide_container_list
