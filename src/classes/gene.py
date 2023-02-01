@@ -31,11 +31,14 @@ class Gene(GuideContainer):
         self.string_id = string_id
         self.integer_id = integer_id
         self.protein_id = protein_id
-        self.species = species
-        self.ref_species = ref_species
-        self.guide_scorer = guide_scorer
-        self.orthologous_to_gene = orthologous_to_gene
-        self.orthologous_to_prot = orthologous_to_prot
+        self.species = species  # Which species does this gene belong to?
+        self.ref_species = ref_species  # Which reference species are we using? 
+                                        # This is found in utils/find_orthogroup_config
+                                        # under the species attribute.
+        self.guide_scorer = guide_scorer  # Any assigned scorer in scorers/
+        self.orthologous_to_gene = orthologous_to_gene  # Which input gene is this gene orthologous to?
+        self.orthologous_to_prot = orthologous_to_prot  # Which input protein_id is this gene orthologous to?
+                                                        # This is the protein_id of the orthologous_to_gene
 
         self.cas9_guide_objects: list[Guide] = list()
 
@@ -47,17 +50,21 @@ class Gene(GuideContainer):
 
     def get_cas9_guides(self) -> list[Guide]:
         if len(self.cas9_guide_objects) == 0:
-            guide_strand_score_tuple_list = self.guide_scorer.score_sequence(self)
+            
+            (guides_list,
+            strands_list, 
+            locations_list,
+            scores_list) = self.guide_scorer.score_sequence(self)
 
-            for guide_strand_score_tuple in guide_strand_score_tuple_list:
+            for i in range(len(guides_list)):
                 self.cas9_guide_objects.append(Guide(
                     pam='GG',
                     container=self,
                     endonuclease='cas9',
-                    score=guide_strand_score_tuple[2],
-                    strand=guide_strand_score_tuple[1],
-                    sequence=guide_strand_score_tuple[0],
-                    genomic_location=guide_strand_score_tuple[3],
+                    score=scores_list[i],
+                    strand=strands_list[i],
+                    sequence=guides_list[i],
+                    genomic_location=locations_list[i],
                     )
                 )
             

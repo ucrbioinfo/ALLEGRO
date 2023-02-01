@@ -35,17 +35,21 @@ class Chromosome(GuideContainer):
 
     def get_cas9_guides(self) -> list[Guide]:
         if len(self.cas9_guide_objects) == 0:
-            guide_strand_score_tuple_list = self.guide_scorer.score_sequence(self)
 
-            for guide_strand_score_tuple in guide_strand_score_tuple_list:
+            (guides_list,
+            strands_list, 
+            locations_list,
+            scores_list) = self.guide_scorer.score_sequence(self)
+
+            for i in range(len(guides_list)):
                 self.cas9_guide_objects.append(Guide(
                     pam='GG',
                     container=self,
                     endonuclease='cas9',
-                    score=guide_strand_score_tuple[2],
-                    strand=guide_strand_score_tuple[1],
-                    sequence=guide_strand_score_tuple[0],
-                    genomic_location=guide_strand_score_tuple[3],
+                    score=scores_list[i],
+                    strand=strands_list[i],
+                    sequence=guides_list[i],
+                    genomic_location=locations_list[i],
                     )
                 )
         
