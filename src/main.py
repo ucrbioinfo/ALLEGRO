@@ -13,26 +13,38 @@ matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
 
 def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
+    config_parser = argparse.ArgumentParser(
         prog='ALLEGRO: An algorithm for a linear program to enhance guide RNA optimization',
         description='Find the smallest set of guide RNAs that cut through all species.',
         epilog="For more info, see https://github.com/AmirUCR/allegro",
+        add_help=False,
     )
 
-    parser.add_argument(
+    config_parser.add_argument(
+        '-c',
         '--config',
         type=argparse.FileType(mode='r'),
         default='config.yaml',
         help='The config file to use. Must be placed in the root folder.',
     )
+    
+    config_args, remaining_args = config_parser.parse_known_args()
+
+    config_arg_dict = vars(config_args)
+    if config_args.config:
+        config_arg_dict.update(yaml.load(config_args.config, Loader=yaml.FullLoader))
+
+    parser = argparse.ArgumentParser(parents=[config_parser])
 
     parser.add_argument(
+        '-n',
         '--experiment_name',
         type=str,
         help='Name of the experiment. Output file(s) will be labeled with this.'
     )
 
     parser.add_argument(
+        '-m',
         '--mode',
         type=str,
         help="'from_genome' or 'from_orthogroups'",
@@ -68,6 +80,7 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        '-b',
         '--beta',
         type=int,
         help=("Beta represents a loose budge or threshold for the maximum " + 
@@ -142,14 +155,9 @@ def parse_arguments() -> argparse.Namespace:
         help=("Only used if the number of feasible guides is above the exhaustive_threshold. " +
         "How many times to run the randomized rounding algorithm?"),
     )
-
-    args = parser.parse_args()
-    if args.config:
-        data = yaml.load(args.config, Loader=yaml.FullLoader)
-        arg_dict = args.__dict__
-        
-        for key, value in data.items():
-            arg_dict[key] = value
+    
+    parser.set_defaults(**config_arg_dict)
+    args = parser.parse_args(remaining_args)
 
     return args
 
