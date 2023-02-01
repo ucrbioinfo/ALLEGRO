@@ -14,7 +14,11 @@ matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
 
 def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog='ALLEGRO: An algorithm for a linear program to enhance guide RNA optimization',
+        description='Find the smallest set of guide RNAs that cut through all species.',
+        epilog="For more info, see https://github.com/AmirUCR/allegro",
+    )
 
     parser.add_argument(
         '--config',
@@ -23,11 +27,141 @@ def parse_arguments() -> argparse.Namespace:
         help='The config file to use. Must be placed in the root folder.',
     )
 
+    parser.add_argument(
+        '--experiment_name',
+        type=str,
+        help='Name of the experiment. Output file(s) will be labeled with this.'
+    )
+
+    parser.add_argument(
+        '--mode',
+        type=str,
+        help="'from_genome' or 'from_orthogroups'",
+    )
+
+    parser.add_argument(
+        '--objective',
+        type=str,
+        help=("'min' or 'max'. max and uses the --beta argument. " +
+        "Select 'min' to disregard beta and find the smallest set of guides to " +
+        "cut all species with."),
+    )
+
+    parser.add_argument(
+        '--scorer',
+        type=str,
+        help=("Which scoring method to use? Options are 'chopchop', 'dummy' " +
+        "where 'dummy' assigns a score of 1.0 to all guides."),
+    )
+
+    parser.add_argument(
+        '--solver_engine',
+        type=str,
+        help=("Which Google OR-Tools pywraplp solver to use? For a list see " +
+        "here https://developers.google.com/optimization/lp/lp_advanced"),
+    )
+
+    parser.add_argument(
+        '--cas',
+        type=str,
+        default='cas9',
+        help="Which cas endonuclease to use? Defaults to 'cas9'. Options are: 'cas9'.",
+    )
+
+    parser.add_argument(
+        '--beta',
+        type=int,
+        help=("Beta represents a loose budge or threshold for the maximum " + 
+        "number of guides you would like in the final covering set. This is " +
+        "NOT a guaranteed maximum due to the hardness of the problem. See the " +
+        "topic on Integrality Gap."),
+    )
+
+    parser.add_argument(
+        '--input_species_path',
+        type=str,
+        help=(".csv file that includes three columns: species_name, " +
+        "genome_file_name, cds_file_name. genome_file_name rows start " +
+        "with species_name + _genomic.fna. cds_file_name rows start with " +
+        "species_name + _cds.fna. Genome files must be placed in data/input/genomes " +
+        "while cds files must be placed in data/input/cds. These directories may be changed " +
+        "with other config options."),
+    )
+
+    parser.add_argument(
+        '--input_genomes_directory',
+        type=str,
+    )
+
+    parser.add_argument(
+        '--output_directory',
+        type=str,
+    )
+
+    parser.add_argument(
+        '--input_cds_directory',
+        type=str,
+        help="Files in this directory must end with _cds.fna or _cds.faa or _cds.fasta",
+    )
+
+    parser.add_argument(
+        '--orthogroups_path',
+        type=str,
+    )
+
+    parser.add_argument(
+        '--chopchop_scoring_method',
+        type=str,
+        help='Only used in chopchop is selected as the scorer. Which chopchop scoring model to use?',
+    )
+
+    parser.add_argument(
+        '--absolute_path_to_chopchop',
+        type=str,
+        help=("Point to the directory where chopchop is located. Download " +
+        "chopchop from here https://bitbucket.org/valenlab/chopchop/src/master/"),
+    )
+
+    parser.add_argument(
+        '--absolute_path_to_bowtie_build',
+        type=str,
+        help=("Only used when chopchop is selected as the scorer. Absolute path to " + 
+        "bowtie. Bowtie is included with chopchop https://bitbucket.org/valenlab/chopchop/src/master/"),
+    )
+
+    parser.add_argument(
+        '--absolute_path_to_chopchop_config_local_json',
+        type=str,
+        help="Only used when chopchop is the selected scorer. Points to the config_local.json for chopchop."
+    )
+
+    parser.add_argument(
+        '--absolute_path_to_genomes_directory',
+        type=str,
+        help="Points to the directory where all species' genomes are placed.",
+    )
+
+    parser.add_argument(
+        '--exhaustive_threshold',
+        type=int,
+        help=("Search all combinatorial possibilities unless there are more " +
+        "feasible solutions than this (then uses randomized rounding). The number " +
+        "of calculations grows exponentially. ONLY increase this parameter when the " +
+        "number of guides in under about twenty or you will have to wait years for it to complete :)."),
+    )
+
+    parser.add_argument(
+        '--num_trials',
+        type=int,
+        help=("Only used if the number of feasible guides is above the exhaustive_threshold. " +
+        "How many times to run the randomized rounding algorithm?"),
+    )
+
     args = parser.parse_args()
     if args.config:
         data = yaml.load(args.config, Loader=yaml.FullLoader)
         arg_dict = args.__dict__
-
+        
         for key, value in data.items():
             arg_dict[key] = value
 
@@ -198,6 +332,8 @@ def output_csv(
 
 
 def main() -> int:
+    print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml.')
+    
     args = parse_arguments()
     scorer_settings = dict()
 
