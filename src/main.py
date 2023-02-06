@@ -339,10 +339,17 @@ def main() -> int:
                 'absolute_path_to_chopchop': args.absolute_path_to_chopchop,
                 'absolute_path_to_genomes_directory': args.absolute_path_to_genomes_directory,
             }
+        case 'dummy':
+            scorer_settings = {
+                'pam': args.pam,
+                'protospacer_length':  args.protospacer_length,
+                'context_toward_five_prime': args.context_toward_five_prime,
+                'context_toward_three_prime': args.context_toward_three_prime,
+            }
         case _:
             scorer_settings = None
 
-    coversets = Coversets(
+    coversets_obj = Coversets(
         guide_source=args.mode,
         cas_variant = args.cas,
         scorer_name=args.scorer,
@@ -355,7 +362,8 @@ def main() -> int:
     solver = Solver(
         beta=args.beta,
         objective=args.objective,
-        coverset_parser=coversets,
+        species=coversets_obj.species_set,
+        coversets=coversets_obj.coversets,
         num_trials=args.num_trials,
         solver_engine=args.solver_engine,
         exhaustive_threshold=args.exhaustive_threshold,
@@ -365,8 +373,8 @@ def main() -> int:
 
     if args.traceback:
         print_solution(
-            parser=coversets,
             solution=solution,
+            parser=coversets_obj,
         )
 
     if args.graph and len(solution) > 0 and not solver.solved_with_exhaustive:
@@ -386,8 +394,8 @@ def main() -> int:
     
     write_solution_to_file(
         beta=args.beta,
-        parser=coversets,
         solution=solution,
+        parser=coversets_obj,
         experiment_name=args.experiment_name,
         output_directory=args.output_directory,
     )
