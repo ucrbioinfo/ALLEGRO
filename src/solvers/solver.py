@@ -10,54 +10,84 @@ from cover_set_parsers.coversets import Coversets
 # For some reason, Google ORTools does not like its objects being passed around.
 # So, everything goes in this class.
 class Solver:
+    __slots__ = ['beta', 'num_trials', 'objective', 'species', 
+    'solver_engine', 'exhaustive_threshold', 'coversets', 'num_trials', 
+    'k', 'solved_with_exhaustive', 'solver', 'set_size_for_each_trial',
+    'average_score_for_each_trial', 'num_while_iters_for_each_trial',
+    'fractional_glop_vals', 'winner_scores', 'num_feasible_guides_with_prob_lt_one',
+    'num_non_zero_feasible', 'num_exhausted_combos', 'solver_time', 'exhaustive_time',
+    'randomized_rounding_time']
+
+    k: int
+    beta: int
+    solver: any
+    objective: str
+    num_trials: int
+    species: set[int]
+    solver_engine: str
+    solver_time: float
+    exhaustive_time: float
+    exhaustive_threshold: int
+    num_exhausted_combos: int
+    winner_scores: list[float]
+    num_non_zero_feasible: int 
+    solved_with_exhaustive: bool
+    randomized_rounding_time: float
+    fractional_glop_vals: list[any]
+    set_size_for_each_trial: list[int]
+    average_score_for_each_trial: list[float]
+    num_while_iters_for_each_trial: list[int]
+    num_feasible_guides_with_prob_lt_one: int
+    coversets: dict[str, tuple[float, set[int]]]
+
     def __init__(
         self, 
-        coverset_parser: Coversets, 
-        beta: int, 
+        beta: int,
+        objective: str,
+        num_trials: int,
+        species: set[int],
         solver_engine: str, 
         exhaustive_threshold: int,
-        num_trials: int,
-        objective: str='max') -> None:
+        coversets: dict[str, tuple[float, set[int]]]) -> None:
         
-        self.coversets = coverset_parser.cover_sets  # TODO these should be a class 
-        self.species = coverset_parser.species_set
-        self.k = len(self.coversets)
-        self.exhaustive_threshold = exhaustive_threshold
-        self.solved_with_exhaustive: bool = False
-        self.num_trials = num_trials
+        self.beta = beta
+        self.species = species
+        self.coversets = coversets
         self.objective = objective
-        
+        self.num_trials = num_trials
+        self.exhaustive_threshold = exhaustive_threshold
+
+        self.k = len(self.coversets)
+        self.solved_with_exhaustive = False
         self.solver = pywraplp.Solver.CreateSolver(solver_engine)
 
-        self.beta: int = beta
-
-        self.set_size_for_each_trial: list[int] = list()
-        self.average_score_for_each_trial: list[float] = list()
-        self.num_while_iters_for_each_trial: list[int] = list()
         self.fractional_glop_vals = list()
+        self.set_size_for_each_trial = list()
+        self.average_score_for_each_trial = list()
+        self.num_while_iters_for_each_trial = list()
 
-        self.winner_scores: list[float] = list()
-        self.num_feasible_guides_with_prob_lt_one: int = 0
-        self.num_non_zero_feasible: int = 0
-        self.num_exhausted_combos: int = 0
+        self.winner_scores = list()
+        self.num_exhausted_combos = 0
+        self.num_non_zero_feasible = 0
+        self.num_feasible_guides_with_prob_lt_one = 0
 
-        self.solver_time: float = 0.0
-        self.exhaustive_time: float = 0.0
-        self.randomized_rounding_time: float = 0.0
+        self.solver_time = 0.0
+        self.exhaustive_time = 0.0
+        self.randomized_rounding_time = 0.0
 
         
     def solve(self) -> set[str]:
         print('Solver working...')
         
+        # max_score: float = numpy.NINF  # Used to transform the efficiency scores.
         cover: dict[int, list[str]] = dict()  # { species_id: [list of guide seqs that cover it] }
-        max_score: float = numpy.NINF  # Used to transform the efficiency scores.
 
         for guide_seq, tupe in self.coversets.items():
             for species in tupe[1]:
                 cover.setdefault(species, list()).append(guide_seq)
 
-                if tupe[0] > max_score:
-                    max_score = tupe[0]
+                # if tupe[0] > max_score:
+                #     max_score = tupe[0]
         # -------------------------------------------
 
 
@@ -84,31 +114,30 @@ class Solver:
         # ------ OBJECTIVE --------------------------
         print('Creating objectives...')
 
-        objective_1_terms = list()
+        objective_1_terms = numpy.empty(shape=(len(vars)), dtype=object)
 
         if self.objective == 'max':
-            objective_2_terms = list()
+            objective_2_terms = numpy.empty(shape=(len(vars)), dtype=object)
 
+            idx = 0
             for seq, var in vars.items():
-                objective_1_terms.append(1 * var)
-                objective_2_terms.append(self.coversets[seq][0] * var)
+                objective_1_terms[idx] = var
+                objective_2_terms[idx] = self.coversets[seq][0] * var
+                idx += 1
 
-            objective_1 = self.solver.Sum(objective_1_terms)
-            objective_2 = self.solver.Sum(objective_2_terms)
+            self.solver.Add(self.solver.Sum(objective_1_terms) <= self.beta)
 
-            self.solver.Add(objective_1 <= self.beta)
-
-            self.solver.Maximize(objective_2)
+            self.solver.Maximize(self.solver.Sum(objective_2_terms))
 
         elif self.objective == 'min':
             print('Minimizing set size (unweighted set cover). Ignoring beta...')
 
+            idx = 0
             for seq, var in vars.items():
-                objective_1_terms.append(1 * var)
-            
-            objective_1 = self.solver.Sum(objective_1_terms)
+                objective_1_terms[idx] = var
+                idx += 1
 
-            self.solver.Minimize(objective_1)
+            self.solver.Minimize(self.solver.Sum(objective_1_terms))
 
         # -------- SOLVE ----------------------------
         print('Solving...')
@@ -189,9 +218,6 @@ class Solver:
             
             rng = numpy.random.default_rng()
             trial_with_smallest_size: int = 0
-
-            # Heuristic?
-            # solutions.sort(key=lambda var: var.solution_value(), reverse=True)
             
             start_time = default_timer()
 
