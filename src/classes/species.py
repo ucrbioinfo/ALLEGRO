@@ -5,6 +5,18 @@ from classes.guide_container_factory import GuideContainerFactory
 
 
 class Species:
+    __slots__ = ['id', 'name', 'cds_path', 'genome_path', 'guide_source',
+    'guide_scorer', 'guide_container_factory', 'guide_containers']
+
+    id: int
+    name: str
+    cds_path: str
+    genome_path: str
+    guide_source: str
+    guide_scorer: Scorer
+    guide_container_factory: GuideContainerFactory
+    guide_containers: list[GuideContainer]
+
     def __init__(
         self,
         id: int, 
@@ -24,7 +36,7 @@ class Species:
         self.guide_scorer = guide_scorer  # chopchop, or other options in config.yaml
         self.guide_container_factory = guide_container_factory
 
-        self.guide_containers: list[GuideContainer] = list()
+        self.guide_containers = list()
 
 
     def get_cas9_guides(self) -> list[Guide]:
