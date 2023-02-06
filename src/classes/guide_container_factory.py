@@ -1,13 +1,8 @@
-from __future__ import annotations
-import typing
-
-if typing.TYPE_CHECKING:
-    from classes.species import Species
-
 import re
 from Bio import SeqIO
 
 from classes.gene import Gene
+from scorers.scorer_base import Scorer
 from classes.chromosome import Chromosome
 from classes.guide_container import GuideContainer
 
@@ -19,13 +14,14 @@ class GuideContainerFactory:
         pass
 
 
-    def make_guide_containers(self, species_object: Species) -> list[GuideContainer]:
+    def make_guide_containers(
+        self,
+        species_name: str,
+        guide_source: str,
+        guide_scorer_obj: Scorer,
+        cds_path: str = '',
+        genome_path: str = '') -> list[GuideContainer]:
         guide_container_list: list[GuideContainer] = list()
-
-        cds_path = species_object.cds_path
-        genome_path = species_object.genome_path
-        guide_source = species_object.guide_source
-        guide_scorer_obj = species_object.guide_scorer
 
         match guide_source:
             case 'from_orthogroups' | 'from_all_cds':
@@ -72,7 +68,7 @@ class GuideContainerFactory:
                         ref_species=ref_species,
                         sequence=str(cds_record.seq),
                         guide_scorer=guide_scorer_obj,
-                        species_name=species_object.name,
+                        species_name=species_name,
                         orthologous_to_prot=ortho_prot_id,
                         orthologous_to_gene=ortho_gene_name,
                         )
@@ -86,7 +82,7 @@ class GuideContainerFactory:
                         integer_id=id,
                         guide_scorer=guide_scorer_obj,
                         string_id=chromosome_record.id,
-                        species_name=species_object.name,
+                        species_name=species_name,
                         sequence=str(chromosome_record.seq).upper(),
                         )
                     )
