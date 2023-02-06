@@ -40,21 +40,6 @@ class Guide:
         self.genomic_location = genomic_location
         self.sequence_with_context = sequence_with_context
 
-
-    @property
-    def species_name(self) -> str:
-        return self.container.species.name
-
-
-    @property
-    def location(self) -> str:
-        return self.container.string_id
-
-
-    @property
-    def guide_in_gene_orthologous_to(self) -> str:
-        return self.container.orthologous_to
-
     
     def get_attributes_dict(self) -> dict:
         guide_attributes = dict({
@@ -67,14 +52,5 @@ class Guide:
             'guide_sequence_with_context': self.sequence_with_context,  # Chopchop scorer does not return context
         })
 
-        # merge dictionaries
+        # merge dictionaries with the | operator
         return guide_attributes | self.container.get_attributes_dict()
-
-
-    def get_species(self) -> Species:
-        '''
-        ## Returns
-            A Species object. To get the species name as a str, use the class'
-             `species_name`` property.
-        '''
-        return self.container.get_species()
