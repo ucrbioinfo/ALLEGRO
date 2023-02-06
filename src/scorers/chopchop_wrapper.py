@@ -10,15 +10,24 @@ from scorers.scorer_base import Scorer
 
 
 class ChopChopWrapper(Scorer):
+    __slots__ = ['output_directory', 'scoring_method', 'absolute_path_to_chopchop',
+    'absolute_path_to_genomes_directory', 'already_made_bowtie_index_for_these_species']
+
+    output_directory: str
+    scoring_method: str
+    absolute_path_to_chopchop: str
+    absolute_path_to_genomes_directory: str
+    already_made_bowtie_index_for_these_species: set[str]
+
     def __init__(self, settings: dict[str, str]) -> None:
-        super().__init__()
+        super().__init__(settings=settings)
 
         self.output_directory = settings['output_directory']
         self.scoring_method = settings['chopchop_scoring_method']
         self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
         self.absolute_path_to_genomes_directory = settings['absolute_path_to_genomes_directory']
 
-        self.already_made_bowtie_index_for_these_species: set[str] = set()
+        self.already_made_bowtie_index_for_these_species = set()
 
 
     def configure_chopchop(self) -> None:
@@ -87,7 +96,7 @@ class ChopChopWrapper(Scorer):
     def score_sequence(
         self,
         guide_container: GuideContainer,
-        ) -> tuple[list[str], list[str], list[int], list[float]]: 
+        ) -> tuple[list[str], list[str], list[str], list[int], list[float]]: 
         silent = True
         
         species_name = guide_container.species_name
@@ -138,12 +147,8 @@ class ChopChopWrapper(Scorer):
             lambda x: int(x.split(':')[1])
         )
 
-        # # This may introduce problems -- What if a guide on the F strand matches with one on R?
-        # container_seqs_in_chopchop_output = chopchop_output[
-        #     chopchop_output['Target sequence'].isin(guide_sequences_from_container)
-        # ]
-
         return (chopchop_output['Target sequence'].values.tolist(),
+                chopchop_output['Target sequence'].values.tolist(),
                 chopchop_output['F/R'].values.tolist(),
                 chopchop_output['Genomic location'].values.tolist(),
                 chopchop_output['Efficiency'].values.tolist()
