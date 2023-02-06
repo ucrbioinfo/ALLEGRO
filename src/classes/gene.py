@@ -6,7 +6,7 @@ from classes.guide_container import GuideContainer
 class Gene(GuideContainer):
     __slots__ = ['sequence', 'gene_name', 'locus_tag', 'string_id', 'integer_id',
     'protein_id', 'species_name', 'ref_species', 'guide_scorer', 'orthologous_to_gene',
-    'orthologous_to_prot', 'cas9_guide_objects']
+    'orthologous_to_prot']
     
     sequence: str
     gene_name: str
@@ -19,7 +19,6 @@ class Gene(GuideContainer):
     guide_scorer: Scorer
     orthologous_to_gene: str
     orthologous_to_prot: str
-    cas9_guide_objects: list[Guide]
 
     def __init__(
         self,
@@ -51,10 +50,10 @@ class Gene(GuideContainer):
         self.orthologous_to_prot = orthologous_to_prot  # Which input protein_id is this gene orthologous to?
                                                         # This is the protein_id of the orthologous_to_gene
 
-        self.cas9_guide_objects = list()
-
 
     def get_cas9_guides(self) -> list[Guide]:
+        self.cas9_guide_objects: list[Guide] = list()
+
         (guides_list,
         guides_context_list,
         strands_list, 
@@ -64,20 +63,20 @@ class Gene(GuideContainer):
         for i in range(len(guides_list)):
             self.cas9_guide_objects.append(Guide(
                 pam='GG',
-                container=self,
                 endonuclease='cas9',
                 score=scores_list[i],
                 strand=strands_list[i],
                 sequence=guides_list[i],
                 genomic_location=locations_list[i],
-                sequence_with_context=guides_context_list[i]
+                sequence_with_context=guides_context_list[i],
+                guide_container_metadata_dict=self.get_attributes_dict(),
                 )
             )
         
+        return self.cas9_guide_objects
         
 
-
-    def get_attributes_dict(self) -> dict:
+    def get_attributes_dict(self) -> dict[str, str | int]:
         return dict({
             'cds_name': self.gene_name,
             'protein_id': self.protein_id,
