@@ -7,6 +7,18 @@ if typing.TYPE_CHECKING:
 
 
 class Guide:
+    __slots__ = ['pam', 'strand', 'score', 'sequence', 'endonuclease', 
+    'genomic_location', 'container', 'sequence_with_context']
+    
+    pam: str
+    strand: str
+    score: float
+    sequence: str
+    endonuclease: str
+    genomic_location: int
+    container: GuideContainer
+    sequence_with_context: str
+
     def __init__(
         self,
         pam: str,
@@ -52,7 +64,7 @@ class Guide:
             'guide_sequence': self.sequence,
             'guide_endonuclease': self.endonuclease,
             'guide_genomic_location': self.genomic_location,
-            'guide_sequence_with_context': self.sequence_with_context,
+            'guide_sequence_with_context': self.sequence_with_context,  # Chopchop scorer does not return context
         })
 
         # merge dictionaries
