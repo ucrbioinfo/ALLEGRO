@@ -12,20 +12,24 @@ class ScorerFactory:
         self,
         scorer_name: str,
         scorer_settings: dict[str, str] = None,
-        ) -> Scorer:
+        ) -> Scorer | None:
         print('Selected scorer:', scorer_name)
 
         match scorer_name:
             case 'chopchop':
                 if scorer_settings == None:
-                    print('Error: CHOPCHOP requires scorer_settings.')
+                    print('Error: ChopChopWrapper requires scorer_settings.')
                     raise ValueError
 
                 return ChopChopWrapper(scorer_settings)
             
             case 'dummy':
-                return DummyScorer()
+                if scorer_settings == None:
+                    print('Error: DummyScorer requires scorer_settings.')
+                    raise ValueError
+                
+                return DummyScorer(scorer_settings)
             
             case _:
-                print('Unknown/dummy scorer selected. Assigning all guides a default score of 1.0')
-                return DummyScorer()
+                print('Unknown scorer selected. Aborting.')
+                raise ValueError
