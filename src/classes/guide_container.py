@@ -9,7 +9,6 @@ from abc import ABC, abstractmethod
 
 
 class GuideContainer(ABC):
-
     # the sequence of this guide container. This is a the CDS sequence
     # for a Gene object, and a chromosome sequence for a Chromosome object.
     sequence: str
@@ -26,8 +25,6 @@ class GuideContainer(ABC):
     # Could be CHOPCHOP or DeepGuide or etc.
     # This option is affected by the setting in config.yaml
     guide_scorer: Scorer
-    
-    guide_objects: list[Guide]
 
 
     @abstractmethod
