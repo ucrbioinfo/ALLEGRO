@@ -3,7 +3,6 @@ import typing
 
 if typing.TYPE_CHECKING:
     from classes.guide import Guide
-    from classes.species import Species
     from scorers.scorer_base import Scorer
     
 from abc import ABC, abstractmethod
@@ -20,7 +19,6 @@ class GuideContainer(ABC):
     string_id: str
     integer_id: int
 
-    species: Species  # the Species object that this container is attached to.
     species_name: str
 
     # The Guide scorer object assigned to this container.
