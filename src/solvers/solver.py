@@ -4,8 +4,6 @@ import itertools
 from timeit import default_timer
 from ortools.linear_solver import pywraplp
 
-from cover_set_parsers.coversets import Coversets
-
 
 # For some reason, Google ORTools does not like its objects being passed around.
 # So, everything goes in this class.
@@ -94,7 +92,24 @@ class Solver:
         # ------ VARIABLES --------------------------
         print('Creating variables...')
 
-        vars = dict((seq, self.solver.NumVar(lb=0.0, ub=1.0, name=seq)) for seq in self.coversets.keys())
+        vars = dict()
+        objective_1_terms = numpy.empty(shape=(len(self.coversets)), dtype=object)
+
+        if self.objective == 'max':
+            objective_2_terms = numpy.empty(shape=(len(self.coversets)), dtype=object)
+
+        idx = 0
+        for seq in self.coversets.keys():
+            var = self.solver.NumVar(lb=0.0, ub=1.0, name=seq)
+
+            vars[seq] = var
+            objective_1_terms[idx] = var
+
+            if self.objective == 'max':
+                objective_2_terms[idx] = self.coversets[seq][0] * var
+
+            idx += 1
+
 
         print('Number of variables (guides) =', self.solver.NumVariables())
         # -------------------------------------------
@@ -114,28 +129,13 @@ class Solver:
         # ------ OBJECTIVE --------------------------
         print('Creating objectives...')
 
-        objective_1_terms = numpy.empty(shape=(len(vars)), dtype=object)
-
         if self.objective == 'max':
-            objective_2_terms = numpy.empty(shape=(len(vars)), dtype=object)
-
-            idx = 0
-            for seq, var in vars.items():
-                objective_1_terms[idx] = var
-                objective_2_terms[idx] = self.coversets[seq][0] * var
-                idx += 1
-
             self.solver.Add(self.solver.Sum(objective_1_terms) <= self.beta)
 
             self.solver.Maximize(self.solver.Sum(objective_2_terms))
 
         elif self.objective == 'min':
             print('Minimizing set size (unweighted set cover). Ignoring beta...')
-
-            idx = 0
-            for seq, var in vars.items():
-                objective_1_terms[idx] = var
-                idx += 1
 
             self.solver.Minimize(self.solver.Sum(objective_1_terms))
 
