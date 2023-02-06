@@ -1,14 +1,6 @@
-from __future__ import annotations
-import typing
-
-if typing.TYPE_CHECKING:
-    from classes.species import Species
-    from classes.guide_container import GuideContainer
-
-
 class Guide:
     __slots__ = ['pam', 'strand', 'score', 'sequence', 'endonuclease', 
-    'genomic_location', 'container', 'sequence_with_context']
+    'genomic_location', 'sequence_with_context', 'guide_container_metadata_dict']
     
     pam: str
     strand: str
@@ -16,8 +8,8 @@ class Guide:
     sequence: str
     endonuclease: str
     genomic_location: int
-    container: GuideContainer
     sequence_with_context: str
+    guide_container_metadata_dict: dict[str, str | int]
 
     def __init__(
         self,
@@ -27,7 +19,7 @@ class Guide:
         sequence: str,
         endonuclease: str,
         genomic_location: int,
-        container: GuideContainer,
+        guide_container_metadata_dict: dict[str, str | int],
         sequence_with_context: str = '',
         ) -> None:
 
@@ -35,13 +27,13 @@ class Guide:
         self.score = score
         self.strand = strand
         self.sequence = sequence
-        self.container = container
         self.endonuclease = endonuclease
         self.genomic_location = genomic_location
         self.sequence_with_context = sequence_with_context
+        self.guide_container_metadata_dict = guide_container_metadata_dict
 
     
-    def get_attributes_dict(self) -> dict:
+    def get_attributes_dict(self) -> dict[str, str | int]:
         guide_attributes = dict({
             'guide_pam': self.pam,
             'guide_score': self.score,
@@ -53,4 +45,4 @@ class Guide:
         })
 
         # merge dictionaries with the | operator
-        return guide_attributes | self.container.get_attributes_dict()
+        return guide_attributes | self.guide_container_metadata_dict
