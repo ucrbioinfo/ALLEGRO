@@ -13,8 +13,11 @@ from classes.guide_container import GuideContainer
 
 
 class GuideContainerFactory:
+    __slots__ = []
+
     def __init__(self) -> None:
         pass
+
 
     def make_guide_containers(self, species_object: Species) -> list[GuideContainer]:
         guide_container_list: list[GuideContainer] = list()
@@ -65,11 +68,11 @@ class GuideContainerFactory:
                         gene_name=gene_name,
                         locus_tag=locus_tag,
                         protein_id=protein_id,
-                        species=species_object,
                         string_id=cds_record.id,
                         ref_species=ref_species,
                         sequence=str(cds_record.seq),
                         guide_scorer=guide_scorer_obj,
+                        species_name=species_object.name,
                         orthologous_to_prot=ortho_prot_id,
                         orthologous_to_gene=ortho_gene_name,
                         )
@@ -81,9 +84,9 @@ class GuideContainerFactory:
                 for id, chromosome_record in enumerate(records):
                     guide_container_list.append(Chromosome(
                         integer_id=id,
-                        species=species_object,
                         guide_scorer=guide_scorer_obj,
                         string_id=chromosome_record.id,
+                        species_name=species_object.name,
                         sequence=str(chromosome_record.seq).upper(),
                         )
                     )
