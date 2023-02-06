@@ -37,7 +37,7 @@ class Species:
 
 
     def get_cas9_guides(self) -> list[Guide]:
-        self.guide_containers = self.guide_container_factory.make_guide_containers(
+        guide_containers = self.guide_container_factory.make_guide_containers(
             species_name=self.name,
             guide_source=self.guide_source,
             guide_scorer_obj=self.guide_scorer,
@@ -46,7 +46,7 @@ class Species:
         )
 
         cas9_guides_list: list[Guide] = list()
-        for container in self.guide_containers:
+        for container in guide_containers:
             cas9_guides_list.extend(container.get_cas9_guides())
 
         return cas9_guides_list
