@@ -97,11 +97,11 @@ class Coversets:
                     list_of_guides_with_this_sequence,
                 )
 
-                # TODO: A little hacky whacky -- coversets should be an object?
+                # TODO: A little hacky -- coversets should be an object?
                 if sequence in self.coversets:
                     self.coversets[sequence][1].add(idx)
                 else:
-                    self.coversets[sequence] = tuple((average_score, set({idx})))  # type: ignore
+                    self.coversets[sequence] = tuple((average_score, set({idx})))
             
             print('Done with', idx + 1, 'species...')
 
