@@ -14,8 +14,8 @@ class Gene(GuideContainer):
     string_id: str
     integer_id: int
     protein_id: str
-    species_name: str
     ref_species: str
+    species_name: str
     guide_scorer: Scorer
     orthologous_to_gene: str
     orthologous_to_prot: str
@@ -29,8 +29,8 @@ class Gene(GuideContainer):
         string_id: str,
         integer_id: int,
         protein_id: str,
-        species_name: str,
         ref_species: str,
+        species_name: str,
         guide_scorer: Scorer,
         orthologous_to_gene: str,
         orthologous_to_prot: str,
@@ -55,28 +55,26 @@ class Gene(GuideContainer):
 
 
     def get_cas9_guides(self) -> list[Guide]:
-        if len(self.cas9_guide_objects) == 0:
-            
-            (guides_list,
-            guides_context_list,
-            strands_list, 
-            locations_list,
-            scores_list) = self.guide_scorer.score_sequence(self)
+        (guides_list,
+        guides_context_list,
+        strands_list, 
+        locations_list,
+        scores_list) = self.guide_scorer.score_sequence(self)
 
-            for i in range(len(guides_list)):
-                self.cas9_guide_objects.append(Guide(
-                    pam='GG',
-                    container=self,
-                    endonuclease='cas9',
-                    score=scores_list[i],
-                    strand=strands_list[i],
-                    sequence=guides_list[i],
-                    genomic_location=locations_list[i],
-                    sequence_with_context=guides_context_list[i]
-                    )
+        for i in range(len(guides_list)):
+            self.cas9_guide_objects.append(Guide(
+                pam='GG',
+                container=self,
+                endonuclease='cas9',
+                score=scores_list[i],
+                strand=strands_list[i],
+                sequence=guides_list[i],
+                genomic_location=locations_list[i],
+                sequence_with_context=guides_context_list[i]
                 )
-            
-        return self.cas9_guide_objects
+            )
+        
+        
 
 
     def get_attributes_dict(self) -> dict:
