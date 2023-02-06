@@ -1,42 +1,42 @@
-from __future__ import annotations
-import typing
-
-if typing.TYPE_CHECKING:
-    from classes.species import Species
-
 from classes.guide import Guide
 from scorers.scorer_base import Scorer
 from classes.guide_container import GuideContainer
 
 
 class Chromosome(GuideContainer):
+    __slots__ = ['sequence', 'string_id', 'integer_id', 'species_name',
+    'guide_scorer', 'cas9_guide_objects']
+
+    sequence: str
+    string_id: str
+    integer_id: int
+    species_name: str
+    guide_scorer: Scorer
+    cas9_guide_objects: list[Guide]
+
     def __init__(
         self,
         sequence: str,
         string_id: str,
         integer_id: int,
-        species: Species,
+        species_name: str,
         guide_scorer: Scorer,
         ) -> None:
 
         self.sequence = sequence
         self.string_id = string_id
         self.integer_id = integer_id
-        self.species = species
+        self.species_name = species_name
         self.guide_scorer = guide_scorer
 
-        self.cas9_guide_objects: list[Guide] = list()
-
-
-    @property
-    def species_name(self) -> str:
-        return self.species.name
+        self.cas9_guide_objects = list()
         
 
     def get_cas9_guides(self) -> list[Guide]:
         if len(self.cas9_guide_objects) == 0:
 
             (guides_list,
+            guides_context_list,
             strands_list, 
             locations_list,
             scores_list) = self.guide_scorer.score_sequence(self)
@@ -50,9 +50,12 @@ class Chromosome(GuideContainer):
                     strand=strands_list[i],
                     sequence=guides_list[i],
                     genomic_location=locations_list[i],
+                    sequence_with_context=guides_context_list[i]
                     )
                 )
-        
+
+        self.sequence = ''
+
         return self.cas9_guide_objects
 
 
