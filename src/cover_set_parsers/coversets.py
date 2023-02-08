@@ -3,27 +3,12 @@ import pandas
 
 from classes.guide import Guide
 from classes.species import Species
+from utils.sqlite_db import GuideSQLite3DB
 from scorers.scorer_factory import ScorerFactory
 from classes.guide_container_factory import GuideContainerFactory
 
 
 class Coversets:
-    __slots__ = ['scorer_name', 'cas_variant', 'guide_source', 'input_cds_directory',
-    'input_genome_directory', 'scorer_settings', 'input_species_csv_file_path',
-    'species_set', 'species_names', 'seq_to_guides_dict', 'coversets']
-
-    scorer_name: str
-    cas_variant: str
-    guide_source: str
-    input_cds_directory: str
-    input_genome_directory: str
-    scorer_settings: dict[str, str]
-    input_species_csv_file_path: str
-    species_set: set[int]
-    species_names: list[str]
-    seq_to_guides_dict: dict[str, list[Guide]]
-    coversets: dict[str, tuple[float, set[int]]]
-
     def __init__(
         self,
         scorer_name: str,
@@ -35,13 +20,11 @@ class Coversets:
         input_species_csv_file_path: str,
         ) -> None:
 
-        self.species_set = set()
-        self.species_names = list()
-        # self.int_to_species_dict: dict[int, Species] = dict()
-        self.seq_to_guides_dict = dict()
-
-        # To be returned for the solver to use
-        self.coversets = dict()
+        db_name = 'guides'
+        self.species_set: set[int] = set()
+        self.species_names: list[str] = list()
+        self.coversets: dict[str, tuple[float, set[int]]] = dict() # To be returned for the solver to use
+        self.database = GuideSQLite3DB(db_name=db_name, overwrite=True)
 
         scorer_factory = ScorerFactory()
         scorer = scorer_factory.make_scorer(
@@ -75,6 +58,8 @@ class Coversets:
             )
 
             guide_objects_list: list[Guide] = list()
+            # seq_to_guides_attributes_dict: dict[str, list[dict]] = dict()
+            guides_attributes_list: list[dict] = list()
 
             match cas_variant:
                 case 'cas9':
@@ -85,36 +70,65 @@ class Coversets:
                     raise NotImplementedError
 
             for guide_object in guide_objects_list:
-                sequence = guide_object.sequence
+                guide_sequence = guide_object.sequence
 
-                self.seq_to_guides_dict.setdefault(sequence, list()).append(guide_object)
+                guides_attributes_list.append(guide_object.get_attributes_dict())
+                # seq_to_guides_attributes_dict.setdefault(guide_sequence, list()).append(guide_object.get_attributes_dict())
 
+                # list_of_dicts = seq_to_guides_attributes_dict[guide_sequence]
                 # If we have multiple guides with the same sequence from different species,
-                # assign their average score to a unique representative guide 
+                # assign their average score to a unique representative guide
                 # that is input to the solver.
-                list_of_guides_with_this_sequence = self.seq_to_guides_dict[sequence]
-                average_score = self.get_average_score_for_guide_objects(
-                    list_of_guides_with_this_sequence,
-                )
+                # list_of_guides_with_this_sequence: list[dict] = list()
 
-                # TODO: A little hacky -- coversets should be an object?
-                if sequence in self.coversets:
-                    self.coversets[sequence][1].add(idx)
+                # if idx > 0:
+                #     list_of_guides_with_this_sequence = self.database.query(
+                #         column='guide_sequence', entry=guide_sequence,
+                #         )
+
+                # list_of_guides_with_this_sequence.extend(list_of_dicts)
+
+                # average_score = self.get_average_score(
+                #     list_of_guides_with_this_sequence,
+                # )
+
+                average_score = 1.0
+
+                if guide_sequence in self.coversets:
+                    self.coversets[guide_sequence][1].add(idx)
                 else:
-                    self.coversets[sequence] = tuple((average_score, set({idx})))
+                    self.coversets[guide_sequence] = tuple((average_score, set({idx})))
             
+            self.database.save_many_to_db(guides_attributes_list)
             print('Done with', idx + 1, 'species...')
 
+        self.database.close_connection()
         print('Created coversets for all species.')
 
 
-    def get_average_score_for_guide_objects(
+    def get_average_score(
         self,
-        guides_list: list[Guide],
+        guides_list: list[dict],
         ) -> float:
+        '''
+        ## Args:
+            list of Guide attribute dictionaries.
+
+        ## Returns:
+            A float value. The average guide_score from all dicts.
+        '''
         avg = 0.0
 
-        for obj in guides_list:
-            avg += obj.score
+        for d in guides_list:
+            avg += d['guide_score']
 
         return avg / len(guides_list)
+
+
+    def get_guide_attributes_dicts_from_seq(self, seqs_iterable) -> list[dict]:
+        results: list[dict] = list()
+        for seq in seqs_iterable:
+            results.extend(self.database.query(column='guide_sequence', entry=seq))
+
+        self.database.close_connection()
+        return results
