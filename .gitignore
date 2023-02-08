@@ -7,6 +7,8 @@ output_used_for_quals/
 339_output_ortho/
 339_output_genome/
 cds/
+guides.db
+guides.db-journal
 genomes/
 datasets/
 test.txt
