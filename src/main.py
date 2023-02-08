@@ -226,13 +226,13 @@ def graph_score_dist(
     matplotlib.pyplot.savefig(output_path)
 
 
-def print_solution(solution: set[str], parser: Coversets) -> None:
-    for guide_seq in solution:
-        guide_objects = parser.seq_to_guides_dict[guide_seq]
+# def print_solution(solution: set[str], parser: Coversets) -> None:
+#     for guide_seq in solution:
+#         guide_objects = parser.seq_to_guides_dict[guide_seq]
         
-        for guide_object in guide_objects:
-            guide_object.print_info()
-            print()
+#         for guide_object in guide_objects:
+#             guide_object.print_info()
+#             print()
 
 
 def write_solution_to_file(
@@ -270,13 +270,7 @@ def write_solution_to_file(
             )
         )
 
-    list_of_attributes_dicts: list[dict] = list()
-
-    for guide_seq in solution:
-        guide_objects = parser.seq_to_guides_dict[guide_seq]
-        
-        for guide_object in guide_objects:
-            list_of_attributes_dicts.append(guide_object.get_attributes_dict())
+    list_of_attributes_dicts: list[dict] = parser.get_guide_attributes_dicts_from_seq(solution)
 
     aggregate_dict = dict()
     for key in list_of_attributes_dicts[0].keys():
@@ -342,12 +336,13 @@ def main() -> int:
         case 'dummy':
             scorer_settings = {
                 'pam': args.pam,
-                'protospacer_length':  args.protospacer_length,
+                'protospacer_length': args.protospacer_length,
                 'context_toward_five_prime': args.context_toward_five_prime,
                 'context_toward_three_prime': args.context_toward_three_prime,
             }
         case _:
-            scorer_settings = None
+            print('Unknown scorer selected. Aborting.')
+            raise ValueError
 
     coversets_obj = Coversets(
         guide_source=args.mode,
@@ -371,11 +366,11 @@ def main() -> int:
 
     solution = solver.solve()
 
-    if args.traceback:
-        print_solution(
-            solution=solution,
-            parser=coversets_obj,
-        )
+    # if args.traceback:  # TODO Fix this
+    #     print_solution(
+    #         solution=solution,
+    #         parser=coversets_obj,
+    #     )
 
     if args.graph and len(solution) > 0 and not solver.solved_with_exhaustive:
         graph_size_dist(
