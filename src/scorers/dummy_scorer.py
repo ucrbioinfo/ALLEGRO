@@ -4,7 +4,8 @@ from utils.find_guides_in_seq import find_guides_and_indicate_strand
 
 
 class DummyScorer(Scorer):
-    __slots__ = ['pam', 'protospacer_length', 'context_toward_five_prime', 'context_toward_three_prime']
+    __slots__ = ['pam', 'protospacer_length',
+    'context_toward_five_prime', 'context_toward_three_prime']
 
     pam: str
     protospacer_length: str
