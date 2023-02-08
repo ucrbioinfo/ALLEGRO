@@ -40,13 +40,13 @@ def find_guides_and_indicate_strand(
         (['AAA', 'TTT'], ['CAAAAAGGTT', 'CTTTTTGGTT'], ['F', 'R'], [12, 12])
     '''
 
-    # Store the reverse complement
-    sequence_rev_comp = str(Seq(sequence).reverse_complement())
-
     guides_list: list[str] = list()
+    guides_context_list: list[str] = list()
     strands_list: list[str] = list()
     locations_list: list[int] = list()
-    guides_context_list: list[str] = list()
+
+    # Store the reverse complement
+    sequence_rev_comp = str(Seq(sequence).reverse_complement())
 
     pam_dict = {
         'NGG': r'(?=(AGG))|(?=(CGG))|(?=(TGG))|(?=(GGG))',
@@ -59,7 +59,7 @@ def find_guides_and_indicate_strand(
         pam_regex = r'(?=({PAM}))'.format(PAM=pam)
 
 
-    def find_matches(seq: str, strand: str) -> None:
+    def find_matches(seq: str, strand: str) -> None:        
         matches = re.finditer(pam_regex, seq)  # Find PAMs on seq
         pam_positions = [match.start() for match in matches]
 
@@ -84,10 +84,10 @@ def find_guides_and_indicate_strand(
                 # There is not enough context on either side
                 else:
                     guide_with_context = seq
-                
+
                 guides_list.append(guide)
-                strands_list.append(strand)
                 guides_context_list.append(guide_with_context)
+                strands_list.append(strand)
                 locations_list.append(position)
 
     find_matches(seq=sequence, strand='F')
