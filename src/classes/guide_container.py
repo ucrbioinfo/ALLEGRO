@@ -1,10 +1,6 @@
-from __future__ import annotations
-import typing
+from classes.guide import Guide
+from scorers.scorer_base import Scorer
 
-if typing.TYPE_CHECKING:
-    from classes.guide import Guide
-    from scorers.scorer_base import Scorer
-    
 from abc import ABC, abstractmethod
 
 
@@ -16,8 +12,6 @@ class GuideContainer(ABC):
     # return: the string id of this guide container.
     # E.g., NW_022983474.1 for some chromosome fasta entry.
     string_id: str
-    integer_id: int
-
     species_name: str
 
     # The Guide scorer object assigned to this container.
@@ -44,7 +38,6 @@ class GuideContainer(ABC):
         return dict({
             'genome_sequence': self.sequence,
             'genome_string_id': self.string_id,
-            'genome_integer_id': self.integer_id,
             'genome_species_name': self.species.name,
         })
         '''

@@ -1,14 +1,12 @@
 from classes.guide import Guide
 from scorers.scorer_base import Scorer
-from classes.guide_container import GuideContainer
 from classes.guide_container_factory import GuideContainerFactory
 
 
 class Species:
-    __slots__ = ['id', 'name', 'cds_path', 'genome_path', 'guide_source',
+    __slots__ = ['name', 'cds_path', 'genome_path', 'guide_source',
     'guide_scorer', 'guide_container_factory']
 
-    id: int
     name: str
     cds_path: str
     genome_path: str
@@ -18,7 +16,6 @@ class Species:
 
     def __init__(
         self,
-        id: int, 
         name: str,
         cds_path: str,
         genome_path: str,
@@ -27,7 +24,6 @@ class Species:
         guide_container_factory: GuideContainerFactory,
         ) -> None:
         
-        self.id = id
         self.name = name
         self.cds_path = cds_path
         self.genome_path = genome_path

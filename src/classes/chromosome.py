@@ -4,11 +4,10 @@ from classes.guide_container import GuideContainer
 
 
 class Chromosome(GuideContainer):
-    __slots__ = ['sequence', 'string_id', 'integer_id', 'species_name', 'guide_scorer']
+    __slots__ = ['sequence', 'string_id', 'species_name', 'guide_scorer']
 
     sequence: str
     string_id: str
-    integer_id: int
     species_name: str
     guide_scorer: Scorer
 
@@ -16,14 +15,12 @@ class Chromosome(GuideContainer):
         self,
         sequence: str,
         string_id: str,
-        integer_id: int,
         species_name: str,
         guide_scorer: Scorer,
         ) -> None:
 
         self.sequence = sequence
         self.string_id = string_id
-        self.integer_id = integer_id
         self.species_name = species_name
         self.guide_scorer = guide_scorer
 
@@ -39,13 +36,10 @@ class Chromosome(GuideContainer):
 
         for i in range(len(guides_list)):
             self.cas9_guide_objects.append(Guide(
-                pam='GG',
-                endonuclease='cas9',
                 score=scores_list[i],
                 strand=strands_list[i],
                 sequence=guides_list[i],
                 genomic_location=locations_list[i],
-                sequence_with_context=guides_context_list[i],
                 guide_container_metadata_dict=self.get_attributes_dict(),
                 )
             )
@@ -55,9 +49,8 @@ class Chromosome(GuideContainer):
         return self.cas9_guide_objects
 
 
-    def get_attributes_dict(self) -> dict[str, str | int]:
+    def get_attributes_dict(self) -> dict[str, str]:
         return dict({
             'genome_string_id': self.string_id,
-            'genome_integer_id': self.integer_id,
             'genome_species_name': self.species_name,
         })
