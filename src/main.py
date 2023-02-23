@@ -7,7 +7,10 @@ import argparse
 import matplotlib.pyplot
 
 from solvers.solver import Solver
-from cover_set_parsers.coversets import Coversets
+# from coverset_parsers.coversets_base import Coversets
+# from coverset_parsers.coversets_factory import CoversetsFactory
+from coverset_parsers.coversets_ram import CoversetsRAM
+from utils.guide_encoder import DNAEncoderDecoder
 
 matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
@@ -237,27 +240,27 @@ def graph_score_dist(
 
 def write_solution_to_file(
     beta: int,
-    parser: Coversets,
+    parser: CoversetsRAM,
     solution: set[str], 
     experiment_name: str,
     output_directory: str,
+    sequence_length: int,
     ) -> None:
 
-    output_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
+    output_txt_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
     output_csv_path = os.path.join(output_directory, experiment_name + '_b{b}.csv'.format(b=beta))
 
-
     i = 1  # If an output file with the same name already exists, make a new numbered one.
-    while os.path.isfile(output_path):
+    while os.path.isfile(output_txt_path):
         new_experiment_name = experiment_name + '_b{b}_'.format(b=beta) + str(i)
-        output_path = os.path.join(output_directory, new_experiment_name + '.txt')
+        output_txt_path = os.path.join(output_directory, new_experiment_name + '.txt')
         output_csv_path = os.path.join(output_directory, new_experiment_name + '.csv')
         i += 1
 
 
     # Writing the new output file.
-    print('Writing to file:', output_path)
-    with open(output_path, 'w') as f:
+    print('Writing to file:', output_txt_path)
+    with open(output_txt_path, 'w') as f:
         f.write('We can cut the following {n} species: {species}.\n'.format(
             n=len(parser.species_names),
             species=str(parser.species_names),
@@ -287,8 +290,10 @@ def output_csv(
     output_directory: str, 
     solver,
     ) -> None:
-    
+
     output_path = os.path.join(output_directory, experiment_name + '_metrics.csv'.format(b=beta))
+
+    print('Writing to file:', output_path)
 
     avg_num_while_iters_for_n_trials = 0
     if len(solver.num_while_iters_for_each_trial) > 0:
@@ -317,6 +322,7 @@ def output_csv(
     write_header_if_file_doesnt_exist = not os.path.exists(output_path)  # otherwise append w/ mode='a'
 
     df.to_csv(output_path, mode='a', header=write_header_if_file_doesnt_exist, index=False)
+    print('Done. Check {path} for the output.'.format(path=output_path))
 
 
 def main() -> int:
@@ -344,9 +350,9 @@ def main() -> int:
             print('Unknown scorer selected. Aborting.')
             raise ValueError
 
-    coversets_obj = Coversets(
+    coversets_obj = CoversetsRAM(
+        cas_variant=args.cas,
         guide_source=args.mode,
-        cas_variant = args.cas,
         scorer_name=args.scorer,
         scorer_settings=scorer_settings,
         input_cds_directory=args.input_cds_directory,
@@ -365,12 +371,6 @@ def main() -> int:
     )
 
     solution = solver.solve()
-
-    # if args.traceback:  # TODO Fix this
-    #     print_solution(
-    #         solution=solution,
-    #         parser=coversets_obj,
-    #     )
 
     if args.graph and len(solution) > 0 and not solver.solved_with_exhaustive:
         graph_size_dist(
@@ -393,6 +393,7 @@ def main() -> int:
         parser=coversets_obj,
         experiment_name=args.experiment_name,
         output_directory=args.output_directory,
+        sequence_length=args.protospacer_length
     )
 
     if args.output_csv:
