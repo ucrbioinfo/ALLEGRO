@@ -1,6 +1,7 @@
-# Function imported by ALLEGRO. No need to run it manually.
+# Functions imported by ALLEGRO. No need to run it manually.
 import re
 from Bio.Seq import Seq
+# from utils.guide_encoder import DNAEncoderDecoder
 
 
 def find_guides_and_indicate_strand(
@@ -26,7 +27,7 @@ def find_guides_and_indicate_strand(
         * The second list[str] is a list of the guides with their context around them.
         * The third list[str] is a list of 'F's and 'R's indicating on
             which strand, forward or reverse, each respective guide resides.
-        * The third list[int] shows the location of each guides in `sequence`.
+        * The fourth list[int] shows the location of each guides in `sequence`.
 
     ## Example
         Input: find_guides_and_indicate_strand(
@@ -58,6 +59,8 @@ def find_guides_and_indicate_strand(
     else:
         pam_regex = r'(?=({PAM}))'.format(PAM=pam)
 
+    # encode_decoder = DNAEncoderDecoder()
+
 
     def find_matches(seq: str, strand: str) -> None:        
         matches = re.finditer(pam_regex, seq)  # Find PAMs on seq
@@ -85,12 +88,15 @@ def find_guides_and_indicate_strand(
                 else:
                     guide_with_context = seq
 
+                # guide = encode_decoder.encode(guide)
+                # guide_with_context = encode_decoder.encode(guide_with_context)
+
                 guides_list.append(guide)
                 guides_context_list.append(guide_with_context)
                 strands_list.append(strand)
                 locations_list.append(position)
 
-    find_matches(seq=sequence, strand='F')
-    find_matches(seq=sequence_rev_comp, strand='R')
+    find_matches(seq=sequence, strand='F')  # 0 means forward strand
+    find_matches(seq=sequence_rev_comp, strand='RC')  # 1 is reverse complement strand
 
     return guides_list, guides_context_list, strands_list, locations_list
