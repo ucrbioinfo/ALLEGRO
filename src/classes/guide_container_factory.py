@@ -34,7 +34,7 @@ class GuideContainerFactory:
                 orthologous_name_regex = r'\[orthologous_to_gene=(.*?)\]'
                 orthologous_protein_regex = r'\[orthologous_to_ref_protein=(.*?)\]'
 
-                for id, cds_record in enumerate(records):
+                for cds_record in records:
                     # Locus tag example: [locus_tag=KLMA_50610], extracts KLMA_50610
                     tag_match = re.search(tag_regex, cds_record.description)
                     locus_tag = tag_match.group(1) if tag_match is not None else 'N/A'
@@ -60,15 +60,14 @@ class GuideContainerFactory:
                     ref_species = reference_species_match.group(1) if reference_species_match is not None else 'N/A'
 
                     guide_container_list.append(Gene(
-                        integer_id=id,
                         gene_name=gene_name,
                         locus_tag=locus_tag,
                         protein_id=protein_id,
+                        species_name=species_name,
                         string_id=cds_record.id,
                         ref_species=ref_species,
                         sequence=str(cds_record.seq),
                         guide_scorer=guide_scorer_obj,
-                        species_name=species_name,
                         orthologous_to_prot=ortho_prot_id,
                         orthologous_to_gene=ortho_gene_name,
                         )
@@ -77,18 +76,17 @@ class GuideContainerFactory:
             case 'from_genome':
                 records = list(SeqIO.parse(open(genome_path), 'fasta'))
                 
-                for id, chromosome_record in enumerate(records):
+                for chromosome_record in records:
                     guide_container_list.append(Chromosome(
-                        integer_id=id,
+                        species_name=species_name,
                         guide_scorer=guide_scorer_obj,
                         string_id=chromosome_record.id,
-                        species_name=species_name,
                         sequence=str(chromosome_record.seq).upper(),
                         )
                     )
                     
             case _:
-                print('No such source as {source}. Check config.yaml'.format(source=self.guide_source))
+                print('No such source as {source}. Check config.yaml'.format(source=guide_source))
                 raise ValueError
 
         return guide_container_list
