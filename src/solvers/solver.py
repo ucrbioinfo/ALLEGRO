@@ -1,6 +1,7 @@
 import sys
 import numpy
 import itertools
+from typing import Any
 from timeit import default_timer
 from ortools.linear_solver import pywraplp
 
@@ -18,7 +19,7 @@ class Solver:
 
     k: int
     beta: int
-    solver: any
+    solver: Any
     objective: str
     num_trials: int
     species: set[int]
@@ -31,7 +32,7 @@ class Solver:
     num_non_zero_feasible: int 
     solved_with_exhaustive: bool
     randomized_rounding_time: float
-    fractional_glop_vals: list[any]
+    fractional_glop_vals: list[Any]
     set_size_for_each_trial: list[int]
     average_score_for_each_trial: list[float]
     num_while_iters_for_each_trial: list[int]
@@ -77,15 +78,11 @@ class Solver:
     def solve(self) -> set[str]:
         print('Solver working...')
         
-        # max_score: float = numpy.NINF  # Used to transform the efficiency scores.
         cover: dict[int, list[str]] = dict()  # { species_id: [list of guide seqs that cover it] }
 
         for guide_seq, tupe in self.coversets.items():
             for species in tupe[1]:
                 cover.setdefault(species, list()).append(guide_seq)
-
-                # if tupe[0] > max_score:
-                #     max_score = tupe[0]
         # -------------------------------------------
 
 
