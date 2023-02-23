@@ -12,7 +12,7 @@ class ScorerFactory:
         self,
         scorer_name: str,
         scorer_settings: dict[str, str],
-        ) -> Scorer | None:
+        ) -> Scorer:
         print('Selected scorer:', scorer_name)
 
         match scorer_name:
