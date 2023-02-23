@@ -6,6 +6,7 @@ output/
 output_used_for_quals/
 339_output_ortho/
 339_output_genome/
+339_output_genome_ns/
 cds/
 guides.db
 guides.db-journal
