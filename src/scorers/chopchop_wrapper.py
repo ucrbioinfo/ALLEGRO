@@ -7,21 +7,20 @@ from Bio.SeqRecord import SeqRecord
 
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
+from utils.guide_encoder import DNAEncoderDecoder
 
 
 class ChopChopWrapper(Scorer):
-    __slots__ = ['output_directory', 'scoring_method', 'absolute_path_to_chopchop',
+    __slots__ = ['scoring_method', 'output_directory', 'absolute_path_to_chopchop',
     'absolute_path_to_genomes_directory', 'already_made_bowtie_index_for_these_species']
 
-    output_directory: str
     scoring_method: str
+    output_directory: str
     absolute_path_to_chopchop: str
     absolute_path_to_genomes_directory: str
     already_made_bowtie_index_for_these_species: set[str]
 
     def __init__(self, settings: dict[str, str]) -> None:
-        super().__init__(settings=settings)
-
         self.output_directory = settings['output_directory']
         self.scoring_method = settings['chopchop_scoring_method']
         self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
@@ -139,18 +138,28 @@ class ChopChopWrapper(Scorer):
         chopchop_output = pandas.read_csv(output_path, sep='\t')
         chopchop_output['Target sequence'] = chopchop_output['Target sequence'].str[0:-3]
 
-        # Map +/- to F/R -- make a new column.
-        equivalent_strand = dict({'+': 'F', '-': 'R'})
-        chopchop_output['F/R'] = chopchop_output['Strand'].map(equivalent_strand)
+        # dna_encoder_decoder = DNAEncoderDecoder()
 
-        chopchop_output['Genomic location'] = chopchop_output['Genomic location'].apply(
+        # encoded_guides: list[float] = chopchop_output['Target sequence'].apply(
+        #     lambda x: dna_encoder_decoder.encode(x)
+        # ).tolist()
+
+        # Map +/- to F/R 0.0/1.0
+        equivalent_strand = dict({'+': 'F', '-': 'RC'})
+        strands: list[str] = chopchop_output['Strand'].map(equivalent_strand).tolist()
+
+        locations: list[int] = chopchop_output['Genomic location'].apply(
             lambda x: int(x.split(':')[1])
-        )
+        ).tolist()
 
-        return (chopchop_output['Target sequence'].values.tolist(),
-                chopchop_output['Target sequence'].values.tolist(),
-                chopchop_output['F/R'].values.tolist(),
-                chopchop_output['Genomic location'].values.tolist(),
-                chopchop_output['Efficiency'].values.tolist()
+        # efficiency: list[float] = chopchop_output['Efficiency'].tolist()
+
+        return (chopchop_output['Target sequence'].tolist(),
+                # below is intentional -- chopchop does not capture a context around the sequence
+                chopchop_output['Target sequence'].tolist(),
+                strands,
+                locations,
+                chopchop_output['Efficiency'].tolist()
+
         )
     
