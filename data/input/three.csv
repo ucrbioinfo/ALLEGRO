@@ -1,0 +1,4 @@
+species_name,genome_file_name,cds_file_name
+saccharomyces_cerevisiae,saccharomyces_cerevisiae_genomic.fna,saccharomyces_cerevisiae_cds.fna
+kluyveromyces_lactis,kluyveromyces_lactis_genomic.fna,kluyveromyces_lactis_cds.fna
+fusarium_oxysporum,fusarium_oxysporum_genomic.fna,fusarium_oxysporum_cds.fna
