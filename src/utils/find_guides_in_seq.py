@@ -4,22 +4,30 @@ from Bio.Seq import Seq
 # from utils.guide_encoder import DNAEncoderDecoder
 
 
+def is_repetitive(seq: str) -> bool:
+    return len(set(seq)) < 3
+
+
+
 def find_guides_and_indicate_strand(
     pam: str,
     sequence: str,
     protospacer_length: int,
     context_toward_five_prime: int,
     context_toward_three_prime: int,
+    include_repetitive: bool
     ) -> tuple[list[str], list[str], list[str], list[int]]:
     '''
     ## Args:
-        pam: The protospacer adjacent motif to look for, e.g., 'NGG'.
-        sequence: A nucleotide/DNA sequence to find substrings of guide RNA in.
-        protospacer_length: The length of the string toward 5-prime of the PAM.
-        context_toward_five_prime: The number of nucleotides to extract toward
+        * pam: The protospacer adjacent motif to look for, e.g., 'NGG'.
+        * sequence: A nucleotide/DNA sequence to find substrings of guide RNA in.
+        * protospacer_length: The length of the string toward 5-prime of the PAM.
+        * context_toward_five_prime: The number of nucleotides to extract toward
             the 5-prime after the protospacer.
-        context_toward_three_prime: The number of nucleotides to extract toward
+        * context_toward_three_prime: The number of nucleotides to extract toward
             the 3-prime after (and excluding) the PAM.
+        * include_repetitive: Discards a guide if the protospace contains 2 or 
+            fewer unique bases.
 
     ## Returns:
         A tuple of three lists:
@@ -49,6 +57,8 @@ def find_guides_and_indicate_strand(
     # Store the reverse complement
     sequence_rev_comp = str(Seq(sequence).reverse_complement())
 
+    print(sequence_rev_comp)
+
     pam_dict = {
         'NGG': r'(?=(AGG))|(?=(CGG))|(?=(TGG))|(?=(GGG))',
     }
@@ -69,6 +79,10 @@ def find_guides_and_indicate_strand(
         for position in pam_positions:
             if (position - protospacer_length >= 0):
                 guide = seq[position-protospacer_length:position]
+
+                # if not include_repetitive and is_repetitive(guide):
+                #     continue
+
                 guide_with_context = ''
 
                 # There is enough context on both sides of the PAM

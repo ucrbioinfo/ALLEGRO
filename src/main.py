@@ -6,11 +6,10 @@ import pandas
 import argparse
 import matplotlib.pyplot
 
-from solvers.solver import Solver
-# from coverset_parsers.coversets_base import Coversets
+# from solvers.solver import Solver
 # from coverset_parsers.coversets_factory import CoversetsFactory
-from coverset_parsers.coversets_ram import CoversetsRAM
-from utils.guide_encoder import DNAEncoderDecoder
+# from coverset_parsers.coversets_ram import CoversetsRAM as coverset
+from coverset_parsers.coverset import CoversetsCython as coverset # type: ignore
 
 matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
@@ -46,12 +45,12 @@ def parse_arguments() -> argparse.Namespace:
         help='Name of the experiment. Output file(s) will be labeled with this.'
     )
 
-    parser.add_argument(
-        '-m',
-        '--mode',
-        type=str,
-        help="'from_genome' or 'from_orthogroups'",
-    )
+    # parser.add_argument(
+    #     '-m',
+    #     '--mode',
+    #     type=str,
+    #     help="'from_genome' or 'from_orthogroups'",
+    # )
 
     parser.add_argument(
         '--objective',
@@ -119,10 +118,10 @@ def parse_arguments() -> argparse.Namespace:
         help="Files in this directory must end with _cds.fna or _cds.faa or _cds.fasta",
     )
 
-    parser.add_argument(
-        '--orthogroups_path',
-        type=str,
-    )
+    # parser.add_argument(
+    #     '--orthogroups_path',
+    #     type=str,
+    # )
 
     parser.add_argument(
         '--chopchop_scoring_method',
@@ -240,7 +239,7 @@ def graph_score_dist(
 
 def write_solution_to_file(
     beta: int,
-    parser: CoversetsRAM,
+    parser: coverset,
     solution: set[str], 
     experiment_name: str,
     output_directory: str,
@@ -326,7 +325,7 @@ def output_csv(
 
 
 def main() -> int:
-    print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml.')
+    print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml')
     
     args = parse_arguments()
     scorer_settings = dict()
@@ -343,16 +342,19 @@ def main() -> int:
             scorer_settings = {
                 'pam': args.pam,
                 'protospacer_length': args.protospacer_length,
+                'include_repetitive': args.include_repetitive,
                 'context_toward_five_prime': args.context_toward_five_prime,
                 'context_toward_three_prime': args.context_toward_three_prime,
+                
             }
         case _:
             print('Unknown scorer selected. Aborting.')
             raise ValueError
 
-    coversets_obj = CoversetsRAM(
+    coversets_obj = coverset(
         cas_variant=args.cas,
         guide_source=args.mode,
+        guide_length=args.protospacer_length,
         scorer_name=args.scorer,
         scorer_settings=scorer_settings,
         input_cds_directory=args.input_cds_directory,
@@ -360,51 +362,54 @@ def main() -> int:
         input_genome_directory=args.input_genomes_directory,
     )
 
-    solver = Solver(
-        beta=args.beta,
-        objective=args.objective,
-        species=coversets_obj.species_set,
-        coversets=coversets_obj.coversets,
-        num_trials=args.num_trials,
-        solver_engine=args.solver_engine,
-        exhaustive_threshold=args.exhaustive_threshold,
-    )
-
-    solution = solver.solve()
-
-    if args.graph and len(solution) > 0 and not solver.solved_with_exhaustive:
-        graph_size_dist(
-            beta=solver.beta,
-            exp_name=args.experiment_name, 
-            output_dir=args.output_directory,
-            size_of_solutions_for_n_trials=solver.set_size_for_each_trial,
-        )
-
-        graph_score_dist(
-            beta=solver.beta,
-            exp_name=args.experiment_name, 
-            output_dir=args.output_directory,
-            average_scores_for_n_trials=solver.average_score_for_each_trial,
-        )
-    
-    write_solution_to_file(
-        beta=args.beta,
-        solution=solution,
-        parser=coversets_obj,
-        experiment_name=args.experiment_name,
-        output_directory=args.output_directory,
-        sequence_length=args.protospacer_length
-    )
-
-    if args.output_csv:
-        output_csv(
-            solver=solver,
-            beta=args.beta,
-            experiment_name=args.experiment_name,
-            output_directory=args.output_directory,
-        )
-
     return 0
+
+
+    # solver = Solver(
+    #     beta=args.beta,
+    #     objective=args.objective,
+    #     species=coversets_obj.species_set,
+    #     coversets=coversets_obj.coversets,
+    #     num_trials=args.num_trials,
+    #     solver_engine=args.solver_engine,
+    #     exhaustive_threshold=args.exhaustive_threshold,
+    # )
+
+    # solution = solver.solve()
+
+    # if args.graph and len(solution) > 0 and not solver.solved_with_exhaustive:
+    #     graph_size_dist(
+    #         beta=solver.beta,
+    #         exp_name=args.experiment_name, 
+    #         output_dir=args.output_directory,
+    #         size_of_solutions_for_n_trials=solver.set_size_for_each_trial,
+    #     )
+
+    #     graph_score_dist(
+    #         beta=solver.beta,
+    #         exp_name=args.experiment_name, 
+    #         output_dir=args.output_directory,
+    #         average_scores_for_n_trials=solver.average_score_for_each_trial,
+    #     )
+    
+    # write_solution_to_file(
+    #     beta=args.beta,
+    #     solution=solution,
+    #     parser=coversets_obj,
+    #     experiment_name=args.experiment_name,
+    #     output_directory=args.output_directory,
+    #     sequence_length=args.protospacer_length
+    # )
+
+    # if args.output_csv:
+    #     output_csv(
+    #         solver=solver,
+    #         beta=args.beta,
+    #         experiment_name=args.experiment_name,
+    #         output_directory=args.output_directory,
+    #     )
+
+    # return 0
 
 
 if __name__ == '__main__':

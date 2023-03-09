@@ -24,7 +24,7 @@ class GuideContainerFactory:
         guide_container_list: list[GuideContainer] = list()
 
         match guide_source:
-            case 'from_orthogroups' | 'from_all_cds':
+            case 'from_cds':
                 records = list(SeqIO.parse(open(cds_path), 'fasta'))
 
                 gene_regex = r'\[gene=(.*?)\]'

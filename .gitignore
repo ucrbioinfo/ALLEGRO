@@ -1,5 +1,7 @@
 __pycache__
 .vscode/
+*.db
+
 unused/
 .fna
 output/

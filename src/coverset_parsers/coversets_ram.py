@@ -4,11 +4,10 @@ import pandas
 from classes.guide import Guide
 from classes.species import Species
 from scorers.scorer_factory import ScorerFactory
-from coverset_parsers.coversets_base import CoversetsBase
 from classes.guide_container_factory import GuideContainerFactory
 
 
-class CoversetsRAM(CoversetsBase):
+class CoversetsRAM:
     def __init__(
         self,
         scorer_name: str,
@@ -28,7 +27,7 @@ class CoversetsRAM(CoversetsBase):
         scorer_factory = ScorerFactory()
         scorer = scorer_factory.make_scorer(
             scorer_name=scorer_name,
-            scorer_settings=scorer_settings,
+            scorer_settings=scorer_settings,  # type: ignore
         )
 
         guide_container_factory = GuideContainerFactory()

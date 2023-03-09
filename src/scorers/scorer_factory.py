@@ -11,7 +11,7 @@ class ScorerFactory:
     def make_scorer(
         self,
         scorer_name: str,
-        scorer_settings: dict[str, str],
+        scorer_settings: dict[str, str | bool | int],
         ) -> Scorer:
         print('Selected scorer:', scorer_name)
 
