@@ -225,7 +225,6 @@ class Solver:
 
                 while I_this_trial != self.species:
                     iters_this_trial += 1
-                    score_sum_this_trial: float = 0.0
 
                     for var in solutions:
                         if var.solution_value() == 1.0 or var.solution_value() > rng.random():
