@@ -18,29 +18,27 @@ from scorers.scorer_factory import ScorerFactory
 from classes.guide_container_factory import GuideContainerFactory
 
 
+def count_kmers(sequence, k):
+    kmers = dict()
+    for i in range(len(sequence) - k + 1):
+        kmer = sequence[i:i+k]
+
+        if kmer in kmers:
+            kmers[kmer] += 1
+        else:
+            kmers[kmer] = 1
+
+    return kmers
+
+
 # Declare the class with cdef
 cdef extern from "allegro/coverset.h" namespace "coversets":
     cdef cppclass CoversetCPP:
-        CoversetCPP(size_t num_species, size_t guide_length) except +
+        CoversetCPP(size_t num_species, size_t guide_length, size_t num_trials) except +
         
         void encode_and_save_dna(string &, unsigned char, unsigned short)
         void ortools_solver()
         string get_str()
-
-# Create a Cython extension type which holds a C++ instance
-#  as an attribute and create several forwarding methods
-# This is the interface exposed to a Python script.
-#cdef class PyCoverset:
-#    cdef CoversetCPP *coverset  # Hold the C++ instance we're wrapping
-#
-#    def __cinit__(self):
-#        self.coverset = new CoversetCPP()
-#        
-#    def __dealloc__(self):
-#        del self.coverset
-#
-#    def OR_Tools_Solver(self):
-#        self.coverset.ortools_solver()
 
 
 cdef class CoversetsCython:
@@ -49,6 +47,7 @@ cdef class CoversetsCython:
 
     def __cinit__(
         self,
+        num_trials: int,
         scorer_name: str,
         cas_variant: str,
         guide_length: int,
@@ -61,6 +60,8 @@ cdef class CoversetsCython:
 
         self.species_set = set()
         self.species_names = list()
+
+        illegal_characters = ['N', 'W', 'R', 'Y', 'K']
 
         scorer_factory = ScorerFactory()
         scorer = scorer_factory.make_scorer(
@@ -76,7 +77,7 @@ cdef class CoversetsCython:
         species_df = pandas.read_csv(input_species_csv_file_path)
 
         num_species = species_df.shape[0]
-        self.coverset = new CoversetCPP(num_species, guide_length)
+        self.coverset = new CoversetCPP(num_species, guide_length, num_trials)
 
         # Make the species objects
         for row in species_df.itertuples():
@@ -110,9 +111,22 @@ cdef class CoversetsCython:
             for guide_object in guide_objects_list:
                 guide_sequence = guide_object.sequence
 
-                print(guide_sequence)
 
-                if 'N' in guide_sequence:
+                # Skip guides with bad nucleotides.
+                if any(c in guide_sequence for c in illegal_characters):
+                    continue
+
+                # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
+                # 7 times or GA is repeated 6 times.
+                if max(count_kmers(guide_sequence, 2).values()) > 4:
+                    continue
+
+                # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
+                if any(substr in guide_sequence for substr in ['AAAAA', 'CCCCC', 'GGGGG', 'TTTTT']):
+                    continue
+                
+                # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
+                if any(substr in guide_sequence for substr in ['AAAA', 'CCCC', 'GGGG', 'TTTT']):
                     continue
 
                 # interact with CPP -- pass in the sequence string
@@ -124,8 +138,8 @@ cdef class CoversetsCython:
         print('Created coversets for all species.')
 
         # Call solver in CPP
-        print(self.coverset.get_str())
-        # self.coverset.ortools_solver()
+        # print(self.coverset.get_str())
+        self.coverset.ortools_solver()
 
 
     def __dealloc__(self):
