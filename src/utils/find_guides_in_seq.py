@@ -57,8 +57,6 @@ def find_guides_and_indicate_strand(
     # Store the reverse complement
     sequence_rev_comp = str(Seq(sequence).reverse_complement())
 
-    print(sequence_rev_comp)
-
     pam_dict = {
         'NGG': r'(?=(AGG))|(?=(CGG))|(?=(TGG))|(?=(GGG))',
     }
