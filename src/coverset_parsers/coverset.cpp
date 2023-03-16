@@ -4,7 +4,6 @@
 
 #include "allegro/coverset.h"
 
-
 #define bA_SHIFT 0b00
 #define bC_SHIFT 0b01
 #define bG_SHIFT 0b10
@@ -17,7 +16,10 @@
 
 namespace coversets
 {
-    CoversetCPP::CoversetCPP(std::size_t num_species, std::size_t guide_length, std::size_t num_trials)
+    CoversetCPP::CoversetCPP(
+        std::size_t num_species,
+        std::size_t guide_length,
+        std::size_t num_trials)
     {
         this->num_species = num_species;
         this->guide_length = guide_length;
@@ -43,7 +45,7 @@ namespace coversets
         boost::dynamic_bitset<> G_shift(this->bits_required_to_store_seq, bG_SHIFT);
         boost::dynamic_bitset<> T_shift(this->bits_required_to_store_seq, bT_SHIFT);
 
-        for (size_t i = 0; i < this->guide_length; i++)
+        for (size_t i = 0; i < guide_length; i++)
         {
             // Shift the bitset to the left by 2 bits
             encoded <<= 2;
@@ -71,24 +73,21 @@ namespace coversets
         // If seq already exists
         if (coversets.find(encoded) != coversets.end())
         {
-            //
-            // this->coversets[encoded].second.set(species_id);
-
             // Set the appropriate bit to indicate which species is hit by this guide.
-            this->coversets[encoded].set(species_id);
+            this->coversets[encoded].second.set(species_id);
         }
         else
         {
             boost::dynamic_bitset<> bitset(this->num_species);
             bitset.set(species_id);
 
-            // std::pair<unsigned char, boost::dynamic_bitset<>> pair(score, bitset);
+            std::pair<unsigned char, boost::dynamic_bitset<>> p(score, bitset);
 
-            this->coversets[encoded] = bitset;
+            this->coversets[encoded] = p;
         }
     }
 
-    std::string CoversetCPP::decode_bitset(boost::dynamic_bitset<> encoded)
+    std::string CoversetCPP::decode_bitset(boost::dynamic_bitset<> &encoded)
     {
         std::string decoded = "";
         std::string buffer;
@@ -105,7 +104,7 @@ namespace coversets
             last_two_chars = buffer.substr(buffer.length() - 2);
 
             // Check what the last two bits were
-            if      (last_two_chars == sA_SHIFT)
+            if (last_two_chars == sA_SHIFT)
             {
                 decoded.push_back('A');
             }
@@ -129,7 +128,7 @@ namespace coversets
         return decoded;
     }
 
-    std::string CoversetCPP::decode_bitset(std::string encoded_str)
+    std::string CoversetCPP::decode_bitset(const std::string &encoded_str)
     {
         boost::dynamic_bitset<> encoded(encoded_str);
 
@@ -148,7 +147,7 @@ namespace coversets
             last_two_chars = buffer.substr(buffer.length() - 2);
 
             // Check what the last two bits were
-            if      (last_two_chars == sA_SHIFT)
+            if (last_two_chars == sA_SHIFT)
             {
                 decoded.push_back('A');
             }
@@ -215,8 +214,9 @@ namespace coversets
         return decoded;
     }
 
-
-    void CoversetCPP::randomized_rounding(std::vector<operations_research::MPVariable*> feasible_solutions) {
+    std::unordered_set<std::string> CoversetCPP::randomized_rounding(
+        std::vector<operations_research::MPVariable *> feasible_solutions)
+    {
         std::cout << "Using randomized rounding with " << this->num_trials << " trials.\n";
 
         std::unordered_set<std::string> winners;
@@ -236,25 +236,23 @@ namespace coversets
 
             while (!(I_this_trial & this->all_species_bitset).all())
             {
+                // TODO This needs an exit condition. The loop can be infinite as of now.
                 // iterations_this_trial++;
-
-                for (auto var_ptr = feasible_solutions.begin(); var_ptr != feasible_solutions.end(); var_ptr++)
+                for (auto var_ptr : feasible_solutions)
                 {
-                    operations_research::MPVariable* var = *var_ptr;
+                    operations_research::MPVariable *var = var_ptr;
 
-                    if ((var->solution_value() == 1.0) || (var->solution_value() > dist(rng))) 
+                    if ((var->solution_value() == 1.0) || (var->solution_value() > dist(rng)))
                     {
                         boost::dynamic_bitset<> bitset(var->name());
-                        // boost::dynamic_bitset<> species_hit_by_this_guide = this->coversets[bitset].second;
-                        boost::dynamic_bitset<> species_hit_by_this_guide = this->coversets[bitset];
+                        boost::dynamic_bitset<> species_hit_by_this_guide = this->coversets[bitset].second;
 
                         I_this_trial |= species_hit_by_this_guide;
-                        
+
                         winners_this_trial.insert(var->name());
                     }
                 }
             }
-
 
             // double score_sum_this_trial = 0.0;
             // for (auto itr = winners_this_trial.begin(); itr != winners_this_trial.end(); itr++)
@@ -265,27 +263,26 @@ namespace coversets
 
             std::size_t len_winners_this_trial = winners_this_trial.size();
 
-            if (len_winners_this_trial <= len_winners) {
+            if (len_winners_this_trial <= len_winners)
+            {
                 winners = winners_this_trial;
                 len_winners = len_winners_this_trial;
                 trial_with_smallest_size = trial;
             }
-
         }
 
-        std::cout << "Winners are:\n"; 
-        for (auto itr = winners.begin(); itr != winners.end(); itr++)
+        std::cout << "Winners are:\n";
+        for (auto i : winners)
         {
-            std::cout << decode_bitset(*itr) << std::endl;
+            std::cout << decode_bitset(i) << std::endl;
         }
 
-        // LOG(INFO) << "Solution:" << std::endl;
-        // LOG(INFO) << "Objective value = " << objective->Value();
+        return winners;
     }
 
-    void CoversetCPP::ortools_solver()
+    std::unordered_set<std::string> CoversetCPP::ortools_solver()
     {
-        // // Create the linear solver with the GLOP backend.
+        // Create the linear solver with the GLOP backend.
         std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
 
         std::unordered_map<boost::dynamic_bitset<>, std::unordered_set<boost::dynamic_bitset<>>> hit_species;
@@ -293,30 +290,36 @@ namespace coversets
         std::unordered_set<boost::dynamic_bitset<>> species_already_hit_by_unique_guide;
         std::unordered_set<boost::dynamic_bitset<>> marked_for_death;
 
-        for (auto it = this->coversets.begin(); it != this->coversets.end(); it++)
+        for (auto i : this->coversets)
         {
-           boost::dynamic_bitset<> guide_seq_bits = it->first;
-           boost::dynamic_bitset<> species_bitset = it->second;
+            boost::dynamic_bitset<> guide_seq_bits = i.first;
+            boost::dynamic_bitset<> species_bitset = i.second.second;
 
-            // We want to keep only one guide per species where that guide hits only this species and none other.
-            // If a species is already hit by a one-hitting-guide and we encounter another one, mark it for deletion
-            // from this->coversets and skip adding it for hit_species.
-            if (species_bitset.count() == 1) {
-                if (species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end()) {
+            // We want to keep only one guide per species where that guide hits
+            //  only this species and none other.
+            // If a species is already hit by a one-hitting-guide and we encounter
+            //  another one, mark it for deletion
+            //   from this->coversets and skip adding it for hit_species.
+            if (species_bitset.count() == 1)
+            {
+                if ((species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end())) {
                     marked_for_death.insert(guide_seq_bits);
                     continue;
                 }
                 else {
                     size_t set_bit_index = species_bitset.find_first();
-
                     boost::dynamic_bitset<> species_onehot(species_bitset.size());
                     species_onehot.set(set_bit_index);
 
                     hit_species[species_onehot].insert(guide_seq_bits);
-
                     species_already_hit_by_unique_guide.insert(species_bitset);
+
+                    set_bit_index = species_bitset.find_next(set_bit_index);
+                    
                 }
-            } else {
+            }
+            else
+            {
                 size_t set_bit_index = species_bitset.find_first();
                 while (set_bit_index != boost::dynamic_bitset<>::npos)
                 {
@@ -330,73 +333,63 @@ namespace coversets
             }
         }
 
-        // for (auto it = hit_species.begin(); it != hit_species.end(); it++) {
-        //     boost::dynamic_bitset<> species_bitset = it->first;
-        //     std::unordered_set<boost::dynamic_bitset<>> guide_seq_bitsets = it->second;
-
-        //     std::string decoded;
-        //     std::string buffer;
-        //     boost::to_string(species_bitset, buffer);
-
-        //     std::cout << "Species " <<  buffer << " is hit by" << std::endl;
-
-        //     boost::dynamic_bitset<> guides_bitset;
-        //     for (auto set_it = guide_seq_bitsets.begin(); set_it != guide_seq_bitsets.end(); set_it++) {
-        //         guides_bitset = *set_it;
-
-        //         decoded = CoversetCPP::decode_bitset(guides_bitset);
-
-        //         std::cout << decoded << std::endl;
-        //     }
-        // }
-
-        for (auto it = marked_for_death.begin(); it != marked_for_death.end(); it++)
+        // Remove redundant guides from further processing.
+        // We do not want to make variables for these.
+        for (auto i : marked_for_death)
         {
-            this->coversets.erase(*it);
+            this->coversets.erase(i);
         }
 
         marked_for_death.clear();
         species_already_hit_by_unique_guide.clear();
 
+        // --------------------------------------------------
+        // -------------- VARIABLE CREATION -----------------
+        // --------------------------------------------------
         operations_research::MPObjective *const objective = solver->MutableObjective();
         std::unordered_map<boost::dynamic_bitset<>, operations_research::MPVariable *> map_seq_to_vars;
 
-        for (auto it = this->coversets.begin(); it != this->coversets.end(); it++)
+        for (auto i : this->coversets)
         {
-            boost::dynamic_bitset<> seq_bitset = it->first;
+            boost::dynamic_bitset<> seq_bitset = i.first;
+            unsigned char score = i.second.first;
 
             std::string buffer;
             boost::to_string(seq_bitset, buffer);
             operations_research::MPVariable *const var = solver->MakeNumVar(0.0, 1, buffer);
 
             map_seq_to_vars[seq_bitset] = var;
-            objective->SetCoefficient(var, 1);
+            objective->SetCoefficient(var, score);
         }
 
         LOG(INFO) << "Number of variables = " << solver->NumVariables();
+        // --------------------------------------------------
 
+        // --------------------------------------------------
+        // ------------- CONSTRAINT CREATION ----------------
+        // --------------------------------------------------
         const double infinity = solver->infinity();
-
-        for (auto it = hit_species.begin(); it != hit_species.end(); it++)
+        for (auto i : hit_species)
         {
             std::vector<operations_research::MPVariable *> vars_for_this_species;
-            std::unordered_set<boost::dynamic_bitset<>> seq_bitsets_set = it->second;
+            std::unordered_set<boost::dynamic_bitset<>> seq_bitsets_set = i.second;
 
-            for (auto it = seq_bitsets_set.begin(); it != seq_bitsets_set.end(); it++)
+            for (auto j : seq_bitsets_set)
             {
-                vars_for_this_species.push_back(map_seq_to_vars[*it]);
+                vars_for_this_species.push_back(map_seq_to_vars[j]);
             }
 
-            operations_research::MPConstraint* const constraint = solver->MakeRowConstraint(1.0, infinity);
-            for (auto it = vars_for_this_species.begin(); it != vars_for_this_species.end(); it++)
+            operations_research::MPConstraint *const constraint = solver->MakeRowConstraint(1.0, infinity);
+            for (auto k : vars_for_this_species)
             {
-                constraint->SetCoefficient(*it, 1);
+                constraint->SetCoefficient(k, 1);
             }
         }
 
         hit_species.clear();
 
         LOG(INFO) << "Number of constraints = " << solver->NumConstraints();
+        // --------------------------------------------------
 
         // Set the objective and solve.
         objective->SetMinimization();
@@ -406,20 +399,21 @@ namespace coversets
         // Check that the problem has an optimal solution.
         if (result_status != operations_research::MPSolver::OPTIMAL)
         {
-        LOG(FATAL) << "The problem does not have an optimal solution!";
+            LOG(FATAL) << "The problem does not have an optimal solution!";
         }
 
         std::cout << "Status: " << result_status << std::endl;
 
         // Save the feasible variables.
-        std::vector<operations_research::MPVariable*> feasible_solutions;
-        for (auto it = map_seq_to_vars.begin(); it != map_seq_to_vars.end(); it++) {
-            // boost::dynamic_bitset<> seq_bitset = it->first;
-            operations_research::MPVariable* var = it->second;
+        std::vector<operations_research::MPVariable *> feasible_solutions;
+        for (auto i : map_seq_to_vars)
+        {
+            boost::dynamic_bitset<> seq_bitset = i.first;
+            operations_research::MPVariable *var = i.second;
 
             if (var->solution_value() > 0.0)
             {
-                // std::cout << decode_bitset(seq_bitset) << " with solution value " << var_solution_value << std::endl;
+                std::cout << decode_bitset(seq_bitset) << " with solution value " << var->solution_value() << std::endl;
                 feasible_solutions.push_back(var);
             }
         }
@@ -432,6 +426,10 @@ namespace coversets
         // --------------------------------------------------
         // -------------- RANDOMIZED ROUND ------------------
         // --------------------------------------------------
-        randomized_rounding(feasible_solutions);
+        if (len_solutions > 0) {
+            return randomized_rounding(feasible_solutions);
+        } else {
+            return std::unordered_set<std::string>();
+        }
     }
 }
