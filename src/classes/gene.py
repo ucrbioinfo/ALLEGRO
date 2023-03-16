@@ -4,9 +4,18 @@ from classes.guide_container import GuideContainer
 
 
 class Gene(GuideContainer):
-    __slots__ = ['sequence', 'gene_name', 'locus_tag', 'string_id',
-    'protein_id', 'species_name', 'ref_species', 'guide_scorer', 'orthologous_to_gene',
-    'orthologous_to_prot']
+    __slots__ = [
+        'sequence',
+        'gene_name',
+        'locus_tag',
+        'string_id',
+        'protein_id',
+        'species_name',
+        'ref_species',
+        'guide_scorer',
+        'orthologous_to_gene',
+        'orthologous_to_prot'
+        ]
     
     sequence: str
     gene_name: str
@@ -71,7 +80,7 @@ class Gene(GuideContainer):
         return self.cas9_guide_objects
         
 
-    def get_attributes_dict(self) -> dict[str, str]:
+    def get_attributes_dict(self) -> dict:
         return dict({
             'cds_name': self.gene_name,
             'protein_id': self.protein_id,
