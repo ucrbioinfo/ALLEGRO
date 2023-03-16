@@ -12,7 +12,7 @@ class Scorer(ABC):
     def score_sequence(
         self,
         guide_container: GuideContainer,
-        ) -> tuple[list[str], list[str], list[str], list[int], list[float]]:
+        ) -> tuple[list[str], list[str], list[str], list[int], list[int]]:
         '''
         ## Args:
             * guide_container: Either a Gene or a Chromosome type guide container.
@@ -24,5 +24,5 @@ class Scorer(ABC):
             * The third list[str] is a list of '0.0's and '1.0's indicating on
               which strand, forward (0.0) or reverse complement (1.0), each respective guide resides.
             * The fourth list[int] shows the locations of each guides in `sequence`.
-            * The fifth list[float] indicates the efficiency scores of each guide.
+            * The fifth list[int] indicates the efficiency scores of each guide.
         '''
