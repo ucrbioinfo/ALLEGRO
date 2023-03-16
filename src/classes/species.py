@@ -4,8 +4,14 @@ from classes.guide_container_factory import GuideContainerFactory
 
 
 class Species:
-    __slots__ = ['name', 'cds_path', 'genome_path', 'guide_source',
-    'guide_scorer', 'guide_container_factory']
+    __slots__ = [
+        'name',
+        'cds_path',
+        'genome_path',
+        'guide_source',
+        'guide_scorer',
+        'guide_container_factory'
+        ]
 
     name: str
     cds_path: str

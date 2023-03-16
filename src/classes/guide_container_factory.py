@@ -20,7 +20,9 @@ class GuideContainerFactory:
         guide_source: str,
         guide_scorer_obj: Scorer,
         cds_path: str = '',
-        genome_path: str = '') -> list[GuideContainer]:
+        genome_path: str = ''
+        ) -> list[GuideContainer]:
+        
         guide_container_list: list[GuideContainer] = list()
 
         match guide_source:

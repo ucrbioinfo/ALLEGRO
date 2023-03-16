@@ -1,20 +1,25 @@
 class Guide:
-    __slots__ = ['strand', 'score', 'sequence',
-    'genomic_location', 'guide_container_metadata_dict']
+    __slots__ = [
+        'strand',
+        'score',
+        'sequence',
+        'genomic_location',
+        'guide_container_metadata_dict'
+        ]
     
     strand: str
-    score: float
+    score: int
     sequence: str
     genomic_location: int
-    guide_container_metadata_dict: dict[str, str]
+    guide_container_metadata_dict: dict
 
     def __init__(
-        self, # HASH TABLE instead of dict # see if you can remove irrelevant guides
+        self,
         strand: str,
-        score: float,
-        sequence: str, # 2 bits per symbol
+        score: int,
+        sequence: str,
         genomic_location: int,
-        guide_container_metadata_dict: dict[str, str],
+        guide_container_metadata_dict: dict,
         ) -> None:
 
         self.score = score
@@ -24,7 +29,7 @@ class Guide:
         self.guide_container_metadata_dict = guide_container_metadata_dict
 
     
-    def get_attributes_dict(self) -> dict[str, str | float | int]:
+    def get_attributes_dict(self) -> dict:
         guide_attributes = dict({
             'guide_score': self.score,
             'guide_strand': self.strand,
