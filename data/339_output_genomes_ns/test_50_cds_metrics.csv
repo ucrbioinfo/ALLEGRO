@@ -1,2 +1,0 @@
-budget,avg_score_over_all_trials,avg_score_over_each_trial,avg_num_while_iters_for_n_trials,num_while_iters_for_each_trial,fractional_glop_vals,solver_time,exhaustive_time,random_rounding_time,num_non_zero_feasible,num_non_zero_feasible_under_one,num_exhausted_combos,solved_with_exhaustive,size_of_solutions_for_n_trials,num_species_constraints,num_guide_variables,num_rounding_trials
-0,1.0,[1.0],1.0,[1],[1.0],118.52573652681895,0.0,2.3456057533621788e-05,1,0,0,No,[1],50,90664265,1
