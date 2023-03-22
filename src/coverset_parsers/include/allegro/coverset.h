@@ -27,7 +27,7 @@ namespace coversets
         std::string decode_bitset(const std::string &encoded_str);
         std::string decode_bitset(boost::dynamic_bitset<> &encoded);
 
-        std::unordered_set<std::string> randomized_rounding(
+        std::vector<std::pair<std::string, std::string>> randomized_rounding(
             std::vector<operations_research::MPVariable *> feasible_solutions);
 
     public:
@@ -38,7 +38,7 @@ namespace coversets
             
         ~CoversetCPP();
 
-        std::unordered_set<std::string> ortools_solver(); // to be removed
+        std::vector<std::pair<std::string, std::string>> ortools_solver(); // to be removed
         void encode_and_save_dna(std::string &seq, unsigned char score, unsigned short species_id);
     };
 }
