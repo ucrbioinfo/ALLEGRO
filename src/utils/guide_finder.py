@@ -1,5 +1,6 @@
 # Functions imported by ALLEGRO. No need to run it manually.
 import re
+from Bio import SeqIO
 from Bio.Seq import Seq
 
 
@@ -34,7 +35,7 @@ class GuideFinder:
         self.num_more_than_four_twomers_removed = 0
 
 
-    def find_guides_and_indicate_strand(
+    def identify_guides_and_indicate_strand(
         self,
         pam: str,
         sequence: str,
@@ -59,8 +60,8 @@ class GuideFinder:
             A tuple of three lists:
             * The first list[str] is a list of the guides found in `sequence`.
             * The second list[str] is a list of the guides with their context around them.
-            * The third list[str] is a list of 'F's and 'R's indicating on
-                which strand, forward or reverse, each respective guide resides.
+            * The third list[str] is a list of 'F's and 'RC's indicating on
+                which strand, forward or reverse complement, each respective guide resides.
             * The fourth list[int] shows the location of each guides in `sequence`.
 
         ## Example
@@ -72,7 +73,7 @@ class GuideFinder:
                 context_toward_three_prime=2,
             )
             Output:
-            (['AAA', 'TTT'], ['CAAAAAGGTT', 'CTTTTTGGTT'], ['F', 'R'], [12, 12])
+            (['AAA', 'TTT'], ['CAAAAAGGTT', 'CTTTTTGGTT'], ['F', 'RC'], [12, 12])
         '''
 
         guides_list: list[str] = list()
@@ -149,7 +150,41 @@ class GuideFinder:
                     strands_list.append(strand)
                     locations_list.append(position)
 
-        find_matches(seq=sequence, strand='F')  # 0 means forward strand
-        find_matches(seq=sequence_rev_comp, strand='RC')  # 1 is reverse complement strand
+        find_matches(seq=sequence, strand='F')  # F means forward strand
+        find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
 
         return guides_list, guides_context_list, strands_list, locations_list
+
+
+    def locate_guides_in_sequence(self, sequence, file_path, to_upper: bool = True):
+        '''
+        ## Args:
+            * sequence: A guide RNA nucleotide sequence.
+            * file_path: The file path to the DNA sequence (genome or CDS genes) fasta file. 
+                Must be relative to the root directory of ALLEGRO.
+            * to_upper: (Default: True) convert the fasta sequence to upper case or not?
+
+        ## Returns:
+            A list of tuples of 4 items list[tuple[str, str, int, int]]:
+            * 1. (str) Chromosome name.
+            * 2. (str) Strand. 'F' indicates the forward strand as read in the fasta file,
+                'RC' indicates the reverse complement of the string in the same file.
+            * 3. (int) Start position of `sequence` in `file_path` fasta.
+            * 4. (int) End position of `sequence` in `file_path` fasta.
+        '''
+
+        sequence_rev_comp = str(Seq(sequence).reverse_complement())
+        chrom_strand_start_end: list[tuple[str, str, int, int]] = list()
+
+        def find_matches(seq: str, strand: str):
+            for record in SeqIO.parse(open(file_path, 'r'), 'fasta'):
+                chromosome = record.id
+                dna = str(record.seq).upper() if to_upper else str(record.seq)
+
+                for match in re.finditer(seq, dna):
+                    chrom_strand_start_end.append((chromosome, strand, match.start(), match.end()))
+
+        find_matches(seq=sequence, strand='F')  # F means forward strand
+        find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
+
+        return chrom_strand_start_end
