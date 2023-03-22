@@ -40,7 +40,7 @@ class DummyScorer(Scorer):
         (guides_list,
         guides_context_list,
         strands_list,
-        locations_list) = self.guide_finder.find_guides_and_indicate_strand(
+        locations_list) = self.guide_finder.identify_guides_and_indicate_strand(
             pam=self.pam,
             sequence=guide_container.sequence,
             protospacer_length=self.protospacer_length,
