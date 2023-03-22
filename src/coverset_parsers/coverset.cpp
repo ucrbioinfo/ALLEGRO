@@ -214,7 +214,7 @@ namespace coversets
         return decoded;
     }
 
-    std::unordered_set<std::string> CoversetCPP::randomized_rounding(
+    std::vector<std::pair<std::string, std::string>> CoversetCPP::randomized_rounding(
         std::vector<operations_research::MPVariable *> feasible_solutions)
     {
         std::cout << "Using randomized rounding with " << this->num_trials << " trials.\n";
@@ -271,16 +271,27 @@ namespace coversets
             }
         }
 
+        std::vector<std::pair<std::string, std::string>> decoded_winners;
+
         std::cout << "Winners are:\n";
-        for (auto i : winners)
+        for (auto winner_str : winners)
         {
-            std::cout << decode_bitset(i) << std::endl;
+            boost::dynamic_bitset<> bitset(winner_str);
+            boost::dynamic_bitset<> species_hit_by_this_guide = this->coversets[bitset].second;
+
+            std::string buffer;
+            boost::to_string(species_hit_by_this_guide, buffer);
+
+            std::string decoded_bitset = decode_bitset(winner_str);
+            decoded_winners.push_back(std::pair<std::string, std::string> (decoded_bitset, buffer));
+
+            std::cout <<  decoded_bitset << std::endl;
         }
 
-        return winners;
+        return decoded_winners;
     }
 
-    std::unordered_set<std::string> CoversetCPP::ortools_solver()
+    std::vector<std::pair<std::string, std::string>> CoversetCPP::ortools_solver()
     {
         // Create the linear solver with the GLOP backend.
         std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
@@ -315,7 +326,6 @@ namespace coversets
                     species_already_hit_by_unique_guide.insert(species_bitset);
 
                     set_bit_index = species_bitset.find_next(set_bit_index);
-                    
                 }
             }
             else
@@ -429,7 +439,7 @@ namespace coversets
         if (len_solutions > 0) {
             return randomized_rounding(feasible_solutions);
         } else {
-            return std::unordered_set<std::string>();
+            return std::vector<std::pair<std::string, std::string>>();
         }
     }
 }
