@@ -6,9 +6,7 @@ import pandas
 import argparse
 import matplotlib.pyplot
 
-# from solvers.solver import Solver
-# from coverset_parsers.coversets_factory import CoversetsFactory
-# from coverset_parsers.coversets_ram import CoversetsRAM as coverset
+from utils.guide_finder import GuideFinder
 from coverset_parsers.coverset import CoversetsCython as coverset # type: ignore
 
 matplotlib.pyplot.rcParams['figure.dpi'] = 300
@@ -164,6 +162,10 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
+# def validate_arguments(args) -> None:
+# TODO: Implement 
+
+
 def graph_size_dist(
     beta: int,
     exp_name: str, 
@@ -228,24 +230,19 @@ def graph_score_dist(
     matplotlib.pyplot.savefig(output_path)
 
 
-# def print_solution(solution: set[str], parser: Coversets) -> None:
-#     for guide_seq in solution:
-#         guide_objects = parser.seq_to_guides_dict[guide_seq]
-        
-#         for guide_object in guide_objects:
-#             guide_object.print_info()
-#             print()
-
-
 def write_solution_to_file(
     beta: int,
-    parser: coverset,
-    solution: set[str], 
+    species_names: list[str],
+    solution: list[tuple[str, str]],
     experiment_name: str,
+    input_csv_path: str,
+    input_sequence_directory: str,
+    paths_csv_column_name: str,
+    species_names_csv_column_name: str,
     output_directory: str,
-    sequence_length: int,
     ) -> None:
 
+    # TODO maybe move to own module -- main.py is too crowded...
     output_txt_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
     output_csv_path = os.path.join(output_directory, experiment_name + '_b{b}.csv'.format(b=beta))
 
@@ -261,8 +258,8 @@ def write_solution_to_file(
     print('Writing to file:', output_txt_path)
     with open(output_txt_path, 'w') as f:
         f.write('We can cut the following {n} species: {species}.\n'.format(
-            n=len(parser.species_names),
-            species=str(parser.species_names),
+            n=len(species_names),
+            species=str(species_names),
             )
         )
 
@@ -272,13 +269,56 @@ def write_solution_to_file(
             )
         )
 
-    list_of_attributes_dicts: list[dict] = parser.get_guide_attributes_dicts_from_seq(solution)
+    paths: list[str] = list()
+    species_list: list[str] = list()
+    scores: list[int] = list()
+    strands: list[str] = list()
+    sequences: list[str] = list()
+    end_positions: list[int] = list()
+    start_positions: list[int] = list()
+    chromosomes_or_genes: list[str] = list()
 
-    aggregate_dict = dict()
-    for key in list_of_attributes_dicts[0].keys():
-        aggregate_dict[key] = [d[key] for d in list_of_attributes_dicts]    
+    guide_finder = GuideFinder()
+    input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
+
+    for pair in solution:
+        seq = pair[0]
+        hit_species = pair[1]
+
+        for species in hit_species:
+            df_file_path = input_df[input_df[species_names_csv_column_name] == species][paths_csv_column_name].values[0]
+            full_path = os.path.join(input_sequence_directory, df_file_path)
+
+            list_of_tuples = guide_finder.locate_guides_in_sequence(sequence=seq, file_path=full_path, to_upper=True)
+
+            for tuple in list_of_tuples:
+                chromosome = tuple[0]
+                strand = tuple[1]
+                start_pos = tuple[2]
+                end_pos = tuple[3]
+
+                sequences.append(seq)
+                paths.append(df_file_path)
+                scores.append(1)  # TODO fix for other than 1
+                strands.append(strand)
+                start_positions.append(start_pos)
+                end_positions.append(end_pos)
+                chromosomes_or_genes.append(chromosome)
+                species_list.append(species)
+            
     
-    pandas.DataFrame.from_dict(aggregate_dict).to_csv(output_csv_path, index=False)
+    pandas.DataFrame(list(zip(
+        sequences,
+        species_list,
+        scores,
+        chromosomes_or_genes,
+        strands,
+        start_positions,
+        end_positions,
+        paths,
+        )),
+    columns=['sequence','targets', 'score', 'chromosome_or_gene',
+    'strand', 'start_position', 'end_position', 'path']).to_csv(output_csv_path, index=False)
     
     print('Done. Check {path} for the output.'.format(path=output_csv_path))
 
@@ -363,9 +403,6 @@ def main() -> int:
         input_genome_directory=args.input_genomes_directory,
     )
 
-    return 0
-
-
     # solver = Solver(
     #     beta=args.beta,
     #     objective=args.objective,
@@ -393,14 +430,17 @@ def main() -> int:
     #         average_scores_for_n_trials=solver.average_score_for_each_trial,
     #     )
     
-    # write_solution_to_file(
-    #     beta=args.beta,
-    #     solution=solution,
-    #     parser=coversets_obj,
-    #     experiment_name=args.experiment_name,
-    #     output_directory=args.output_directory,
-    #     sequence_length=args.protospacer_length
-    # )
+    write_solution_to_file(
+        beta=args.beta,
+        species_names=coversets_obj.species_names,
+        solution=coversets_obj.solution,
+        experiment_name=args.experiment_name,
+        input_csv_path=args.input_species_path,
+        input_sequence_directory=args.input_genomes_directory,
+        paths_csv_column_name='genome_file_name',
+        species_names_csv_column_name='species_name',
+        output_directory=args.output_directory
+    )
 
     # if args.output_csv:
     #     output_csv(
@@ -410,7 +450,7 @@ def main() -> int:
     #         output_directory=args.output_directory,
     #     )
 
-    # return 0
+    return 0
 
 
 if __name__ == '__main__':
