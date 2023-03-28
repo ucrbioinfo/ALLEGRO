@@ -1,4 +1,6 @@
 # Functions imported by ALLEGRO. No need to run it manually.
+# You can import this .py file separately, instantiate GuideFinder,
+#  and check for guides in your custom sequence.
 import re
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -28,7 +30,7 @@ class GuideFinder:
 
     def __init__(self) -> None:
         self.pam_dict = {
-            'NGG': r'(?=(AGG))|(?=(CGG))|(?=(TGG))|(?=(GGG))',
+            'NGG': r'(?=([ACTG]GG))',
         }
         self.num_containing_fourmers_removed = 0
         self.num_containing_fivemers_removed = 0
@@ -62,7 +64,7 @@ class GuideFinder:
             * The second list[str] is a list of the guides with their context around them.
             * The third list[str] is a list of 'F's and 'RC's indicating on
                 which strand, forward or reverse complement, each respective guide resides.
-            * The fourth list[int] shows the location of each guides in `sequence`.
+            * The fourth list[int] shows the location of the PAM of each guides in `sequence`.
 
         ## Example
             Input: find_guides_and_indicate_strand(
@@ -81,16 +83,11 @@ class GuideFinder:
         strands_list: list[str] = list()
         locations_list: list[int] = list()
 
-        alphabet = ['A', 'C', 'G', 'T']
-
-        # Store the reverse complement
-        sequence_rev_comp = str(Seq(sequence).reverse_complement())
-
         pam_regex = r''
         if pam in self.pam_dict:
             pam_regex = self.pam_dict[pam]
         else:
-            print(pam, 'not found in dictionary. Treating as literal.')
+            print('PAM', pam, 'not recognized. Treating as literal and searching for instances of', pam, '.')
             pam_regex = r'(?=({PAM}))'.format(PAM=pam)
             
 
@@ -102,11 +99,11 @@ class GuideFinder:
                 if (position - protospacer_length >= 0):
                     guide = seq[position-protospacer_length:position]
 
-                    if include_repetitive == False:
-                        # Skip guides with bad nucleotides.
-                        if any(c not in alphabet for c in guide):
-                            continue
+                    # Skip guides with non-standard nucleotides.
+                    if any(c not in ['A', 'C', 'G', 'T'] for c in guide):
+                        continue
 
+                    if include_repetitive == False:
                         # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
                         # 7 times or GA is repeated 6 times.
                         if max(count_kmers(guide, 2).values()) >= 5:
@@ -151,6 +148,8 @@ class GuideFinder:
                     locations_list.append(position)
 
         find_matches(seq=sequence, strand='F')  # F means forward strand
+
+        sequence_rev_comp = str(Seq(sequence).reverse_complement())
         find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
 
         return guides_list, guides_context_list, strands_list, locations_list
@@ -165,7 +164,7 @@ class GuideFinder:
             * to_upper: (Default: True) convert the fasta sequence to upper case or not?
 
         ## Returns:
-            A list of tuples of 4 items list[tuple[str, str, int, int]]:
+            A list of tuples of 4 items: list[tuple[str, str, int, int]]:
             * 1. (str) Chromosome name.
             * 2. (str) Strand. 'F' indicates the forward strand as read in the fasta file,
                 'RC' indicates the reverse complement of the string in the same file.
@@ -173,18 +172,19 @@ class GuideFinder:
             * 4. (int) End position of `sequence` in `file_path` fasta.
         '''
 
-        sequence_rev_comp = str(Seq(sequence).reverse_complement())
         chrom_strand_start_end: list[tuple[str, str, int, int]] = list()
 
         def find_matches(seq: str, strand: str):
             for record in SeqIO.parse(open(file_path, 'r'), 'fasta'):
-                chromosome = record.id
+
                 dna = str(record.seq).upper() if to_upper else str(record.seq)
 
                 for match in re.finditer(seq, dna):
-                    chrom_strand_start_end.append((chromosome, strand, match.start(), match.end()))
+                    chrom_strand_start_end.append((record.id, strand, match.start(), match.end()))
 
         find_matches(seq=sequence, strand='F')  # F means forward strand
+        
+        sequence_rev_comp = str(Seq(sequence).reverse_complement())
         find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
 
         return chrom_strand_start_end
