@@ -68,7 +68,7 @@ class GuideContainerFactory:
                         species_name=species_name,
                         string_id=cds_record.id,
                         ref_species=ref_species,
-                        sequence=str(cds_record.seq),
+                        sequence=str(cds_record.seq).upper(),
                         guide_scorer=guide_scorer_obj,
                         orthologous_to_prot=ortho_prot_id,
                         orthologous_to_gene=ortho_gene_name,
@@ -92,3 +92,4 @@ class GuideContainerFactory:
                 raise ValueError
 
         return guide_container_list
+        
