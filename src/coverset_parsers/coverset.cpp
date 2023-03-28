@@ -315,52 +315,69 @@ namespace coversets
             boost::dynamic_bitset<> guide_seq_bits = i.first;
             boost::dynamic_bitset<> species_bitset = i.second.second;
 
-            // We want to keep only one guide per species where that guide hits
+            // Below, we want to keep only one guide per species where that guide hits
             //  only this species and none other.
             // If a species is already hit by a one-hitting-guide and we encounter
             //  another one, mark it for deletion from this->coversets and 
             //   skip adding it for hit_species.
+
+            // If a guide hits only 1 species...
             if (species_bitset.count() == 1)
             {
+                // and if this species already has a representative guide that hits it...
                 if ((species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end())) {
+                    
+                    // Mark the new guide for deletion and carry on.
                     marked_for_death.insert(guide_seq_bits);
                     continue;
                 }
+                // If this species still needs a representative guide...
                 else {
+                    // Create a bitset and set the species index bit to 1
                     size_t set_bit_index = species_bitset.find_first();
                     boost::dynamic_bitset<> species_onehot(species_bitset.size());
                     species_onehot.set(set_bit_index);
 
+                    // Indicate that this species is hit by this guide
                     hit_species[species_onehot].insert(guide_seq_bits);
-                    species_already_hit_by_unique_guide.insert(species_bitset);
 
-                    set_bit_index = species_bitset.find_next(set_bit_index);
+                    // Indicate that this species has a representative guide now and does not need another one later.
+                    species_already_hit_by_unique_guide.insert(species_bitset);
                 }
             }
             else
             {
+                // Find the first species hit by this guide and while there are species left to process...
                 size_t set_bit_index = species_bitset.find_first();
                 while (set_bit_index != boost::dynamic_bitset<>::npos)
                 {
+                    // Create a onehot bitvector for this species specifically.
+                    // For three species, this would be:
+                    //  001 for the first species, 010 for the second, 100, for the third.
                     boost::dynamic_bitset<> species_onehot(species_bitset.size());
                     species_onehot.set(set_bit_index);
 
+                    // Indicate that this species is hit by this guide.
+                    // For example, 001: 00110011... when species 1 is hit by this ATAT... guide
+                    // and on the next iteration, if ATAT hits species 2 as well:
+                    //  010: 00110011... when species 2 is hit by this ATAT... guide
                     hit_species[species_onehot].insert(guide_seq_bits);
 
+                    // Find the next species hit by this guide.
                     set_bit_index = species_bitset.find_next(set_bit_index);
                 }
             }
         }
 
-        // Remove redundant guides from further processing.
-        // We do not want to make variables for these.
+        // Space saving: Remove redundant guides from further processing.
+        // We do not want to make solver variables for these.
         for (auto i : marked_for_death)
         {
             this->coversets.erase(i);
         }
 
-        marked_for_death.clear();
-        species_already_hit_by_unique_guide.clear();
+        marked_for_death.clear();  // Mark memory as free
+        species_already_hit_by_unique_guide.clear();  // Mark memory as free
 
         // --------------------------------------------------
         // -------------- VARIABLE CREATION -----------------
@@ -405,7 +422,7 @@ namespace coversets
             }
         }
 
-        hit_species.clear();
+        hit_species.clear();  // Mark memory as free
 
         LOG(INFO) << "Number of constraints = " << solver->NumConstraints();
         // --------------------------------------------------
@@ -416,14 +433,15 @@ namespace coversets
         const operations_research::MPSolver::ResultStatus result_status = solver->Solve();
 
         // Check that the problem has an optimal solution.
+        std::cout << "Status: " << result_status << std::endl;
         if (result_status != operations_research::MPSolver::OPTIMAL)
         {
             LOG(FATAL) << "The problem does not have an optimal solution!";
         }
 
-        std::cout << "Status: " << result_status << std::endl;
-
         // Save the feasible variables.
+        // A feasible variable is any variable with a solution value greater than 0.
+        // It has a chance to be in the final solution.
         std::vector<operations_research::MPVariable *> feasible_solutions;
         for (auto i : map_seq_to_vars)
         {
@@ -448,6 +466,8 @@ namespace coversets
         if (len_solutions > 0) {
             return randomized_rounding(feasible_solutions);
         } else {
+            // Empty -- A problem with 0 feasible solutions (empty inputs or no guides in the fasta files)
+            //  still returns an OPTIMAL status by GLOP. Return an empty vector in this edge case.
             return std::vector<std::pair<std::string, std::string>>();
         }
     }
