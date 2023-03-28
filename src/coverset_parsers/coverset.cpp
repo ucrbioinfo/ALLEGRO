@@ -27,7 +27,6 @@ namespace coversets
         this->bits_required_to_store_seq = guide_length * 2;
 
         this->all_species_bitset = boost::dynamic_bitset<>(num_species);
-        this->all_species_bitset.set();
     }
 
     CoversetCPP::~CoversetCPP() {}
@@ -77,14 +76,19 @@ namespace coversets
             this->coversets[encoded].second.set(species_id);
         }
         else
-        {
+        {   
+            // If it is the first time we encounter this sequence
             boost::dynamic_bitset<> bitset(this->num_species);
             bitset.set(species_id);
 
-            std::pair<unsigned char, boost::dynamic_bitset<>> p(score, bitset);
-
-            this->coversets[encoded] = p;
+            this->coversets[encoded] = std::pair<unsigned char, boost::dynamic_bitset<>>(score, bitset);
         }
+
+        // Keep a record of which species should be hit. We compare against this later in randomized_rounding
+        //  to determine if a set of feasible solutions hits all the required species or not.
+        // We do this record keeping here instead of in the constructor because some species
+        //  may not contain any guides and should be excluded from consideration (so we don't set those bits).
+        this->all_species_bitset.set(species_id);
     }
 
     std::string CoversetCPP::decode_bitset(boost::dynamic_bitset<> &encoded)
@@ -217,6 +221,8 @@ namespace coversets
     std::vector<std::pair<std::string, std::string>> CoversetCPP::randomized_rounding(
         std::vector<operations_research::MPVariable *> feasible_solutions)
     {
+        // Algorithm source:
+        // https://web.archive.org/web/20230325165759/https://theory.stanford.edu/~trevisan/cs261/lecture08.pdf
         std::cout << "Using randomized rounding with " << this->num_trials << " trials.\n";
 
         std::unordered_set<std::string> winners;
@@ -232,19 +238,22 @@ namespace coversets
             // Species to cover
             boost::dynamic_bitset<> I_this_trial(this->num_species);
             std::unordered_set<std::string> winners_this_trial;
-            // std::size_t iterations_this_trial = 0;
+            std::size_t iterations_this_trial = 0;  // while-loop exit condition in case of bad luck
 
-            while (!(I_this_trial & this->all_species_bitset).all())
+            while (!(I_this_trial == this->all_species_bitset) && (iterations_this_trial != 10000))
             {
-                // TODO This needs an exit condition. The loop can be infinite as of now.
-                // iterations_this_trial++;
+                iterations_this_trial++;
+                
                 for (auto var_ptr : feasible_solutions)
                 {
                     operations_research::MPVariable *var = var_ptr;
 
                     if ((var->solution_value() == 1.0) || (var->solution_value() > dist(rng)))
                     {
+                        // Encoded binary DNA sequence
                         boost::dynamic_bitset<> bitset(var->name());
+
+                        // The species bit vector hit by this binary DNA sequence
                         boost::dynamic_bitset<> species_hit_by_this_guide = this->coversets[bitset].second;
 
                         I_this_trial |= species_hit_by_this_guide;
@@ -309,8 +318,8 @@ namespace coversets
             // We want to keep only one guide per species where that guide hits
             //  only this species and none other.
             // If a species is already hit by a one-hitting-guide and we encounter
-            //  another one, mark it for deletion
-            //   from this->coversets and skip adding it for hit_species.
+            //  another one, mark it for deletion from this->coversets and 
+            //   skip adding it for hit_species.
             if (species_bitset.count() == 1)
             {
                 if ((species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end())) {
