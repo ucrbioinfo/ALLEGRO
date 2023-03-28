@@ -103,6 +103,12 @@ cdef class CoversetsCython:
 
             if cas_variant == 'cas9':
                 guide_objects_list = species_object.get_cas9_guides()
+
+                if len(guide_objects_list) == 0:
+                    print('* WARNING: Species', row.species_name, 'contains no cas9 guides, or ' +
+                    'all of its cas9 guides have been marked as repetitive and thus removed in ' +
+                    'a preprocessing step. Set the include_repetitive option to False in config.yaml ' +
+                    'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
                 print('No such cas variant as', cas_variant, '. Modify this value in config.yaml. Exiting.\n')
                 raise NotImplementedError
