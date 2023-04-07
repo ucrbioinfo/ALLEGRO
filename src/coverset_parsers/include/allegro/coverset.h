@@ -2,6 +2,7 @@
 #define COVERSETCPP_H
 
 #include <string>
+#include <sstream>
 #include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
@@ -19,6 +20,7 @@ namespace coversets
         std::size_t guide_length;
         std::size_t bits_required_to_store_seq;
         boost::dynamic_bitset<> all_species_bitset;
+        std::ostringstream log_buffer;
 
         // guide --> bitvector of species it hits
         std::unordered_map<boost::dynamic_bitset<>, std::pair<unsigned char, boost::dynamic_bitset<>>> coversets;

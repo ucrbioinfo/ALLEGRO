@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'cython_200_test'
+experiment_name: 'test'
 mode: 'from_genome'  # 'from_genome', 'from_cds'
 # objective: 'min'  # default: 'max' uses beta -- 'min' does not use beta
 scorer: 'dummy'  # options: default: 'chopchop', 'dummy'
@@ -18,7 +18,7 @@ scorer: 'dummy'  # options: default: 'chopchop', 'dummy'
 # For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC
 #  since it contains 7 AC 2-mers.
 # Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT.
-include_repetitive: False
+include_repetitive: True
 
 # Integer value: Only used if the number of feasible guides is above the exhaustive_threshold.
 # How many times to run the randomized rounding algorithm?
@@ -39,8 +39,8 @@ pam: 'NGG'  # default for cas9: 'NGG'
             # Supports 'NGG' which looks for 'A/C/T/G' + 'GG' 
             # Any other PAM will be treated as a literal string.
 protospacer_length: 20  # Integer, default: 20
-context_toward_five_prime: 5  # Integer, default: 5
-context_toward_three_prime: 3  # Integer, default: 3
+context_toward_five_prime: 0  # Integer, default: 5
+context_toward_three_prime: 0  # Integer, default: 3
 # --------------------------------------------------------------------
 
 

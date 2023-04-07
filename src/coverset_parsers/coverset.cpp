@@ -1,4 +1,5 @@
 #include <vector>
+#include <fstream>
 #include <iostream>
 #include <boost/random.hpp>
 
@@ -13,6 +14,47 @@
 #define sC_SHIFT "01"
 #define sG_SHIFT "10"
 #define sT_SHIFT "11"
+
+std::string generate_log_filename()
+{
+    int count = 1;
+    std::string filename;
+
+    while (true)
+    {
+        // Generate a filename based on the current count
+        if (count == 1)
+        {
+            filename = "last_runs_log.txt";
+        }
+        else
+        {
+            filename = "last_runs_log_" + std::to_string(count) + ".txt";
+        }
+
+        // Check if the file exists
+        std::ifstream file(filename);
+        if (!file)
+        {
+            return filename;
+        }
+
+        count++;
+    }
+}
+
+void log_info(std::ostringstream& log_buffer)
+{
+    std::ofstream log_file(generate_log_filename());
+
+    if (!log_file.is_open())
+    {
+        std::cerr << "Unable to open log file!" << std::endl;
+    }
+
+    log_file << log_buffer.str();
+    log_file.close();
+}
 
 namespace coversets
 {
@@ -76,7 +118,7 @@ namespace coversets
             this->coversets[encoded].second.set(species_id);
         }
         else
-        {   
+        {
             // If it is the first time we encounter this sequence
             boost::dynamic_bitset<> bitset(this->num_species);
             bitset.set(species_id);
@@ -223,7 +265,8 @@ namespace coversets
     {
         // Algorithm source:
         // https://web.archive.org/web/20230325165759/https://theory.stanford.edu/~trevisan/cs261/lecture08.pdf
-        std::cout << "Using randomized rounding with " << this->num_trials << " trials.\n";
+        std::cout << "Using randomized rounding with " << this->num_trials << " trials." << std::endl;
+        this->log_buffer << "Using randomized rounding with " << this->num_trials << " trials." << std::endl;
 
         std::unordered_set<std::string> winners;
         std::size_t len_winners = this->num_species;
@@ -238,12 +281,12 @@ namespace coversets
             // Species to cover
             boost::dynamic_bitset<> I_this_trial(this->num_species);
             std::unordered_set<std::string> winners_this_trial;
-            std::size_t iterations_this_trial = 0;  // while-loop exit condition in case of bad luck
+            std::size_t iterations_this_trial = 0; // while-loop exit condition in case of bad luck
 
-            while (!(I_this_trial == this->all_species_bitset) && (iterations_this_trial != 10000))
+            while (!(I_this_trial == this->all_species_bitset) && (iterations_this_trial != 100000))
             {
                 iterations_this_trial++;
-                
+
                 for (auto var_ptr : feasible_solutions)
                 {
                     operations_research::MPVariable *var = var_ptr;
@@ -282,7 +325,8 @@ namespace coversets
 
         std::vector<std::pair<std::string, std::string>> decoded_winners;
 
-        std::cout << "Winners are:\n";
+        std::cout << "Winners are:" << std::endl;
+        this->log_buffer << "Winners are:" << std::endl;
         for (auto winner_str : winners)
         {
             boost::dynamic_bitset<> bitset(winner_str);
@@ -292,9 +336,10 @@ namespace coversets
             boost::to_string(species_hit_by_this_guide, buffer);
 
             std::string decoded_bitset = decode_bitset(winner_str);
-            decoded_winners.push_back(std::pair<std::string, std::string> (decoded_bitset, buffer));
+            decoded_winners.push_back(std::pair<std::string, std::string>(decoded_bitset, buffer));
 
-            std::cout <<  decoded_bitset << std::endl;
+            std::cout << decoded_bitset << std::endl;
+            this->log_buffer << decoded_bitset << std::endl;
         }
 
         return decoded_winners;
@@ -308,76 +353,70 @@ namespace coversets
         std::unordered_map<boost::dynamic_bitset<>, std::unordered_set<boost::dynamic_bitset<>>> hit_species;
 
         std::unordered_set<boost::dynamic_bitset<>> species_already_hit_by_unique_guide;
-        std::unordered_set<boost::dynamic_bitset<>> marked_for_death;
+        std::unordered_set<boost::dynamic_bitset<>> zerstoeren;
 
         for (auto i : this->coversets)
         {
             boost::dynamic_bitset<> guide_seq_bits = i.first;
+
+            unsigned char score = i.second.first;
             boost::dynamic_bitset<> species_bitset = i.second.second;
 
             // Below, we want to keep only one guide per species where that guide hits
             //  only this species and none other.
             // If a species is already hit by a one-hitting-guide and we encounter
-            //  another one, mark it for deletion from this->coversets and 
+            //  another one, mark it for deletion from this->coversets and
             //   skip adding it for hit_species.
-
-            // If a guide hits only 1 species...
-            if (species_bitset.count() == 1)
+            if (species_bitset.count() <= 3)
             {
                 // and if this species already has a representative guide that hits it...
-                if ((species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end())) {
-                    
+                if ((species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end()))
+                {
+                    // The new guide is not needed.
+                    // TODO May compare scores here and below and replace if better.
                     // Mark the new guide for deletion and carry on.
-                    marked_for_death.insert(guide_seq_bits);
+                    zerstoeren.insert(guide_seq_bits);
                     continue;
                 }
                 // If this species still needs a representative guide...
-                else {
-                    // Create a bitset and set the species index bit to 1
-                    size_t set_bit_index = species_bitset.find_first();
-                    boost::dynamic_bitset<> species_onehot(species_bitset.size());
-                    species_onehot.set(set_bit_index);
-
-                    // Indicate that this species is hit by this guide
-                    hit_species[species_onehot].insert(guide_seq_bits);
-
+                else
+                {
                     // Indicate that this species has a representative guide now and does not need another one later.
                     species_already_hit_by_unique_guide.insert(species_bitset);
                 }
             }
-            else
+            // Find the first species hit by this guide and while there are species left to process...
+            size_t set_bit_index = species_bitset.find_first();
+            while (set_bit_index != boost::dynamic_bitset<>::npos)
             {
-                // Find the first species hit by this guide and while there are species left to process...
-                size_t set_bit_index = species_bitset.find_first();
-                while (set_bit_index != boost::dynamic_bitset<>::npos)
-                {
-                    // Create a onehot bitvector for this species specifically.
-                    // For three species, this would be:
-                    //  001 for the first species, 010 for the second, 100, for the third.
-                    boost::dynamic_bitset<> species_onehot(species_bitset.size());
-                    species_onehot.set(set_bit_index);
+                // Create a onehot bitvector for this one species specifically.
+                // For three species, this would be:
+                //  first iteration: bit vector 001 for the first species,
+                //  second iteration: 010 for the second, and then third iteration 100 for the third.
+                boost::dynamic_bitset<> species_onehot(species_bitset.size());
+                species_onehot.set(set_bit_index);
 
-                    // Indicate that this species is hit by this guide.
-                    // For example, 001: 00110011... when species 1 is hit by this ATAT... guide
-                    // and on the next iteration, if ATAT hits species 2 as well:
-                    //  010: 00110011... when species 2 is hit by this ATAT... guide
-                    hit_species[species_onehot].insert(guide_seq_bits);
+                // Indicate that this species is hit by this guide.
+                // For example, 001: 00110011... when species 1 is hit by this ATAT... guide
+                // and on the next iteration, if ATAT hits species 2 as well:
+                //  010: 00110011...
+                hit_species[species_onehot].insert(guide_seq_bits);
 
-                    // Find the next species hit by this guide.
-                    set_bit_index = species_bitset.find_next(set_bit_index);
-                }
+                // Find the next species hit by this guide for the next iteration.
+                // Returns boost::dynamic_bitset<>::npos if no other bits are set.
+                set_bit_index = species_bitset.find_next(set_bit_index);
             }
         }
 
         // Space saving: Remove redundant guides from further processing.
         // We do not want to make solver variables for these.
-        for (auto i : marked_for_death)
+        for (auto i : zerstoeren)
         {
             this->coversets.erase(i);
         }
 
-        marked_for_death.clear();  // Mark memory as free
-        species_already_hit_by_unique_guide.clear();  // Mark memory as free
+        zerstoeren.clear();                          // Mark memory as free
+        species_already_hit_by_unique_guide.clear(); // Mark memory as free
 
         // --------------------------------------------------
         // -------------- VARIABLE CREATION -----------------
@@ -399,6 +438,7 @@ namespace coversets
         }
 
         LOG(INFO) << "Number of variables = " << solver->NumVariables();
+        this->log_buffer << "Number of variables = " << solver->NumVariables() << std::endl;
         // --------------------------------------------------
 
         // --------------------------------------------------
@@ -422,9 +462,10 @@ namespace coversets
             }
         }
 
-        hit_species.clear();  // Mark memory as free
+        hit_species.clear(); // Mark memory as free
 
         LOG(INFO) << "Number of constraints = " << solver->NumConstraints();
+        this->log_buffer << "Number of constraints = " << solver->NumConstraints() << std::endl;
         // --------------------------------------------------
 
         // Set the objective and solve.
@@ -434,9 +475,11 @@ namespace coversets
 
         // Check that the problem has an optimal solution.
         std::cout << "Status: " << result_status << std::endl;
+        this->log_buffer << "Status: " << result_status << std::endl;
         if (result_status != operations_research::MPSolver::OPTIMAL)
         {
             LOG(FATAL) << "The problem does not have an optimal solution!";
+            this->log_buffer << "The problem does not have an optimal solution!" << std::endl;
         }
 
         // Save the feasible variables.
@@ -451,6 +494,8 @@ namespace coversets
             if (var->solution_value() > 0.0)
             {
                 std::cout << decode_bitset(seq_bitset) << " with solution value " << var->solution_value() << std::endl;
+                this->log_buffer << decode_bitset(seq_bitset) << " with solution value " << var->solution_value() << std::endl;
+
                 feasible_solutions.push_back(var);
             }
         }
@@ -459,15 +504,21 @@ namespace coversets
 
         std::size_t len_solutions = feasible_solutions.size();
         std::cout << "Number of feasible candidate guides: " << len_solutions << std::endl;
-
+        this->log_buffer << "Number of feasible candidate guides: " << len_solutions << std::endl;
         // --------------------------------------------------
         // -------------- RANDOMIZED ROUND ------------------
         // --------------------------------------------------
-        if (len_solutions > 0) {
+        log_info(this->log_buffer);
+
+        if (len_solutions > 0)
+        {
             return randomized_rounding(feasible_solutions);
-        } else {
+        }
+        else
+        {
             // Empty -- A problem with 0 feasible solutions (empty inputs or no guides in the fasta files)
             //  still returns an OPTIMAL status by GLOP. Return an empty vector in this edge case.
+            // Why would you input no guides? :/
             return std::vector<std::pair<std::string, std::string>>();
         }
     }
