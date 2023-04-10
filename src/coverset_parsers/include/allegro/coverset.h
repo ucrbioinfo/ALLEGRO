@@ -22,12 +22,12 @@ namespace coversets
         boost::dynamic_bitset<> all_species_bitset;
         std::ostringstream log_buffer;
 
-        // guide --> bitvector of species it hits
+        // guide --> (score, bitvector of species it hits)
         std::unordered_map<boost::dynamic_bitset<>, std::pair<unsigned char, boost::dynamic_bitset<>>> coversets;
 
         std::string get_str();
-        std::string decode_bitset(const std::string &encoded_str);
-        std::string decode_bitset(boost::dynamic_bitset<> &encoded);
+        std::string decode_bitset(const std::string encoded_str);
+        std::string decode_bitset(boost::dynamic_bitset<> encoded);
 
         std::vector<std::pair<std::string, std::string>> randomized_rounding(
             std::vector<operations_research::MPVariable *> feasible_solutions);
@@ -40,7 +40,7 @@ namespace coversets
             
         ~CoversetCPP();
 
-        std::vector<std::pair<std::string, std::string>> ortools_solver(); // to be removed
+        std::vector<std::pair<std::string, std::string>> ortools_solver();
         void encode_and_save_dna(std::string &seq, unsigned char score, unsigned short species_id);
     };
 }

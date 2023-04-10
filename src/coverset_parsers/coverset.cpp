@@ -133,7 +133,7 @@ namespace coversets
         this->all_species_bitset.set(species_id);
     }
 
-    std::string CoversetCPP::decode_bitset(boost::dynamic_bitset<> &encoded)
+    std::string CoversetCPP::decode_bitset(boost::dynamic_bitset<> encoded)
     {
         std::string decoded = "";
         std::string buffer;
@@ -174,7 +174,7 @@ namespace coversets
         return decoded;
     }
 
-    std::string CoversetCPP::decode_bitset(const std::string &encoded_str)
+    std::string CoversetCPP::decode_bitset(const std::string encoded_str)
     {
         boost::dynamic_bitset<> encoded(encoded_str);
 
@@ -272,7 +272,8 @@ namespace coversets
         std::size_t len_winners = this->num_species;
         std::size_t trial_with_smallest_size = 0;
 
-        // On each invocation, dist(rng) returns a random floating-point value uniformly distributed in the range [min..max).
+        // On each invocation, dist(rng) returns a random floating-point value
+        //  uniformly distributed in the range [min, max).
         boost::random::mt19937 rng(std::time(nullptr));
         boost::random::uniform_real_distribution<double> dist(0, 1);
 
@@ -283,7 +284,7 @@ namespace coversets
             std::unordered_set<std::string> winners_this_trial;
             std::size_t iterations_this_trial = 0; // while-loop exit condition in case of bad luck
 
-            while (!(I_this_trial == this->all_species_bitset) && (iterations_this_trial != 100000))
+            while ((I_this_trial != this->all_species_bitset) && (iterations_this_trial != 100000))
             {
                 iterations_this_trial++;
 
@@ -464,8 +465,8 @@ namespace coversets
 
         hit_species.clear(); // Mark memory as free
 
-        LOG(INFO) << "Number of constraints = " << solver->NumConstraints();
-        this->log_buffer << "Number of constraints = " << solver->NumConstraints() << std::endl;
+        LOG(INFO) << "Number of constraints (species) = " << solver->NumConstraints();
+        this->log_buffer << "Number of constraints (species) = " << solver->NumConstraints() << std::endl;
         // --------------------------------------------------
 
         // Set the objective and solve.
