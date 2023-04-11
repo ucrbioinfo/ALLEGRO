@@ -1,6 +1,6 @@
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
-from utils.guide_finder import GuideFinder
+from utils.guide_finder import GuideFinder, GuideFinderDebug
 
 
 class DummyScorer(Scorer):
@@ -18,7 +18,7 @@ class DummyScorer(Scorer):
     include_repetitive: bool
     context_toward_five_prime: int
     context_toward_three_prime: int
-    guide_finder: GuideFinder
+    guide_finder: GuideFinderDebug
 
     def __init__(self, settings: dict) -> None:
         self.pam = settings['pam']
@@ -26,7 +26,7 @@ class DummyScorer(Scorer):
         self.protospacer_length = settings['protospacer_length']
         self.context_toward_five_prime = settings['context_toward_five_prime']
         self.context_toward_three_prime = settings['context_toward_three_prime']
-        self.guide_finder = GuideFinder()
+        self.guide_finder = GuideFinderDebug()
         
 
     def score_sequence(
@@ -46,7 +46,9 @@ class DummyScorer(Scorer):
             protospacer_length=self.protospacer_length,
             context_toward_five_prime=self.context_toward_five_prime,
             context_toward_three_prime=self.context_toward_three_prime,
-            include_repetitive=self.include_repetitive
+            include_repetitive=self.include_repetitive,
+            species=guide_container.species_name,
+            sequence_id=guide_container.string_id
         )
         
         scores = [1] * len(guides_list)
