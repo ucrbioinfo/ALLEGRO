@@ -126,6 +126,9 @@ cdef class CoversetsCython:
         del species_df
         gc.collect()
 
+        # TODO: REMOVE. DEBUGGING
+        scorer.guide_finder.write_removed_guides_to_dataframe()
+
         # Interface with C++ functions.
         winners_bytes_pairs = self.coverset.ortools_solver()
 
