@@ -5,11 +5,6 @@
 
 #include "allegro/coverset.h"
 
-#define bA_SHIFT 0b00
-#define bC_SHIFT 0b01
-#define bG_SHIFT 0b10
-#define bT_SHIFT 0b11
-
 #define sA_SHIFT "00"
 #define sC_SHIFT "01"
 #define sG_SHIFT "10"
@@ -43,7 +38,7 @@ std::string generate_log_filename()
     }
 }
 
-void log_info(std::ostringstream& log_buffer)
+void log_info(std::ostringstream &log_buffer)
 {
     std::ofstream log_file(generate_log_filename());
 
@@ -78,44 +73,36 @@ namespace coversets
         unsigned char score,
         unsigned short species_id)
     {
-        // Assuming we are using alphabet of 4 A/C/T/G, each is represented by 2 bits.
-        boost::dynamic_bitset<> encoded(this->bits_required_to_store_seq);
+        std::string encoded_str = "";
 
-        boost::dynamic_bitset<> A_shift(this->bits_required_to_store_seq, bA_SHIFT);
-        boost::dynamic_bitset<> C_shift(this->bits_required_to_store_seq, bC_SHIFT);
-        boost::dynamic_bitset<> G_shift(this->bits_required_to_store_seq, bG_SHIFT);
-        boost::dynamic_bitset<> T_shift(this->bits_required_to_store_seq, bT_SHIFT);
-
-        for (size_t i = 0; i < guide_length; i++)
+        for (auto base : seq)
         {
-            // Shift the bitset to the left by 2 bits
-            encoded <<= 2;
-
-            // Set the last two bits based on the current DNA character
-            switch (seq[i])
+            switch (base)
             {
             case 'A':
-                encoded |= A_shift;
+                encoded_str += sA_SHIFT;
                 break;
             case 'C':
-                encoded |= C_shift;
+                encoded_str += sC_SHIFT;
                 break;
             case 'G':
-                encoded |= G_shift;
+                encoded_str += sG_SHIFT;
                 break;
             case 'T':
-                encoded |= T_shift;
+                encoded_str += sT_SHIFT;
                 break;
             default:
-                std::cerr << "Invalid DNA character: " << seq[i] << '\n';
+                std::cerr << "Invalid DNA character: " << base << '\n';
             }
         }
 
+        boost::dynamic_bitset<> encoded_bitset = boost::dynamic_bitset<>(encoded_str);
+
         // If seq already exists
-        if (coversets.find(encoded) != coversets.end())
+        if (coversets.find(encoded_bitset) != coversets.end())
         {
             // Set the appropriate bit to indicate which species is hit by this guide.
-            this->coversets[encoded].second.set(species_id);
+            this->coversets[encoded_bitset].second.set(species_id);
         }
         else
         {
@@ -123,7 +110,7 @@ namespace coversets
             boost::dynamic_bitset<> bitset(this->num_species);
             bitset.set(species_id);
 
-            this->coversets[encoded] = std::pair<unsigned char, boost::dynamic_bitset<>>(score, bitset);
+            this->coversets[encoded_bitset] = std::pair<unsigned char, boost::dynamic_bitset<>>(score, bitset);
         }
 
         // Keep a record of which species should be hit. We compare against this later in randomized_rounding
@@ -137,83 +124,62 @@ namespace coversets
     {
         std::string decoded = "";
         std::string buffer;
-        std::string last_two_chars;
+        std::string next_two_bases;
 
-        for (std::size_t i = 0; i < this->guide_length; i++)
+        boost::to_string(encoded, buffer);
+
+        for (std::size_t i = 0; i < buffer.length(); i += 2)
         {
-            // Take the 2 least sigbits
-            boost::dynamic_bitset<> LSBs(encoded.size(), 0b11);
-            LSBs &= encoded;
+            next_two_bases = buffer.substr(i, 2);
 
-            boost::to_string(LSBs, buffer); // Insert into buffer as a string
-
-            last_two_chars = buffer.substr(buffer.length() - 2);
-
-            // Check what the last two bits were
-            if (last_two_chars == sA_SHIFT)
+            if (next_two_bases == sA_SHIFT)
             {
-                decoded.push_back('A');
+                decoded += "A";
             }
-            else if (last_two_chars == sC_SHIFT)
+            else if (next_two_bases == sC_SHIFT)
             {
-                decoded.push_back('C');
+                decoded += "C";
             }
-            else if (last_two_chars == sG_SHIFT)
+            else if (next_two_bases == sG_SHIFT)
             {
-                decoded.push_back('G');
+                decoded += "G";
             }
-            else if (last_two_chars == sT_SHIFT)
+            else if (next_two_bases == sT_SHIFT)
             {
-                decoded.push_back('T');
+                decoded += "T";
             }
-
-            encoded >>= 2;
         }
 
-        std::reverse(decoded.begin(), decoded.end());
         return decoded;
     }
 
-    std::string CoversetCPP::decode_bitset(const std::string encoded_str)
+    std::string CoversetCPP::decode_bitset(const std::string &encoded_str)
     {
-        boost::dynamic_bitset<> encoded(encoded_str);
-
         std::string decoded = "";
-        std::string buffer;
-        std::string last_two_chars;
+        std::string next_two_bases;
 
-        for (std::size_t i = 0; i < this->guide_length; i++)
+        for (std::size_t i = 0; i < encoded_str.length(); i += 2)
         {
-            // Take the 2 least sigbits
-            boost::dynamic_bitset<> LSBs(encoded.size(), 0b11);
-            LSBs &= encoded;
+            next_two_bases = encoded_str.substr(i, 2);
 
-            boost::to_string(LSBs, buffer); // Insert into buffer as a string
-
-            last_two_chars = buffer.substr(buffer.length() - 2);
-
-            // Check what the last two bits were
-            if (last_two_chars == sA_SHIFT)
+            if (next_two_bases == sA_SHIFT)
             {
-                decoded.push_back('A');
+                decoded += "A";
             }
-            else if (last_two_chars == sC_SHIFT)
+            else if (next_two_bases == sC_SHIFT)
             {
-                decoded.push_back('C');
+                decoded += "C";
             }
-            else if (last_two_chars == sG_SHIFT)
+            else if (next_two_bases == sG_SHIFT)
             {
-                decoded.push_back('G');
+                decoded += "G";
             }
-            else if (last_two_chars == sT_SHIFT)
+            else if (next_two_bases == sT_SHIFT)
             {
-                decoded.push_back('T');
+                decoded += "T";
             }
-
-            encoded >>= 2;
         }
 
-        std::reverse(decoded.begin(), decoded.end());
         return decoded;
     }
 
@@ -348,20 +314,17 @@ namespace coversets
 
     std::vector<std::pair<std::string, std::string>> CoversetCPP::ortools_solver()
     {
+        std::unordered_set<boost::dynamic_bitset<>> species_already_hit_by_unique_guide;
+        std::unordered_map<boost::dynamic_bitset<>, std::unordered_set<boost::dynamic_bitset<>>> hit_species;
         // Create the linear solver with the GLOP backend.
         std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
 
-        std::unordered_map<boost::dynamic_bitset<>, std::unordered_set<boost::dynamic_bitset<>>> hit_species;
-
-        std::unordered_set<boost::dynamic_bitset<>> species_already_hit_by_unique_guide;
-        std::unordered_set<boost::dynamic_bitset<>> zerstoeren;
-
-        for (auto i : this->coversets)
+        auto it = this->coversets.begin();
+        while (it != this->coversets.end())
         {
-            boost::dynamic_bitset<> guide_seq_bits = i.first;
-
-            unsigned char score = i.second.first;
-            boost::dynamic_bitset<> species_bitset = i.second.second;
+            unsigned char score = it->second.first;
+            boost::dynamic_bitset<> guide_seq_bits = it->first;
+            boost::dynamic_bitset<> species_bitset = it->second.second;
 
             // Below, we want to keep only one guide per species where that guide hits
             //  only this species and none other.
@@ -376,7 +339,7 @@ namespace coversets
                     // The new guide is not needed.
                     // TODO May compare scores here and below and replace if better.
                     // Mark the new guide for deletion and carry on.
-                    zerstoeren.insert(guide_seq_bits);
+                    it = this->coversets.erase(it);
                     continue;
                 }
                 // If this species still needs a representative guide...
@@ -386,6 +349,7 @@ namespace coversets
                     species_already_hit_by_unique_guide.insert(species_bitset);
                 }
             }
+            
             // Find the first species hit by this guide and while there are species left to process...
             size_t set_bit_index = species_bitset.find_first();
             while (set_bit_index != boost::dynamic_bitset<>::npos)
@@ -407,16 +371,10 @@ namespace coversets
                 // Returns boost::dynamic_bitset<>::npos if no other bits are set.
                 set_bit_index = species_bitset.find_next(set_bit_index);
             }
+
+            it++;
         }
 
-        // Space saving: Remove redundant guides from further processing.
-        // We do not want to make solver variables for these.
-        for (auto i : zerstoeren)
-        {
-            this->coversets.erase(i);
-        }
-
-        zerstoeren.clear();                          // Mark memory as free
         species_already_hit_by_unique_guide.clear(); // Mark memory as free
 
         // --------------------------------------------------
