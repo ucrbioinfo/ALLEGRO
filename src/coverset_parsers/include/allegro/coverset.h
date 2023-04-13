@@ -26,7 +26,7 @@ namespace coversets
         std::unordered_map<boost::dynamic_bitset<>, std::pair<unsigned char, boost::dynamic_bitset<>>> coversets;
 
         std::string get_str();
-        std::string decode_bitset(const std::string encoded_str);
+        std::string decode_bitset(const std::string &encoded_str);
         std::string decode_bitset(boost::dynamic_bitset<> encoded);
 
         std::vector<std::pair<std::string, std::string>> randomized_rounding(
@@ -35,9 +35,9 @@ namespace coversets
     public:
         CoversetCPP(
             std::size_t num_species,
-            std::size_t guide_length, 
+            std::size_t guide_length,
             std::size_t num_trials);
-            
+
         ~CoversetCPP();
 
         std::vector<std::pair<std::string, std::string>> ortools_solver();
