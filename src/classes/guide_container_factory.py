@@ -8,8 +8,6 @@ from classes.guide_container import GuideContainer
 
 
 class GuideContainerFactory:
-    __slots__ = []
-
     def __init__(self) -> None:
         pass
 
