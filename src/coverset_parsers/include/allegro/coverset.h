@@ -18,6 +18,7 @@ namespace coversets
         std::size_t num_trials;
         std::size_t num_species;
         std::size_t guide_length;
+        std::string output_directory;
         std::size_t bits_required_to_store_seq;
         boost::dynamic_bitset<> all_species_bitset;
         std::ostringstream log_buffer;
@@ -36,11 +37,12 @@ namespace coversets
         CoversetCPP(
             std::size_t num_species,
             std::size_t guide_length,
-            std::size_t num_trials);
+            std::size_t num_trials,
+            std::string output_directory);
 
         ~CoversetCPP();
 
-        std::vector<std::pair<std::string, std::string>> ortools_solver();
+        std::vector<std::pair<std::string, std::string>> ortools_solver(std::size_t monophonic_threshold);
         void encode_and_save_dna(std::string &seq, unsigned char score, unsigned short species_id);
     };
 }
