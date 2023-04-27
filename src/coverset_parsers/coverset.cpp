@@ -1,6 +1,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 #include <boost/random.hpp>
 
 #include "allegro/coverset.h"
@@ -10,37 +11,13 @@
 #define sG_SHIFT "10"
 #define sT_SHIFT "11"
 
-std::string generate_log_filename()
+
+void log_info(std::ostringstream &log_buffer, std::string output_directory)
 {
-    int count = 1;
-    std::string filename;
+    std::filesystem::path dirpath(output_directory);
+    std::filesystem::path filepath = dirpath / "solver_log.txt";
 
-    while (true)
-    {
-        // Generate a filename based on the current count
-        if (count == 1)
-        {
-            filename = "last_runs_log.txt";
-        }
-        else
-        {
-            filename = "last_runs_log_" + std::to_string(count) + ".txt";
-        }
-
-        // Check if the file exists
-        std::ifstream file(filename);
-        if (!file)
-        {
-            return filename;
-        }
-
-        count++;
-    }
-}
-
-void log_info(std::ostringstream &log_buffer)
-{
-    std::ofstream log_file(generate_log_filename());
+    std::ofstream log_file(filepath);
 
     if (!log_file.is_open())
     {
@@ -56,11 +33,13 @@ namespace coversets
     CoversetCPP::CoversetCPP(
         std::size_t num_species,
         std::size_t guide_length,
-        std::size_t num_trials)
+        std::size_t num_trials,
+        std::string output_directory)
     {
         this->num_species = num_species;
         this->guide_length = guide_length;
         this->num_trials = num_trials;
+        this->output_directory = output_directory;
         this->bits_required_to_store_seq = guide_length * 2;
 
         this->all_species_bitset = boost::dynamic_bitset<>(num_species);
@@ -312,12 +291,14 @@ namespace coversets
         return decoded_winners;
     }
 
-    std::vector<std::pair<std::string, std::string>> CoversetCPP::ortools_solver()
+    std::vector<std::pair<std::string, std::string>> CoversetCPP::ortools_solver(std::size_t monophonic_threshold)
     {
         std::unordered_set<boost::dynamic_bitset<>> species_already_hit_by_unique_guide;
         std::unordered_map<boost::dynamic_bitset<>, std::unordered_set<boost::dynamic_bitset<>>> hit_species;
         // Create the linear solver with the GLOP backend.
         std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
+
+        this->log_buffer << "Monophonic threshold: " << monophonic_threshold << std::endl;
 
         auto it = this->coversets.begin();
         while (it != this->coversets.end())
@@ -331,7 +312,7 @@ namespace coversets
             // If a species is already hit by a one-hitting-guide and we encounter
             //  another one, mark it for deletion from this->coversets and
             //   skip adding it for hit_species.
-            if (species_bitset.count() <= 3)
+            if (species_bitset.count() <= monophonic_threshold)
             {
                 // and if this species already has a representative guide that hits it...
                 if ((species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end()))
@@ -349,7 +330,7 @@ namespace coversets
                     species_already_hit_by_unique_guide.insert(species_bitset);
                 }
             }
-            
+
             // Find the first species hit by this guide and while there are species left to process...
             size_t set_bit_index = species_bitset.find_first();
             while (set_bit_index != boost::dynamic_bitset<>::npos)
@@ -467,18 +448,21 @@ namespace coversets
         // --------------------------------------------------
         // -------------- RANDOMIZED ROUND ------------------
         // --------------------------------------------------
-        log_info(this->log_buffer);
+        std::vector<std::pair<std::string, std::string>> solution_set;
 
         if (len_solutions > 0)
         {
-            return randomized_rounding(feasible_solutions);
+            solution_set = randomized_rounding(feasible_solutions);
         }
         else
         {
             // Empty -- A problem with 0 feasible solutions (empty inputs or no guides in the fasta files)
             //  still returns an OPTIMAL status by GLOP. Return an empty vector in this edge case.
             // Why would you input no guides? :/
-            return std::vector<std::pair<std::string, std::string>>();
+            solution_set = std::vector<std::pair<std::string, std::string>>();
         }
+
+        log_info(this->log_buffer, this->output_directory);
+        return solution_set;
     }
 }
