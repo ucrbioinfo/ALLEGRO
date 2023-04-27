@@ -42,16 +42,16 @@ class GuideFinder:
                 the 5-prime after the protospacer.
             * context_toward_three_prime: The number of nucleotides to extract toward
                 the 3-prime after (and excluding) the PAM.
-            * include_repetitive: Discards a guide if the protospace contains 2 or 
-                fewer unique bases.
+            * include_repetitive: Discards a guide if the protospace contains 2-mers
+                repeated 5 or more times
 
         ## Returns:
-            A tuple of three lists:
+            A tuple of four lists:
             * The first list[str] is a list of the guides found in `sequence`.
             * The second list[str] is a list of the guides with their context around them.
             * The third list[str] is a list of 'F's and 'RC's indicating on
                 which strand, forward or reverse complement, each respective guide resides.
-            * The fourth list[int] shows the location of the PAM of each guides in `sequence`.
+            * The fourth list[int] shows the location of the PAM of each guide in `sequence`.
 
         ## Example
             Input: find_guides_and_indicate_strand(
@@ -142,7 +142,12 @@ class GuideFinder:
         return guides_list, guides_context_list, strands_list, locations_list
 
 
-    def locate_guides_in_sequence(self, sequence, file_path, to_upper: bool = True):
+    def locate_guides_in_sequence(
+        self,
+        sequence: str,
+        file_path: str,
+        to_upper: bool=True
+        ) -> list[tuple[str, str, int, int, str]]:
         '''
         ## Args:
             * sequence: A guide RNA nucleotide sequence.
@@ -151,23 +156,35 @@ class GuideFinder:
             * to_upper: (Default: True) convert the fasta sequence to upper case or not?
 
         ## Returns:
-            A list of tuples of 4 items: list[tuple[str, str, int, int]]:
+            A list of tuples of 5 items: list[tuple[str, str, int, int, str]]:
             * 1. (str) Chromosome name.
             * 2. (str) Strand. 'F' indicates the forward strand as read in the fasta file,
                 'RC' indicates the reverse complement of the string in the same file.
             * 3. (int) Start position of `sequence` in `file_path` fasta.
             * 4. (int) End position of `sequence` in `file_path` fasta.
+            * 5. (str) Misc info about the guide and its location.
         '''
 
-        chrom_strand_start_end: list[tuple[str, str, int, int]] = list()
+        chrom_strand_start_end: list[tuple[str, str, int, int, str]] = list()
 
         def find_matches(seq: str, strand: str):
             for record in SeqIO.parse(open(file_path, 'r'), 'fasta'):
 
                 dna = str(record.seq).upper() if to_upper else str(record.seq)
 
+                misc_list: list[str] = list()
+                match = re.search(r'\[gene=(.*?)\]', record.description)
+                if match:
+                    misc_list.append('Gene: ' + match.group(1))
+
+                match = re.search(r'\[protein_id=(.*?)\]', record.description)
+                if match:
+                    misc_list.append('Protein: ' + match.group(1))
+
+                misc = ', '.join(misc_list)
+
                 for match in re.finditer(seq, dna):
-                    chrom_strand_start_end.append((record.id, strand, match.start(), match.end()))
+                    chrom_strand_start_end.append((record.id, strand, match.start(), match.end(), misc))
 
         find_matches(seq=sequence, strand='F')  # F means forward strand
         
