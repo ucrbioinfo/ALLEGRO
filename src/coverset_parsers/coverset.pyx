@@ -26,7 +26,7 @@ from classes.guide_container_factory import GuideContainerFactory
 # Declare the class with cdef
 cdef extern from "allegro/coverset.h" namespace "coversets":
     cdef cppclass CoversetCPP:
-        CoversetCPP(size_t num_species, size_t guide_length, size_t num_trials) except +
+        CoversetCPP(size_t num_species, size_t guide_length, size_t num_trials, string output_directory) except +
         
         # Google OR-Tools solver code
         # Returns a python-iterable list of tuples. tuple[0] is a plain-text sequence
@@ -34,7 +34,7 @@ cdef extern from "allegro/coverset.h" namespace "coversets":
         # that shows which species this sequence hits, e.g., '1110'.
         # The width of the bitset is equal to the number of input species found in
         # species_df .csv normally found in data/input/species.csv
-        vector[pair[string, string]] ortools_solver()
+        vector[pair[string, string]] ortools_solver(size_t monophonic_threshold)
 
         # Encodes each seq into a boost::dynamic_bitset and saves it, plus the species 
         # this seq hits.
@@ -52,7 +52,9 @@ cdef class CoversetsCython:
         cas_variant: str,
         guide_length: int,
         guide_source: str,
+        monophonic_threshold: int,
         scorer_settings: dict,
+        output_directory: str,
         input_cds_directory: str,
         input_genome_directory: str,
         input_species_csv_file_path: str,
@@ -67,7 +69,7 @@ cdef class CoversetsCython:
 
         self.num_species = species_df.shape[0]
 
-        self.coverset = new CoversetCPP(self.num_species, guide_length, num_trials)
+        self.coverset = new CoversetCPP(self.num_species, guide_length, num_trials, output_directory.encode('utf-8'))
 
         # To translate indices back to legible names later.
         self.idx_to_species: dict[int, str] = dict()
@@ -130,7 +132,7 @@ cdef class CoversetsCython:
         # scorer.guide_finder.write_removed_guides_to_dataframe()
 
         # Interface with C++ functions.
-        winners_bytes_pairs = self.coverset.ortools_solver()
+        winners_bytes_pairs = self.coverset.ortools_solver(monophonic_threshold)
 
         self.solution: list[tuple[str, list[str]]] = list()
         for seq, binary_hits in winners_bytes_pairs:
