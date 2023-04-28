@@ -444,6 +444,7 @@ def main() -> int:
             raise ValueError
 
     coversets_obj = coverset(
+        beta=args.beta,
         num_trials=args.num_trials,
         cas_variant=args.cas,
         guide_source=args.mode,
