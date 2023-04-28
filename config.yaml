@@ -1,26 +1,32 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'test_revert'
-mode: 'from_genome'  # 'from_genome', 'from_orthogroups'
-objective: 'min'  # default: 'max' uses beta -- 'min' does not use beta
+experiment_name: 'test'
+mode: 'from_genome'  # 'from_genome', 'from_cds'
+# objective: 'min'  # default: 'max' uses beta -- 'min' does not use beta
 scorer: 'dummy'  # options: default: 'chopchop', 'dummy'
                  # dummy assigns a score of 1.0 to all guides
-solver_engine: 'GLOP'
-beta: 0  # Integer value: Used with objective: 'max'
+# solver_engine: 'GLOP'
+# beta: 0  # Integer value: Used with objective: 'max'
          # The final size of the guides set must be <= than this. Think of it as your budget.
 
 # Integer value: Search all combinatorial possibilities unless there are more
 # feasible solutions than this (then use randomized rounding)
-exhaustive_threshold: 0
+# exhaustive_threshold: 5
+
+# If False, discards guides with 5 or more repeated 2-mers.
+# For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC
+#  since it contains 7 AC 2-mers.
+# Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT.
+include_repetitive: True
 
 # Integer value: Only used if the number of feasible guides is above the exhaustive_threshold.
 # How many times to run the randomized rounding algorithm?
-num_trials: 1
+num_trials: 10000
 
-graph: False
-output_csv: True
-save_temp_data_to: 'ram'  # options: 'ram', 'database'.
+# graph: False
+# output_csv: True
+# save_temp_data_to: 'ram'  # options: 'ram', 'database'.
                            # Use database if running out of ram. Database is slower.
 # --------------------------------------------------------------------
 
@@ -33,8 +39,8 @@ pam: 'NGG'  # default for cas9: 'NGG'
             # Supports 'NGG' which looks for 'A/C/T/G' + 'GG' 
             # Any other PAM will be treated as a literal string.
 protospacer_length: 20  # Integer, default: 20
-context_toward_five_prime: 5  # Integer, default: 5
-context_toward_three_prime: 3  # Integer, default: 3
+context_toward_five_prime: 0  # Integer, default: 5
+context_toward_three_prime: 0  # Integer, default: 3
 # --------------------------------------------------------------------
 
 
@@ -45,11 +51,10 @@ input_species_path: 'data/input/three.csv'
 input_genomes_directory: 'data/input/genomes/'
 output_directory: 'data/339_output_genomes_ns/'
 
-# Required if mode is set to 'from_orthogroups' -- ignored otherwise
-input_cds_directory: 'data/input/cds/orthogroups/'  # Files inside must end with _cds.fna or _cds.faa or _cds.fasta
-orthogroups_path: 'data/input/orthogroups/Orthogroups.tsv'
+# Required if mode is set to 'from_cds' -- ignored otherwise -- default: input_cds_directory: 'data/input/cds/orthogroups/''
+input_cds_directory: 'data/input/cds/'  # Files inside must end with _cds.fna or _cds.faa or _cds.fasta
 
 # Required if scorer is set to 'chopchop' -- ignored otherwise
-chopchop_scoring_method: 'DOENCH_2016'
-absolute_path_to_chopchop: '/home/amohs002/projects/research/chopchop/'  # directory only
-absolute_path_to_genomes_directory: '/home/amohs002/projects/research/ALLEGRO/data/input/genomes/'
+# chopchop_scoring_method: 'DOENCH_2016'
+# absolute_path_to_chopchop: '/home/amohs002/projects/research/chopchop/'  # directory only
+# absolute_path_to_genomes_directory: '/home/amohs002/projects/research/ALLEGRO/data/input/genomes/'

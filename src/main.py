@@ -6,11 +6,8 @@ import pandas
 import argparse
 import matplotlib.pyplot
 
-from solvers.solver import Solver
-# from coverset_parsers.coversets_base import Coversets
-# from coverset_parsers.coversets_factory import CoversetsFactory
-from coverset_parsers.coversets_ram import CoversetsRAM
-from utils.guide_encoder import DNAEncoderDecoder
+from utils.guide_finder import GuideFinder
+from coverset_parsers.coverset import CoversetsCython as coverset # type: ignore
 
 matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
@@ -46,12 +43,12 @@ def parse_arguments() -> argparse.Namespace:
         help='Name of the experiment. Output file(s) will be labeled with this.'
     )
 
-    parser.add_argument(
-        '-m',
-        '--mode',
-        type=str,
-        help="'from_genome' or 'from_orthogroups'",
-    )
+    # parser.add_argument(
+    #     '-m',
+    #     '--mode',
+    #     type=str,
+    #     help="'from_genome' or 'from_orthogroups'",
+    # )
 
     parser.add_argument(
         '--objective',
@@ -119,10 +116,10 @@ def parse_arguments() -> argparse.Namespace:
         help="Files in this directory must end with _cds.fna or _cds.faa or _cds.fasta",
     )
 
-    parser.add_argument(
-        '--orthogroups_path',
-        type=str,
-    )
+    # parser.add_argument(
+    #     '--orthogroups_path',
+    #     type=str,
+    # )
 
     parser.add_argument(
         '--chopchop_scoring_method',
@@ -158,11 +155,59 @@ def parse_arguments() -> argparse.Namespace:
         help=("Only used if the number of feasible guides is above the exhaustive_threshold. " +
         "How many times to run the randomized rounding algorithm?"),
     )
+
+    parser.add_argument(
+        '--mp_threshold',
+        type=int,
+        help=("A higher number increases running time while decreasing memory consumption." +
+        " Pre-select guides that hit only up to this number of species to act as representatives for these species."),
+    )
     
     parser.set_defaults(**config_arg_dict)
     args = parser.parse_args(remaining_args)
 
     return args
+
+
+def validate_arguments(args: argparse.Namespace) -> bool:
+    if args.mp_threshold <= 0:
+        print('mp_threshold is disabled. Saving all guides to memory.')
+
+    if args.include_repetitive == True:
+        print('include_repetitive is set to True.')
+
+    if args.num_trials <= 0:
+        print('num_trials is disabled. Randomized rounding is disabled.')
+
+    return True
+
+
+def log_args(args: argparse.Namespace) -> None:
+    output_txt_path = os.path.join(args.output_directory, args.experiment_name + '_config_used.txt')
+
+    with open(output_txt_path, 'w') as f:
+        f.write('Config used for experiment ' + args.experiment_name + '\n')
+        for key, value in vars(args).items():
+            f.writelines(key + ': ' + str(value) + '\n')
+
+
+def create_output_directory(output_directory: str, experiment_name: str) -> str:
+    dir_name = os.path.join(output_directory, experiment_name)
+
+    # Check if the directory already exists
+    if os.path.exists(dir_name):
+        # If it exists, append a number to the directory name
+        i = 1
+
+        while os.path.exists(dir_name + "_" + str(i)):
+            i += 1
+
+        dir_name = dir_name + "_" + str(i)
+
+    print('Creating directory', dir_name)
+    os.makedirs(dir_name)
+
+    return dir_name
 
 
 def graph_size_dist(
@@ -229,41 +274,34 @@ def graph_score_dist(
     matplotlib.pyplot.savefig(output_path)
 
 
-# def print_solution(solution: set[str], parser: Coversets) -> None:
-#     for guide_seq in solution:
-#         guide_objects = parser.seq_to_guides_dict[guide_seq]
-        
-#         for guide_object in guide_objects:
-#             guide_object.print_info()
-#             print()
-
-
 def write_solution_to_file(
     beta: int,
-    parser: CoversetsRAM,
-    solution: set[str], 
+    species_names: list[str],
+    solution: list[tuple[str, str]],
     experiment_name: str,
+    input_csv_path: str,
+    input_sequence_directory: str,
+    paths_csv_column_name: str,
+    species_names_csv_column_name: str,
     output_directory: str,
-    sequence_length: int,
     ) -> None:
 
+    # TODO maybe move to own module -- main.py is too crowded...
     output_txt_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
     output_csv_path = os.path.join(output_directory, experiment_name + '_b{b}.csv'.format(b=beta))
 
-    i = 1  # If an output file with the same name already exists, make a new numbered one.
-    while os.path.isfile(output_txt_path):
-        new_experiment_name = experiment_name + '_b{b}_'.format(b=beta) + str(i)
-        output_txt_path = os.path.join(output_directory, new_experiment_name + '.txt')
-        output_csv_path = os.path.join(output_directory, new_experiment_name + '.csv')
-        i += 1
-
-
-    # Writing the new output file.
     print('Writing to file:', output_txt_path)
     with open(output_txt_path, 'w') as f:
+
+        for tuple_elem in solution:
+            f.write('Guide {g} targets {n} species.\n'.format(
+                g=tuple_elem[0],
+                n=len(tuple_elem[1])
+            ))
+
         f.write('We can cut the following {n} species: {species}.\n'.format(
-            n=len(parser.species_names),
-            species=str(parser.species_names),
+            n=len(species_names),
+            species=str(species_names),
             )
         )
 
@@ -273,13 +311,60 @@ def write_solution_to_file(
             )
         )
 
-    list_of_attributes_dicts: list[dict] = parser.get_guide_attributes_dicts_from_seq(solution)
+    paths: list[str] = list()
+    misc_list: list[str] = list()
+    species_list: list[str] = list()
+    scores: list[int] = list()
+    strands: list[str] = list()
+    sequences: list[str] = list()
+    end_positions: list[int] = list()
+    start_positions: list[int] = list()
+    chromosomes_or_genes: list[str] = list()
 
-    aggregate_dict = dict()
-    for key in list_of_attributes_dicts[0].keys():
-        aggregate_dict[key] = [d[key] for d in list_of_attributes_dicts]    
+    guide_finder = GuideFinder()
+    input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
+
+    for pair in solution:
+        seq = pair[0]
+        hit_species = pair[1]
+
+        for species in hit_species:
+            df_file_path = input_df[input_df[species_names_csv_column_name] == species][paths_csv_column_name].values[0]
+            full_path = os.path.join(input_sequence_directory, df_file_path)
+
+            list_of_tuples = guide_finder.locate_guides_in_sequence(sequence=seq, file_path=full_path, to_upper=True)
+
+            for tuple in list_of_tuples:
+                chromosome = tuple[0]
+                strand = tuple[1]
+                start_pos = tuple[2]
+                end_pos = tuple[3]
+                misc = tuple[4]
+
+                sequences.append(seq)
+                paths.append(df_file_path)
+                scores.append(1)  # TODO fix for other than 1
+                strands.append(strand)
+                start_positions.append(start_pos)
+                end_positions.append(end_pos)
+                chromosomes_or_genes.append(chromosome)
+                species_list.append(species)
+                misc_list.append(misc)
+            
     
-    pandas.DataFrame.from_dict(aggregate_dict).to_csv(output_csv_path, index=False)
+    pandas.DataFrame(list(zip(
+        sequences,
+        species_list,
+        scores,
+        chromosomes_or_genes,
+        strands,
+        start_positions,
+        end_positions,
+        misc_list,
+        paths,
+        )),
+    columns=['sequence','targets', 'score', 'chromosome_or_gene',
+    'strand', 'start_position', 'end_position', 'misc', 'path']).to_csv(output_csv_path, index=False)
     
     print('Done. Check {path} for the output.'.format(path=output_csv_path))
 
@@ -326,10 +411,14 @@ def output_csv(
 
 
 def main() -> int:
-    print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml.')
+    print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml')
     
     args = parse_arguments()
     scorer_settings = dict()
+
+    validate_arguments(args)
+    args.output_directory = create_output_directory(args.output_directory, args.experiment_name)
+    log_args(args)
 
     match args.scorer:
         case 'chopchop':
@@ -339,70 +428,87 @@ def main() -> int:
                 'absolute_path_to_chopchop': args.absolute_path_to_chopchop,
                 'absolute_path_to_genomes_directory': args.absolute_path_to_genomes_directory,
             }
+
         case 'dummy':
             scorer_settings = {
                 'pam': args.pam,
                 'protospacer_length': args.protospacer_length,
+                'include_repetitive': args.include_repetitive,
                 'context_toward_five_prime': args.context_toward_five_prime,
                 'context_toward_three_prime': args.context_toward_three_prime,
+                
             }
+
         case _:
             print('Unknown scorer selected. Aborting.')
             raise ValueError
 
-    coversets_obj = CoversetsRAM(
+    coversets_obj = coverset(
+        beta=args.beta,
+        num_trials=args.num_trials,
         cas_variant=args.cas,
         guide_source=args.mode,
+        guide_length=args.protospacer_length,
         scorer_name=args.scorer,
         scorer_settings=scorer_settings,
+        monophonic_threshold=args.mp_threshold,
+        output_directory=args.output_directory,
         input_cds_directory=args.input_cds_directory,
         input_species_csv_file_path=args.input_species_path,
         input_genome_directory=args.input_genomes_directory,
     )
 
-    solver = Solver(
-        beta=args.beta,
-        objective=args.objective,
-        species=coversets_obj.species_set,
-        coversets=coversets_obj.coversets,
-        num_trials=args.num_trials,
-        solver_engine=args.solver_engine,
-        exhaustive_threshold=args.exhaustive_threshold,
-    )
+    # if args.graph and len(solution) > 0 and not solver.solved_with_exhaustive:
+    #     graph_size_dist(
+    #         beta=solver.beta,
+    #         exp_name=args.experiment_name, 
+    #         output_dir=args.output_directory,
+    #         size_of_solutions_for_n_trials=solver.set_size_for_each_trial,
+    #     )
 
-    solution = solver.solve()
+    #     graph_score_dist(
+    #         beta=solver.beta,
+    #         exp_name=args.experiment_name, 
+    #         output_dir=args.output_directory,
+    #         average_scores_for_n_trials=solver.average_score_for_each_trial,
+    #     )
 
-    if args.graph and len(solution) > 0 and not solver.solved_with_exhaustive:
-        graph_size_dist(
-            beta=solver.beta,
-            exp_name=args.experiment_name, 
-            output_dir=args.output_directory,
-            size_of_solutions_for_n_trials=solver.set_size_for_each_trial,
-        )
+    d = {
+        'input_sequence_directory': '',
+        'paths_csv_column_name': ''
+    }
+    match args.mode:
+        case 'from_genome':
+            d['input_sequence_directory'] = args.input_genomes_directory
+            d['paths_csv_column_name'] = 'genome_file_name'
 
-        graph_score_dist(
-            beta=solver.beta,
-            exp_name=args.experiment_name, 
-            output_dir=args.output_directory,
-            average_scores_for_n_trials=solver.average_score_for_each_trial,
-        )
+        case 'from_cds':
+            d['input_sequence_directory'] = args.input_cds_directory
+            d['paths_csv_column_name'] = 'cds_file_name'
+        
+        case _:
+            print('Unknown mode selected. Aborting.')
+            raise ValueError
     
     write_solution_to_file(
         beta=args.beta,
-        solution=solution,
-        parser=coversets_obj,
+        species_names=coversets_obj.species_names,
+        solution=coversets_obj.solution,
         experiment_name=args.experiment_name,
-        output_directory=args.output_directory,
-        sequence_length=args.protospacer_length
+        input_csv_path=args.input_species_path,
+        input_sequence_directory=d['input_sequence_directory'],
+        paths_csv_column_name=d['paths_csv_column_name'],
+        species_names_csv_column_name='species_name',
+        output_directory=args.output_directory
     )
 
-    if args.output_csv:
-        output_csv(
-            solver=solver,
-            beta=args.beta,
-            experiment_name=args.experiment_name,
-            output_directory=args.output_directory,
-        )
+    # if args.output_csv:
+    #     output_csv(
+    #         solver=solver,
+    #         beta=args.beta,
+    #         experiment_name=args.experiment_name,
+    #         output_directory=args.output_directory,
+    #     )
 
     return 0
 

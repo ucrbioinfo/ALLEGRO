@@ -4,7 +4,12 @@ from classes.guide_container import GuideContainer
 
 
 class Chromosome(GuideContainer):
-    __slots__ = ['sequence', 'string_id', 'species_name', 'guide_scorer']
+    __slots__ = [
+        'sequence',
+        'string_id',
+        'species_name',
+        'guide_scorer'
+        ]
 
     sequence: str
     string_id: str
@@ -49,7 +54,7 @@ class Chromosome(GuideContainer):
         return self.cas9_guide_objects
 
 
-    def get_attributes_dict(self) -> dict[str, str]:
+    def get_attributes_dict(self) -> dict:
         return dict({
             'genome_string_id': self.string_id,
             'genome_species_name': self.species_name,

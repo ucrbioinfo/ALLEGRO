@@ -1,5 +1,7 @@
 __pycache__
 .vscode/
+*.db
+
 unused/
 .fna
 output/
@@ -14,3 +16,4 @@ genomes/
 datasets/
 test.txt
 txt.txt
+.pytest_cache/

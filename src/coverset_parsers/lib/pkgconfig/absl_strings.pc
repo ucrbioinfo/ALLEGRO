@@ -1,0 +1,12 @@
+prefix=/root/or-tools/or-tools_x86_64_Ubuntu-20.04_cpp_v9.5.2237
+exec_prefix=${prefix}
+libdir=/root/or-tools/or-tools_x86_64_Ubuntu-20.04_cpp_v9.5.2237/lib
+includedir=/root/or-tools/or-tools_x86_64_Ubuntu-20.04_cpp_v9.5.2237/include
+
+Name: absl_strings
+Description: Abseil strings library
+URL: https://abseil.io/
+Version: 20220623
+Requires: absl_strings_internal = 20220623, absl_base = 20220623, absl_bits = 20220623, absl_config = 20220623, absl_core_headers = 20220623, absl_endian = 20220623, absl_int128 = 20220623, absl_memory = 20220623, absl_raw_logging_internal = 20220623, absl_throw_delegate = 20220623, absl_type_traits = 20220623
+Libs: -L${libdir}  -labsl_strings
+Cflags: -I${includedir} -DNOMINMAX

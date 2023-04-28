@@ -8,8 +8,6 @@ from classes.guide_container import GuideContainer
 
 
 class GuideContainerFactory:
-    __slots__ = []
-
     def __init__(self) -> None:
         pass
 
@@ -20,11 +18,13 @@ class GuideContainerFactory:
         guide_source: str,
         guide_scorer_obj: Scorer,
         cds_path: str = '',
-        genome_path: str = '') -> list[GuideContainer]:
+        genome_path: str = ''
+        ) -> list[GuideContainer]:
+        
         guide_container_list: list[GuideContainer] = list()
 
         match guide_source:
-            case 'from_orthogroups' | 'from_all_cds':
+            case 'from_cds':
                 records = list(SeqIO.parse(open(cds_path), 'fasta'))
 
                 gene_regex = r'\[gene=(.*?)\]'
@@ -66,7 +66,7 @@ class GuideContainerFactory:
                         species_name=species_name,
                         string_id=cds_record.id,
                         ref_species=ref_species,
-                        sequence=str(cds_record.seq),
+                        sequence=str(cds_record.seq).upper(),
                         guide_scorer=guide_scorer_obj,
                         orthologous_to_prot=ortho_prot_id,
                         orthologous_to_gene=ortho_gene_name,
@@ -90,3 +90,4 @@ class GuideContainerFactory:
                 raise ValueError
 
         return guide_container_list
+        

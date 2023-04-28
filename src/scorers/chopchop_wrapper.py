@@ -7,7 +7,7 @@ from Bio.SeqRecord import SeqRecord
 
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
-from utils.guide_encoder import DNAEncoderDecoder
+# from utils.guide_encoder import DNAEncoderDecoder
 
 
 class ChopChopWrapper(Scorer):
@@ -20,7 +20,7 @@ class ChopChopWrapper(Scorer):
     absolute_path_to_genomes_directory: str
     already_made_bowtie_index_for_these_species: set[str]
 
-    def __init__(self, settings: dict[str, str]) -> None:
+    def __init__(self, settings: dict) -> None:
         self.output_directory = settings['output_directory']
         self.scoring_method = settings['chopchop_scoring_method']
         self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
@@ -95,7 +95,7 @@ class ChopChopWrapper(Scorer):
     def score_sequence(
         self,
         guide_container: GuideContainer,
-        ) -> tuple[list[str], list[str], list[str], list[int], list[float]]: 
+        ) -> tuple[list[str], list[str], list[str], list[int], list[int]]: 
         silent = True
         
         species_name = guide_container.species_name
@@ -159,7 +159,7 @@ class ChopChopWrapper(Scorer):
                 chopchop_output['Target sequence'].tolist(),
                 strands,
                 locations,
-                chopchop_output['Efficiency'].tolist()
+                chopchop_output['Efficiency'].astype(int).tolist()
 
         )
     
