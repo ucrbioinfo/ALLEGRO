@@ -291,12 +291,13 @@ namespace coversets
         return decoded_winners;
     }
 
-    std::vector<std::pair<std::string, std::string>> CoversetCPP::ortools_solver(std::size_t monophonic_threshold)
+    std::vector<std::pair<std::string, std::string>> CoversetCPP::ortools_solver(std::size_t monophonic_threshold, std::size_t beta)
     {
         std::unordered_set<boost::dynamic_bitset<>> species_already_hit_by_unique_guide;
         std::unordered_map<boost::dynamic_bitset<>, std::unordered_set<boost::dynamic_bitset<>>> hit_species;
         // Create the linear solver with the GLOP backend.
         std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
+        const double infinity = solver->infinity();  // Used for constraints to denote >= 1 and <= 1
 
         this->log_buffer << "Monophonic threshold: " << monophonic_threshold << std::endl;
 
@@ -362,6 +363,8 @@ namespace coversets
         // -------------- VARIABLE CREATION -----------------
         // --------------------------------------------------
         operations_research::MPObjective *const objective = solver->MutableObjective();
+        operations_research::MPConstraint *const beta_constraint = solver->MakeRowConstraint(-infinity, beta);
+
         std::unordered_map<boost::dynamic_bitset<>, operations_research::MPVariable *> map_seq_to_vars;
 
         for (auto i : this->coversets)
@@ -374,7 +377,12 @@ namespace coversets
             operations_research::MPVariable *const var = solver->MakeNumVar(0.0, 1, buffer);
 
             map_seq_to_vars[seq_bitset] = var;
-            objective->SetCoefficient(var, score);
+            if (beta <= 0) {
+                objective->SetCoefficient(var, 1);
+            } else {
+                objective->SetCoefficient(var, score);
+                beta_constraint->SetCoefficient(var, 1);
+            }
         }
 
         LOG(INFO) << "Number of variables = " << solver->NumVariables();
@@ -384,7 +392,6 @@ namespace coversets
         // --------------------------------------------------
         // ------------- CONSTRAINT CREATION ----------------
         // --------------------------------------------------
-        const double infinity = solver->infinity();
         for (auto i : hit_species)
         {
             std::vector<operations_research::MPVariable *> vars_for_this_species;
@@ -395,6 +402,7 @@ namespace coversets
                 vars_for_this_species.push_back(map_seq_to_vars[j]);
             }
 
+            // All species must be covered by at least 1 guide
             operations_research::MPConstraint *const constraint = solver->MakeRowConstraint(1.0, infinity);
             for (auto k : vars_for_this_species)
             {
@@ -404,12 +412,22 @@ namespace coversets
 
         hit_species.clear(); // Mark memory as free
 
-        LOG(INFO) << "Number of constraints (species) = " << solver->NumConstraints();
-        this->log_buffer << "Number of constraints (species) = " << solver->NumConstraints() << std::endl;
+        LOG(INFO) << "Number of constraints (species) + 1 (beta) = " << solver->NumConstraints();
+        this->log_buffer << "Number of constraints (species) + 1 (beta) = " << solver->NumConstraints() << std::endl;
         // --------------------------------------------------
 
         // Set the objective and solve.
-        objective->SetMinimization();
+        if (beta > 0) {
+            LOG(INFO) << "Beta: " << beta << " - Maximizing the the set size considering beta." << std::endl;
+            this->log_buffer << "Beta: " << beta << " - Maximizing the the set size considering beta." << std::endl;
+            
+            objective->SetMaximization();
+        } else {
+            LOG(INFO) << "Beta: " << beta << " - Minimizing the the set size. Disregarding scores and beta." << std::endl;
+            this->log_buffer << "Beta: " << beta << " - Minimizing the the set size. Disregarding scores and beta." << std::endl;
+            
+            objective->SetMinimization();
+        }
 
         const operations_research::MPSolver::ResultStatus result_status = solver->Solve();
 

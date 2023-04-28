@@ -34,7 +34,7 @@ cdef extern from "allegro/coverset.h" namespace "coversets":
         # that shows which species this sequence hits, e.g., '1110'.
         # The width of the bitset is equal to the number of input species found in
         # species_df .csv normally found in data/input/species.csv
-        vector[pair[string, string]] ortools_solver(size_t monophonic_threshold)
+        vector[pair[string, string]] ortools_solver(size_t monophonic_threshold, size_t beta)
 
         # Encodes each seq into a boost::dynamic_bitset and saves it, plus the species 
         # this seq hits.
@@ -47,13 +47,14 @@ cdef class CoversetsCython:
 
     def __cinit__(
         self,
+        beta: int,
         num_trials: int,
         scorer_name: str,
         cas_variant: str,
         guide_length: int,
         guide_source: str,
-        monophonic_threshold: int,
         scorer_settings: dict,
+        monophonic_threshold: int,
         output_directory: str,
         input_cds_directory: str,
         input_genome_directory: str,
@@ -64,7 +65,10 @@ cdef class CoversetsCython:
             print('Reading species input file from {path}'.format(path=input_species_csv_file_path))
             species_df = pandas.read_csv(input_species_csv_file_path)
         except pandas.errors.EmptyDataError:
-            print('Error in coverset.pyx: File', input_species_csv_file_path, 'is empty. Exiting.')
+            print('EmptyDataError exception in coverset.pyx: File', input_species_csv_file_path, 'is empty. Exiting.')
+            sys.exit(1)
+        except FileNotFoundError:
+            print('FileNotFoundError exception in coverset.pyx: Cannot find file', input_species_csv_file_path, 'Did you spell the path/file name correctly? Exiting.')
             sys.exit(1)
 
         self.num_species = species_df.shape[0]
@@ -81,7 +85,7 @@ cdef class CoversetsCython:
         # Instantiate the GuideContainerFactory to assign to each Species.
         # Each Species object tells the factory about its guide source.
         # This makes mix-and-matching the guide sources easier. You'd have to
-        # only add another column to species_df .csv file and read it in in the loop below.
+        #  only add another column to species_df .csv file and read it in in the loop below.
         guide_container_factory = GuideContainerFactory()
 
         # Make an object for each species
@@ -132,7 +136,7 @@ cdef class CoversetsCython:
         # scorer.guide_finder.write_removed_guides_to_dataframe()
 
         # Interface with C++ functions.
-        winners_bytes_pairs = self.coverset.ortools_solver(monophonic_threshold)
+        winners_bytes_pairs = self.coverset.ortools_solver(monophonic_threshold, beta)
 
         self.solution: list[tuple[str, list[str]]] = list()
         for seq, binary_hits in winners_bytes_pairs:
@@ -150,11 +154,9 @@ cdef class CoversetsCython:
             # E.g., ('ACCTGAG...', ['saccharomyces', 'yarrowia', 'kmarx'])
             self.solution.append((seq, names_hits))
 
-
     @property
     def species_names(self) -> list[str]:
         return list(self.idx_to_species.values())
-
 
     def __dealloc__(self):
         del self.coverset
