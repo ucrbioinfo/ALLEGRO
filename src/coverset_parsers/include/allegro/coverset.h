@@ -42,7 +42,7 @@ namespace coversets
 
         ~CoversetCPP();
 
-        std::vector<std::pair<std::string, std::string>> ortools_solver(std::size_t monophonic_threshold);
+        std::vector<std::pair<std::string, std::string>> ortools_solver(std::size_t monophonic_threshold, std::size_t beta);
         void encode_and_save_dna(std::string &seq, unsigned char score, unsigned short species_id);
     };
 }
