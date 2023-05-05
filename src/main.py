@@ -410,38 +410,45 @@ def output_csv(
     print('Done. Check {path} for the output.'.format(path=output_path))
 
 
+def make_scorer_settings(args: argparse.Namespace):
+    scorer_settings = dict()
+
+    match args.scorer:
+            case 'chopchop':
+                scorer_settings = {
+                    'experiment_name': args.experiment_name,
+                    'output_directory': args.output_directory,
+                    'chopchop_scoring_method': args.chopchop_scoring_method,
+                    'absolute_path_to_chopchop': args.absolute_path_to_chopchop,
+                    'absolute_path_to_genomes_directory': args.absolute_path_to_genomes_directory,
+                    'input_species_csv_file_path': args.input_species_path
+                }
+
+            case 'dummy':
+                scorer_settings = {
+                    'pam': args.pam,
+                    'protospacer_length': args.protospacer_length,
+                    'include_repetitive': args.include_repetitive,
+                    'context_toward_five_prime': args.context_toward_five_prime,
+                    'context_toward_three_prime': args.context_toward_three_prime,
+                }
+
+            case _:
+                print('Unknown scorer selected. Aborting.')
+                raise ValueError
+    
+    return scorer_settings
+
+
 def main() -> int:
     print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml')
     
     args = parse_arguments()
-    scorer_settings = dict()
-
     validate_arguments(args)
     args.output_directory = create_output_directory(args.output_directory, args.experiment_name)
     log_args(args)
 
-    match args.scorer:
-        case 'chopchop':
-            scorer_settings = {
-                'output_directory': args.output_directory,
-                'chopchop_scoring_method': args.chopchop_scoring_method,
-                'absolute_path_to_chopchop': args.absolute_path_to_chopchop,
-                'absolute_path_to_genomes_directory': args.absolute_path_to_genomes_directory,
-            }
-
-        case 'dummy':
-            scorer_settings = {
-                'pam': args.pam,
-                'protospacer_length': args.protospacer_length,
-                'include_repetitive': args.include_repetitive,
-                'context_toward_five_prime': args.context_toward_five_prime,
-                'context_toward_three_prime': args.context_toward_three_prime,
-                
-            }
-
-        case _:
-            print('Unknown scorer selected. Aborting.')
-            raise ValueError
+    scorer_settings = make_scorer_settings(args)
 
     coversets_obj = coverset(
         beta=args.beta,
