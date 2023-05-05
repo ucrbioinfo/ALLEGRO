@@ -1,25 +1,9 @@
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
-from utils.guide_finder import GuideFinder, GuideFinderDebug
+from utils.guide_finder import GuideFinder
 
 
 class DummyScorer(Scorer):
-    __slots__ = [
-        'pam',
-        'protospacer_length',
-        'include_repetitive',
-        'context_toward_five_prime',
-        'context_toward_three_prime',
-        'guide_finder'
-        ]
-
-    pam: str
-    protospacer_length: int
-    include_repetitive: bool
-    context_toward_five_prime: int
-    context_toward_three_prime: int
-    guide_finder: GuideFinder
-
     def __init__(self, settings: dict) -> None:
         self.pam = settings['pam']
         self.include_repetitive = settings['include_repetitive']
