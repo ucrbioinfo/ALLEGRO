@@ -6,7 +6,7 @@
 
 #include "allegro/coverset.h"
 
-#define sA_SHIFT "00"
+#define sA_SHIFT "00" // s stands for string
 #define sC_SHIFT "01"
 #define sG_SHIFT "10"
 #define sT_SHIFT "11"
@@ -30,11 +30,7 @@ void log_info(std::ostringstream &log_buffer, std::string output_directory)
 
 namespace coversets
 {
-    CoversetCPP::CoversetCPP(
-        std::size_t num_species,
-        std::size_t guide_length,
-        std::size_t num_trials,
-        std::string output_directory)
+    CoversetCPP::CoversetCPP(std::size_t num_species, std::size_t guide_length, std::size_t num_trials, std::string output_directory)
     {
         this->num_species = num_species;
         this->guide_length = guide_length;
@@ -47,10 +43,7 @@ namespace coversets
 
     CoversetCPP::~CoversetCPP() {}
 
-    void CoversetCPP::encode_and_save_dna(
-        std::string &seq,
-        unsigned char score,
-        unsigned short species_id)
+    void CoversetCPP::encode_and_save_dna(std::string &seq, char score, unsigned short species_id)
     {
         std::string encoded_str = "";
 
@@ -82,6 +75,10 @@ namespace coversets
         {
             // Set the appropriate bit to indicate which species is hit by this guide.
             this->coversets[encoded_bitset].second.set(species_id);
+
+            // todo: Update the average score of this guide
+            // need to keep track of how many times this guide has been seen: n
+            // new_average = old_average + (new_item - old_average) / (n + 1)
         }
         else
         {
@@ -89,7 +86,7 @@ namespace coversets
             boost::dynamic_bitset<> bitset(this->num_species);
             bitset.set(species_id);
 
-            this->coversets[encoded_bitset] = std::pair<unsigned char, boost::dynamic_bitset<>>(score, bitset);
+            this->coversets[encoded_bitset] = std::pair<char, boost::dynamic_bitset<>>(score, bitset);
         }
 
         // Keep a record of which species should be hit. We compare against this later in randomized_rounding
@@ -205,8 +202,7 @@ namespace coversets
         return decoded;
     }
 
-    std::vector<std::pair<std::string, std::string>> CoversetCPP::randomized_rounding(
-        std::vector<operations_research::MPVariable *> feasible_solutions)
+    std::vector<std::pair<std::string, std::string>> CoversetCPP::randomized_rounding(std::vector<operations_research::MPVariable *> feasible_solutions)
     {
         // Algorithm source:
         // https://web.archive.org/web/20230325165759/https://theory.stanford.edu/~trevisan/cs261/lecture08.pdf
@@ -214,7 +210,7 @@ namespace coversets
         this->log_buffer << "Using randomized rounding with " << this->num_trials << " trials." << std::endl;
 
         std::unordered_set<std::string> winners;
-        std::size_t len_winners = this->num_species;
+        std::size_t len_winners = INT_MAX; // Inifinity, initially
         std::size_t trial_with_smallest_size = 0;
 
         // On each invocation, dist(rng) returns a random floating-point value
@@ -227,11 +223,11 @@ namespace coversets
             // Species to cover
             boost::dynamic_bitset<> I_this_trial(this->num_species);
             std::unordered_set<std::string> winners_this_trial;
-            std::size_t iterations_this_trial = 0; // while-loop exit condition in case of bad luck
+            std::size_t iterations_this_trial = 100000; // while-loop exit condition in case of bad luck
 
-            while ((I_this_trial != this->all_species_bitset) && (iterations_this_trial != 100000))
+            while ((I_this_trial != this->all_species_bitset) && (iterations_this_trial != 0))
             {
-                iterations_this_trial++;
+                iterations_this_trial--;
 
                 for (auto var_ptr : feasible_solutions)
                 {
@@ -293,44 +289,91 @@ namespace coversets
 
     std::vector<std::pair<std::string, std::string>> CoversetCPP::ortools_solver(std::size_t monophonic_threshold, std::size_t beta)
     {
-        std::unordered_set<boost::dynamic_bitset<>> species_already_hit_by_unique_guide;
+        std::unordered_map<boost::dynamic_bitset<>, std::pair<boost::dynamic_bitset<>, char>> species_already_hit_by_unique_guide;
         std::unordered_map<boost::dynamic_bitset<>, std::unordered_set<boost::dynamic_bitset<>>> hit_species;
         // Create the linear solver with the GLOP backend.
         std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
-        const double infinity = solver->infinity();  // Used for constraints to denote >= 1 and <= 1
+        const double infinity = solver->infinity(); // Used for constraints to denote >= 1 and <= 1
 
+
+        // --------------------------------------------------
+        // --------------  MP THRESHOLD ---------------------
+        // --------------------------------------------------
         this->log_buffer << "Monophonic threshold: " << monophonic_threshold << std::endl;
+
+        if (monophonic_threshold > 0)
+        {
+            auto it = this->coversets.begin();
+            while (it != this->coversets.end())
+            {
+                unsigned char new_score = it->second.first;
+                boost::dynamic_bitset<> new_guide = it->first;
+                boost::dynamic_bitset<> species_bitset = it->second.second;
+
+                // Below, we want to keep only one guide per species where that guide hits
+                //  only this species and none other.
+                // If a species is already hit by a one-hitting-guide and we encounter
+                //  another one, mark it for deletion from this->coversets and
+                //   skip adding it to hit_species.
+                if (species_bitset.count() <= monophonic_threshold)
+                {
+                    // and if this species already has a representative guide that hits it...
+                    if ((species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end()))
+                    {
+                        // Compare scores here
+                        // if a guide we saw earlier is worse, flag its score.
+                        // if current guide is worse, delete it and continue.
+                        boost::dynamic_bitset<> old_guide = species_already_hit_by_unique_guide[species_bitset].first;
+                        char old_score = species_already_hit_by_unique_guide[species_bitset].second;
+
+                        if (new_score > old_score)
+                        {
+                            auto it = this->coversets.find(old_guide);
+                            it->second.first = 0;  // if a guide we saw earlier is worse, flag its score.
+                        }
+                        else
+                        {
+                            it = this->coversets.erase(it);  // if current guide is not better, delete it and continue.
+                            continue;  // Do not update the iterator below. The line above does that.
+                        }
+                    }
+                    // If this species still needs a representative guide...
+                    else
+                    {
+                        // Indicate that this species has a representative guide now and does not need another one later.
+                        species_already_hit_by_unique_guide[species_bitset] = std::pair<boost::dynamic_bitset<>, char>(new_guide, new_score);
+                    }
+                }
+
+                it++;
+            }
+
+            species_already_hit_by_unique_guide.clear(); // Mark memory as free
+        }
+
+        // --------------------------------------------------
+        // -------------- VARIABLE CREATION -----------------
+        // --------------------------------------------------
+        operations_research::MPObjective *const objective = solver->MutableObjective();
+        operations_research::MPConstraint *const beta_constraint = solver->MakeRowConstraint(-infinity, beta);
+
+        std::unordered_map<boost::dynamic_bitset<>, operations_research::MPVariable *> map_seq_to_vars;
 
         auto it = this->coversets.begin();
         while (it != this->coversets.end())
         {
             unsigned char score = it->second.first;
-            boost::dynamic_bitset<> guide_seq_bits = it->first;
-            boost::dynamic_bitset<> species_bitset = it->second.second;
 
-            // Below, we want to keep only one guide per species where that guide hits
-            //  only this species and none other.
-            // If a species is already hit by a one-hitting-guide and we encounter
-            //  another one, mark it for deletion from this->coversets and
-            //   skip adding it for hit_species.
-            if (species_bitset.count() <= monophonic_threshold)
+            // Remove redundant guides. Either predicted inefficient by the scorer, 
+            //  or marked as not needed above.
+            if (score <= 0)
             {
-                // and if this species already has a representative guide that hits it...
-                if ((species_already_hit_by_unique_guide.find(species_bitset) != species_already_hit_by_unique_guide.end()))
-                {
-                    // The new guide is not needed.
-                    // TODO May compare scores here and below and replace if better.
-                    // Mark the new guide for deletion and carry on.
-                    it = this->coversets.erase(it);
-                    continue;
-                }
-                // If this species still needs a representative guide...
-                else
-                {
-                    // Indicate that this species has a representative guide now and does not need another one later.
-                    species_already_hit_by_unique_guide.insert(species_bitset);
-                }
+                it = this->coversets.erase(it);
+                continue;
             }
+
+            boost::dynamic_bitset<> guide_seq_bitset = it->first;
+            boost::dynamic_bitset<> species_bitset = it->second.second;
 
             // Find the first species hit by this guide and while there are species left to process...
             size_t set_bit_index = species_bitset.find_first();
@@ -347,42 +390,29 @@ namespace coversets
                 // For example, 001: 00110011... when species 1 is hit by this ATAT... guide
                 // and on the next iteration, if ATAT hits species 2 as well:
                 //  010: 00110011...
-                hit_species[species_onehot].insert(guide_seq_bits);
+                hit_species[species_onehot].insert(guide_seq_bitset);
 
                 // Find the next species hit by this guide for the next iteration.
                 // Returns boost::dynamic_bitset<>::npos if no other bits are set.
                 set_bit_index = species_bitset.find_next(set_bit_index);
             }
 
-            it++;
-        }
-
-        species_already_hit_by_unique_guide.clear(); // Mark memory as free
-
-        // --------------------------------------------------
-        // -------------- VARIABLE CREATION -----------------
-        // --------------------------------------------------
-        operations_research::MPObjective *const objective = solver->MutableObjective();
-        operations_research::MPConstraint *const beta_constraint = solver->MakeRowConstraint(-infinity, beta);
-
-        std::unordered_map<boost::dynamic_bitset<>, operations_research::MPVariable *> map_seq_to_vars;
-
-        for (auto i : this->coversets)
-        {
-            boost::dynamic_bitset<> seq_bitset = i.first;
-            unsigned char score = i.second.first;
-
             std::string buffer;
-            boost::to_string(seq_bitset, buffer);
+            boost::to_string(guide_seq_bitset, buffer);
             operations_research::MPVariable *const var = solver->MakeNumVar(0.0, 1, buffer);
 
-            map_seq_to_vars[seq_bitset] = var;
-            if (beta <= 0) {
+            map_seq_to_vars[guide_seq_bitset] = var;
+            if (beta <= 0)
+            {
                 objective->SetCoefficient(var, 1);
-            } else {
+            }
+            else
+            {
                 objective->SetCoefficient(var, score);
                 beta_constraint->SetCoefficient(var, 1);
             }
+
+            it++;
         }
 
         LOG(INFO) << "Number of variables = " << solver->NumVariables();
@@ -417,15 +447,18 @@ namespace coversets
         // --------------------------------------------------
 
         // Set the objective and solve.
-        if (beta > 0) {
+        if (beta > 0)
+        {
             LOG(INFO) << "Beta: " << beta << " - Maximizing the the set size considering beta." << std::endl;
             this->log_buffer << "Beta: " << beta << " - Maximizing the the set size considering beta." << std::endl;
-            
+
             objective->SetMaximization();
-        } else {
+        }
+        else
+        {
             LOG(INFO) << "Beta: " << beta << " - Minimizing the the set size. Disregarding scores and beta." << std::endl;
             this->log_buffer << "Beta: " << beta << " - Minimizing the the set size. Disregarding scores and beta." << std::endl;
-            
+
             objective->SetMinimization();
         }
 
