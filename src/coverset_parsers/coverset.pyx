@@ -135,7 +135,7 @@ cdef class CoversetsCython:
         # TODO: REMOVE. DEBUGGING
         # scorer.guide_finder.write_removed_guides_to_dataframe()
 
-        # Interface with C++ functions.
+        # Interface with the C++ functions.
         winners_bytes_pairs = self.coverset.ortools_solver(monophonic_threshold, beta)
 
         self.solution: list[tuple[str, list[str]]] = list()
