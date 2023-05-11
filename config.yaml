@@ -1,35 +1,50 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'test'
-mode: 'from_genome'  # 'from_genome', 'from_cds'
-# objective: 'min'  # default: 'max' uses beta -- 'min' does not use beta
-scorer: 'dummy'  # options: default: 'chopchop', 'dummy'
-                 # dummy assigns a score of 1.0 to all guides
-# solver_engine: 'GLOP'
-# beta: 0  # Integer value: Used with objective: 'max'
-         # The final size of the guides set must be <= than this. Think of it as your budget.
+experiment_name: 'one_test'
+# ---
 
-# Integer value: Search all combinatorial possibilities unless there are more
-# feasible solutions than this (then use randomized rounding)
-# exhaustive_threshold: 5
+# Choices: 'from_genome', 'from_cds'
+mode: 'from_cds'
+# ---
 
+# Choices: 'chopchop', 'dummy'
+# dummy assigns a score of 1.0 to all guides
+scorer: 'dummy'
+# ---
+
+# (Affects performance) Default: False
+# False reduces running time and reduces memory consumption.
 # If False, discards guides with 5 or more repeated 2-mers.
 # For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC
-#  since it contains 7 AC 2-mers.
+#  since it contains 7 'AC' 2-mers.
 # Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT.
-include_repetitive: True
+include_repetitive: False
+# ---
 
+# (Affects performance) Default: 4
+# A higher number increases running time but reduces memory consumption.
+# Pre-select guides that hit only up to this number of species to act as representatives
+# for these species. Set to 0 to disable and save all guides to memory (highly inefficient).
+mp_threshold: 4
+# ---
+
+# (Affects performance) Default: 10000
+# A higher number slightly increases running time but attempts to find a smaller cover set.
 # Integer value: Only used if the number of feasible guides is above the exhaustive_threshold.
-# How many times to run the randomized rounding algorithm?
+# How many times to run the randomized rounding algorithm? Any value under 1 disables trials.
 num_trials: 10000
+# ---
 
-# graph: False
-# output_csv: True
-# save_temp_data_to: 'ram'  # options: 'ram', 'database'.
-                           # Use database if running out of ram. Database is slower.
-# --------------------------------------------------------------------
-
+# Integer value, default: 0
+beta: 0   # The final size of the guides set must be <= than this. Think of it as your budget.
+          # Set to 0 to disable: this causes ALLEGRO to find the smallest gRNA set IGNORING scores
+          #  (treats all of the guides as equals).
+          # If set to the number of input species, the final size of the set may be up to
+          #  the number of species you have (worst case, one guide per species).
+          # If set to a number HIGHER than the number of species, finds the best #beta guides
+          #  and ensures each species is hit at least once.
+# ---
 
 # --------------------------------------------------------------------
 # Endonuclease settings
@@ -38,6 +53,7 @@ cas: 'cas9'  # default: 'cas9'
 pam: 'NGG'  # default for cas9: 'NGG'
             # Supports 'NGG' which looks for 'A/C/T/G' + 'GG' 
             # Any other PAM will be treated as a literal string.
+
 protospacer_length: 20  # Integer, default: 20
 context_toward_five_prime: 0  # Integer, default: 5
 context_toward_three_prime: 0  # Integer, default: 3
@@ -47,14 +63,29 @@ context_toward_three_prime: 0  # Integer, default: 3
 # --------------------------------------------------------------------
 # Path Settings
 # --------------------------------------------------------------------
-input_species_path: 'data/input/three.csv'
+output_directory: 'data/output/'
+input_species_path: 'data/input/ten.csv'   # either a .csv file with the right format, or list of species paths
 input_genomes_directory: 'data/input/genomes/'
-output_directory: 'data/339_output_genomes_ns/'
+# ---
 
-# Required if mode is set to 'from_cds' -- ignored otherwise -- default: input_cds_directory: 'data/input/cds/orthogroups/''
-input_cds_directory: 'data/input/cds/'  # Files inside must end with _cds.fna or _cds.faa or _cds.fasta
+# ---
+# Required if mode is set to 'from_cds' -- ignored otherwise
+# default: 'data/input/cds/orthogroups/'
+# Files inside the directory must end with _cds.fna or _cds.faa or _cds.fasta
+input_cds_directory: 'data/input/cds/'
+# ---
 
+# ---
 # Required if scorer is set to 'chopchop' -- ignored otherwise
-# chopchop_scoring_method: 'DOENCH_2016'
-# absolute_path_to_chopchop: '/home/amohs002/projects/research/chopchop/'  # directory only
-# absolute_path_to_genomes_directory: '/home/amohs002/projects/research/ALLEGRO/data/input/genomes/'
+chopchop_scoring_method: 'DOENCH_2016'  # choices: "XU_2015", "DOENCH_2014", "DOENCH_2016", "MORENO_MATEOS_2015", "CHARI_2015", "G_20", "KIM_2018", "ALKAN_2018", "ZHANG_2019", "ALL"
+absolute_path_to_chopchop: '/home/amohs002/projects/research/chopchop/'  # directory only
+absolute_path_to_genomes_directory: '/home/amohs002/projects/research/ALLEGRO/data/input/genomes/'
+# ---
+
+# ---
+# (Affects performance -- currently not implemented)
+# A higher number increases running time and reduces memory consumption.
+# Integer value: Search all combinatorial possibilities unless there are more
+# feasible solutions than this (then use randomized rounding)
+# exhaustive_threshold: 5
+# ---

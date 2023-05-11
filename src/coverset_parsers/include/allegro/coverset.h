@@ -23,8 +23,9 @@ namespace coversets
         boost::dynamic_bitset<> all_species_bitset;
         std::ostringstream log_buffer;
 
-        // guide --> (score, bitvector of species it hits)
-        std::unordered_map<boost::dynamic_bitset<>, std::pair<unsigned char, boost::dynamic_bitset<>>> coversets;
+        // guide bitvector --> (score, bitvector of species it hits)
+        // The width of the guide bitvector is 2 * guide length AKA this->(std::size_t) bits_required_to_store_seq
+        std::unordered_map<boost::dynamic_bitset<>, std::pair<char, boost::dynamic_bitset<>>> coversets;
 
         std::string get_str();
         std::string decode_bitset(const std::string &encoded_str);
@@ -43,7 +44,7 @@ namespace coversets
         ~CoversetCPP();
 
         std::vector<std::pair<std::string, std::string>> ortools_solver(std::size_t monophonic_threshold, std::size_t beta);
-        void encode_and_save_dna(std::string &seq, unsigned char score, unsigned short species_id);
+        void encode_and_save_dna(std::string &seq, char score, unsigned short species_id);
     };
 }
 

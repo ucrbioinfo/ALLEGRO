@@ -7,22 +7,14 @@ from Bio.SeqRecord import SeqRecord
 
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
-# from utils.guide_encoder import DNAEncoderDecoder
 
 
 class ChopChopWrapper(Scorer):
-    __slots__ = ['scoring_method', 'output_directory', 'absolute_path_to_chopchop',
-    'absolute_path_to_genomes_directory', 'already_made_bowtie_index_for_these_species']
-
-    scoring_method: str
-    output_directory: str
-    absolute_path_to_chopchop: str
-    absolute_path_to_genomes_directory: str
-    already_made_bowtie_index_for_these_species: set[str]
-
     def __init__(self, settings: dict) -> None:
+        self.experiment_name = settings['experiment_name']
         self.output_directory = settings['output_directory']
         self.scoring_method = settings['chopchop_scoring_method']
+        self.input_species_df = pandas.read_csv(settings['input_species_csv_file_path'])
         self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
         self.absolute_path_to_genomes_directory = settings['absolute_path_to_genomes_directory']
 
@@ -49,8 +41,9 @@ class ChopChopWrapper(Scorer):
         if species_name not in self.already_made_bowtie_index_for_these_species:
             self.already_made_bowtie_index_for_these_species.add(species_name)
 
-            output_directory = self.output_directory + 'bowtie_indices/'
-            absolute_path_to_species_genome = os.path.join(self.absolute_path_to_genomes_directory, species_name + '_genomic.fna')
+            output_directory = os.path.join(self.output_directory, 'bowtie_indices')
+            species_genome_path = self.input_species_df[self.input_species_df['species_name'] == species_name]['genome_file_name'].to_list()[0]
+            absolute_path_to_species_genome = os.path.join(self.absolute_path_to_genomes_directory, species_genome_path)
 
             if not os.path.exists(output_directory):
                 os.makedirs(output_directory)
@@ -160,6 +153,5 @@ class ChopChopWrapper(Scorer):
                 strands,
                 locations,
                 chopchop_output['Efficiency'].astype(int).tolist()
-
         )
     
