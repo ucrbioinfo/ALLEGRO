@@ -1,3 +1,0 @@
-/home/amohs002/projects/research/ALLEGRO/src/coverset_parsers/build/CMakeFiles/coverset.dir
-/home/amohs002/projects/research/ALLEGRO/src/coverset_parsers/build/CMakeFiles/edit_cache.dir
-/home/amohs002/projects/research/ALLEGRO/src/coverset_parsers/build/CMakeFiles/rebuild_cache.dir
