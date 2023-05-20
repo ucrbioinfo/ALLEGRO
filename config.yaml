@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'one_test'
+experiment_name: 'testest'
 # ---
 
 # Choices: 'from_genome', 'from_cds'
@@ -19,22 +19,27 @@ scorer: 'dummy'
 # For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC
 #  since it contains 7 'AC' 2-mers.
 # Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT.
-include_repetitive: False
+include_repetitive: True
 # ---
 
 # (Affects performance) Default: 4
 # A higher number increases running time but reduces memory consumption.
 # Pre-select guides that hit only up to this number of species to act as representatives
 # for these species. Set to 0 to disable and save all guides to memory (highly inefficient).
-mp_threshold: 4
+mp_threshold: 0
 # ---
 
 # (Affects performance) Default: 10000
 # A higher number slightly increases running time but attempts to find a smaller cover set.
 # Integer value: Only used if the number of feasible guides is above the exhaustive_threshold.
 # How many times to run the randomized rounding algorithm? Any value under 1 disables trials.
-num_trials: 10000
+num_trials: 1000
 # ---
+
+# ---
+multiplicity: 1
+# ---
+
 
 # Integer value, default: 0
 beta: 0   # The final size of the guides set must be <= than this. Think of it as your budget.
@@ -64,7 +69,7 @@ context_toward_three_prime: 0  # Integer, default: 3
 # Path Settings
 # --------------------------------------------------------------------
 output_directory: 'data/output/'
-input_species_path: 'data/input/ten.csv'   # either a .csv file with the right format, or list of species paths
+input_species_path: 'data/input/three.csv'   # either a .csv file with the right format, or list of species paths
 input_genomes_directory: 'data/input/genomes/'
 # ---
 
@@ -72,7 +77,7 @@ input_genomes_directory: 'data/input/genomes/'
 # Required if mode is set to 'from_cds' -- ignored otherwise
 # default: 'data/input/cds/orthogroups/'
 # Files inside the directory must end with _cds.fna or _cds.faa or _cds.fasta
-input_cds_directory: 'data/input/cds/'
+input_cds_directory: 'data/input/cds/orthogroups/'
 # ---
 
 # ---

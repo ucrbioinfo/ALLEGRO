@@ -350,14 +350,14 @@ class GuideFinderDebug:
 
         ## Returns:
             A list of tuples of 4 items: list[tuple[str, str, int, int]]:
-            * 1. (str) Chromosome name.
+            * 1. (str) Chromosome/gene name.
             * 2. (str) Strand. 'F' indicates the forward strand as read in the fasta file,
                 'RC' indicates the reverse complement of the string in the same file.
             * 3. (int) Start position of `sequence` in `file_path` fasta.
             * 4. (int) End position of `sequence` in `file_path` fasta.
         '''
 
-        chrom_strand_start_end: list[tuple[str, str, int, int]] = list()
+        container_strand_start_end: list[tuple[str, str, int, int]] = list()
 
         def find_matches(seq: str, strand: str):
             for record in SeqIO.parse(open(file_path, 'r'), 'fasta'):
@@ -365,14 +365,14 @@ class GuideFinderDebug:
                 dna = str(record.seq).upper() if to_upper else str(record.seq)
 
                 for match in re.finditer(seq, dna):
-                    chrom_strand_start_end.append((record.id, strand, match.start(), match.end()))
+                    container_strand_start_end.append((record.id, strand, match.start(), match.end()))
 
         find_matches(seq=sequence, strand='F')  # F means forward strand
         
         sequence_rev_comp = str(Seq(sequence).reverse_complement())
         find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
 
-        return chrom_strand_start_end
+        return container_strand_start_end
 
 
     def write_removed_guides_to_dataframe(self) -> None:

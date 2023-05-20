@@ -1,5 +1,6 @@
 from classes.guide import Guide
 from scorers.scorer_base import Scorer
+from classes.guide_container import GuideContainer
 from classes.guide_container_factory import GuideContainerFactory
 
 
@@ -10,6 +11,7 @@ class Species:
         'genome_path',
         'guide_source',
         'guide_scorer',
+        'guide_containers_list',
         'guide_container_factory'
         ]
 
@@ -18,6 +20,7 @@ class Species:
     genome_path: str
     guide_source: str
     guide_scorer: Scorer
+    guide_containers_list: list[GuideContainer]
     guide_container_factory: GuideContainerFactory
 
     def __init__(
@@ -37,9 +40,11 @@ class Species:
         self.guide_scorer = guide_scorer  # chopchop, or other options in config.yaml
         self.guide_container_factory = guide_container_factory
 
+        self.guide_containers_list: list[GuideContainer]
 
-    def get_cas9_guides(self) -> list[Guide]:
-        guide_containers = self.guide_container_factory.make_guide_containers(
+
+    def make_guide_containers(self) -> None:
+        self.guide_containers_list = self.guide_container_factory.make_guide_containers(
             species_name=self.name,
             guide_source=self.guide_source,
             guide_scorer_obj=self.guide_scorer,
@@ -47,8 +52,11 @@ class Species:
             genome_path=self.genome_path
         )
 
-        cas9_guides_list: list[Guide] = list()
-        for container in guide_containers:
-            cas9_guides_list.extend(container.get_cas9_guides())
 
-        return cas9_guides_list
+    def get_guides_from_containers(self) -> list[Guide]:
+        guide_objects_list: list[Guide] = list() 
+
+        for container in self.guide_containers_list:
+            guide_objects_list.extend(container.get_cas9_guides())
+
+        return guide_objects_list
