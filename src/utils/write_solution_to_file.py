@@ -86,7 +86,7 @@ def write_cds_solution_to_file(
     paths_csv_column_name: str,
     species_names_csv_column_name: str,
     output_directory: str,
-    ) -> None:
+    ) -> str:
 
     output_txt_path = os.path.join(output_directory, experiment_name + '_m{m}.txt'.format(m=multiplicity))
     output_csv_path = os.path.join(output_directory, experiment_name + '_m{m}.csv'.format(m=multiplicity))
@@ -127,7 +127,6 @@ def write_cds_solution_to_file(
 
     for pair in solution:
         seq = pair[0]
-
         hit_species = pair[1]
 
         for species_gene_tupe in hit_species:
@@ -170,6 +169,7 @@ def write_cds_solution_to_file(
     'strand', 'start_position', 'end_position', 'misc', 'path']).to_csv(output_csv_path, index=False)
     
     print('Done. Check {path} for the output.'.format(path=output_csv_path))
+    return output_csv_path
 
 
 def write_solution_to_file(
@@ -182,9 +182,8 @@ def write_solution_to_file(
     paths_csv_column_name: str,
     species_names_csv_column_name: str,
     output_directory: str,
-    ) -> None:
+    ) -> str:
 
-    # TODO maybe move to own module -- main.py is too crowded...
     output_txt_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
     output_csv_path = os.path.join(output_directory, experiment_name + '_b{b}.csv'.format(b=beta))
 
@@ -241,7 +240,7 @@ def write_solution_to_file(
 
                 sequences.append(seq)
                 paths.append(df_file_path)
-                scores.append(1)  # TODO fix for other than 1
+                scores.append('-')  # TODO fix for other than 1
                 strands.append(strand)
                 start_positions.append(start_pos)
                 end_positions.append(end_pos)
@@ -265,6 +264,7 @@ def write_solution_to_file(
     'strand', 'start_position', 'end_position', 'misc', 'path']).to_csv(output_csv_path, index=False)
     
     print('Done. Check {path} for the output.'.format(path=output_csv_path))
+    return output_csv_path
 
 
 def output_csv(
@@ -272,7 +272,7 @@ def output_csv(
     experiment_name: str,
     output_directory: str, 
     solver,
-    ) -> None:
+    ) -> str:
 
     output_path = os.path.join(output_directory, experiment_name + '_metrics.csv'.format(b=beta))
 
@@ -306,3 +306,4 @@ def output_csv(
 
     df.to_csv(output_path, mode='a', header=write_header_if_file_doesnt_exist, index=False)
     print('Done. Check {path} for the output.'.format(path=output_path))
+    return output_path
