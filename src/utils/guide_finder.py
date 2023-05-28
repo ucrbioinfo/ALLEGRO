@@ -1,6 +1,6 @@
 # Functions imported by ALLEGRO. No need to run it manually.
 # You can import this .py file separately, instantiate GuideFinder,
-#  and check for guides in your custom sequence.
+# and check for guides in your custom sequence.
 import re
 import gc
 import pandas
@@ -157,7 +157,7 @@ class GuideFinder:
 
         ## Returns:
             A list of tuples of 5 items: list[tuple[str, str, int, int, str]]:
-            * 1. (str) Chromosome name.
+            * 1. (str) Container (gene/chromosome) name.
             * 2. (str) Strand. 'F' indicates the forward strand as read in the fasta file,
                 'RC' indicates the reverse complement of the string in the same file.
             * 3. (int) Start position of `sequence` in `file_path` fasta.
