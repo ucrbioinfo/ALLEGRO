@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'testest'
+experiment_name: 'clustering'
 # ---
 
 # Choices: 'from_genome', 'from_cds'
@@ -19,25 +19,35 @@ scorer: 'dummy'
 # For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC
 #  since it contains 7 'AC' 2-mers.
 # Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT.
-include_repetitive: True
+include_repetitive: False
 # ---
 
 # (Affects performance) Default: 4
 # A higher number increases running time but reduces memory consumption.
 # Pre-select guides that hit only up to this number of species to act as representatives
 # for these species. Set to 0 to disable and save all guides to memory (highly inefficient).
-mp_threshold: 0
+mp_threshold: 4
 # ---
 
-# (Affects performance) Default: 10000
+# (Affects performance) Number of randomized rounding trials
+# Default: 10000
 # A higher number slightly increases running time but attempts to find a smaller cover set.
 # Integer value: Only used if the number of feasible guides is above the exhaustive_threshold.
 # How many times to run the randomized rounding algorithm? Any value under 1 disables trials.
-num_trials: 1000
+num_trials: 10000
 # ---
 
 # ---
 multiplicity: 1
+# ---
+
+# (Affects performance) Post-processing
+# Default: True, 10, 5
+# Compresses the output guide set by clustering similar guides
+# Adds a new column to output.csv
+cluster_guides: True
+seed_region_is_n_from_pam: 10
+mismatches_allowed_after_seed_region: 5
 # ---
 
 

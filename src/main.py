@@ -3,6 +3,7 @@ import sys
 import yaml
 import argparse
 
+import utils.cluster_solution as cluster_solution
 import utils.write_solution_to_file as write_solution
 from cython_libs.coverset2 import CoversetsCython as coverset  # type: ignore
 
@@ -354,8 +355,9 @@ def main() -> int:
             raise ValueError
     
 
+    output_path: str = ''
     if args.mode == 'from_genome':
-        write_solution.write_solution_to_file(
+        output_path = write_solution.write_solution_to_file(
             beta=args.beta,
             species_names=coversets_obj.species_names,
             solution=coversets_obj.solution,
@@ -367,7 +369,7 @@ def main() -> int:
             output_directory=args.output_directory
         )
     elif args.mode == 'from_cds':
-            write_solution.write_cds_solution_to_file(
+        output_path = write_solution.write_cds_solution_to_file(
             species_names=coversets_obj.species_names,
             gene_names=['LYS2', 'LYS5', 'MET17', 'TRP1', 'URA3', 'FCY1', 'GAP1', 'CAN1'],
             multiplicity=args.multiplicity,
@@ -379,6 +381,9 @@ def main() -> int:
             species_names_csv_column_name='species_name',
             output_directory=args.output_directory
         )
+
+    if args.cluster_guides:
+        cluster_solution.cluster_solution(output_path, args.seed_region_is_n_from_pam, args.mismatches_allowed_after_seed_region)
 
     # if args.output_csv:
     #     output_csv(
