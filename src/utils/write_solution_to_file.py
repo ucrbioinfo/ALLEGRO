@@ -76,9 +76,7 @@ def graph_score_dist(
 
 
 def write_cds_solution_to_file(
-    multiplicity: int,
-    species_names: list[str],
-    gene_names: list[str],
+    container_names: list[str],
     solution: list[tuple[str, str]],
     experiment_name: str,
     input_csv_path: str,
@@ -88,8 +86,8 @@ def write_cds_solution_to_file(
     output_directory: str,
     ) -> str:
 
-    output_txt_path = os.path.join(output_directory, experiment_name + '_m{m}.txt'.format(m=multiplicity))
-    output_csv_path = os.path.join(output_directory, experiment_name + '_m{m}.csv'.format(m=multiplicity))
+    output_txt_path = os.path.join(output_directory, experiment_name + '.txt')
+    output_csv_path = os.path.join(output_directory, experiment_name + '.csv')
 
     print('Writing to file:', output_txt_path)
     with open(output_txt_path, 'w') as f:
@@ -101,8 +99,8 @@ def write_cds_solution_to_file(
             ))
 
         f.write('We can cut the following {n} genes: {genes}.\n'.format(
-            n=len(gene_names),
-            genes=str(gene_names),
+            n=len(container_names),
+            genes=str(container_names),
             )
         )
 
@@ -131,6 +129,11 @@ def write_cds_solution_to_file(
 
         for species_gene_tupe in hit_species:
             species_gene_tupe = species_gene_tupe.split(', ')
+
+            gene_name = ''
+            if len(species_gene_tupe) > 1:
+                gene_name = ', ' + species_gene_tupe[1]
+
             df_file_path = input_df[input_df[species_names_csv_column_name] == species_gene_tupe[0]][paths_csv_column_name].values[0]
             full_path = os.path.join(input_sequence_directory, df_file_path)
 
@@ -149,7 +152,7 @@ def write_cds_solution_to_file(
                 strands.append(strand)
                 start_positions.append(start_pos)
                 end_positions.append(end_pos)
-                chromosomes_or_genes.append(container + ', ' + species_gene_tupe[1])
+                chromosomes_or_genes.append(container + gene_name)
                 species_list.append(species_gene_tupe[0])
                 misc_list.append(misc)
             
@@ -173,7 +176,6 @@ def write_cds_solution_to_file(
 
 
 def write_solution_to_file(
-    beta: int,
     species_names: list[str],
     solution: list[tuple[str, str]],
     experiment_name: str,
@@ -184,8 +186,8 @@ def write_solution_to_file(
     output_directory: str,
     ) -> str:
 
-    output_txt_path = os.path.join(output_directory, experiment_name + '_b{b}.txt'.format(b=beta))
-    output_csv_path = os.path.join(output_directory, experiment_name + '_b{b}.csv'.format(b=beta))
+    output_txt_path = os.path.join(output_directory, experiment_name + '.txt')
+    output_csv_path = os.path.join(output_directory, experiment_name + '.csv')
 
     print('Writing to file:', output_txt_path)
     with open(output_txt_path, 'w') as f:
