@@ -31,7 +31,7 @@ class GuideFinder:
         protospacer_length: int,
         context_toward_five_prime: int,
         context_toward_three_prime: int,
-        include_repetitive: bool
+        filter_repetitive: bool
         ) -> tuple[list[str], list[str], list[str], list[int]]:
         '''
         ## Args:
@@ -42,7 +42,7 @@ class GuideFinder:
                 the 5-prime after the protospacer.
             * context_toward_three_prime: The number of nucleotides to extract toward
                 the 3-prime after (and excluding) the PAM.
-            * include_repetitive: Discards a guide if the protospace contains 2-mers
+            * filter_repetitive: Discards a guide if the protospace contains 2-mers
                 repeated 5 or more times
 
         ## Returns:
@@ -90,7 +90,7 @@ class GuideFinder:
                     if any(c not in ['A', 'C', 'G', 'T'] for c in guide):
                         continue
 
-                    if include_repetitive == False:
+                    if filter_repetitive == True:
                         # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
                         # 7 times or GA is repeated 6 times.
                         if max(count_kmers(guide, 2).values()) >= 5:
@@ -220,7 +220,7 @@ class GuideFinderDebug:
         protospacer_length: int,
         context_toward_five_prime: int,
         context_toward_three_prime: int,
-        include_repetitive: bool,
+        filter_repetitive: bool,
         sequence_id: str = '',
         species: str = '',
         ) -> tuple[list[str], list[str], list[str], list[int]]:
@@ -261,7 +261,7 @@ class GuideFinderDebug:
                         self.contains_fourmers.append(0)
                         continue
 
-                    if include_repetitive == False:
+                    if filter_repetitive == True:
                         # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
                         # 7 times or GA is repeated 6 times.
                         if max(count_kmers(guide, 2).values()) >= 5:
