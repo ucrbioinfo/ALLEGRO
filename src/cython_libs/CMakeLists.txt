@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 option(CMAKE_EXPORT_COMPILE_COMMANDS "Export compile command" OFF)
 
-project(coverset2 VERSION 1.0 LANGUAGES CXX)
+project(rammingstone VERSION 1.0 LANGUAGES CXX)
 message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 
 set(CMAKE_CXX_STANDARD 17)
@@ -23,10 +23,10 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib/cmake/cmake-cython
 include(UseCython)
 
 # Tells UseCython to compile this file as a c++ file
-set_source_files_properties(coverset2.pyx PROPERTIES CYTHON_IS_CXX TRUE)
+set_source_files_properties(rammingstone.pyx PROPERTIES CYTHON_IS_CXX TRUE)
 
 # Create python module
-cython_add_module(${PROJECT_NAME} coverset2.pyx coverset2.cpp decode_bitset.cpp logger.cpp ilp_approximators.cpp)
+cython_add_module(${PROJECT_NAME} rammingstone.pyx rammingstone.cpp decorators.cpp decode_bitset.cpp logger.cpp ilp_approximators.cpp)
 
 # Location of .h files
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
