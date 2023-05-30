@@ -51,3 +51,4 @@ def cluster_solution(solution_path: str, req_match_len: int, mm_allowed: int):
 
     df.to_csv(solution_path, index=False)
     print('Done clustering. Added a new column \'cluster\' to', solution_path)
+    print('The guide RNA set contains {n} clusters.'.format(n=len(clusters)))
