@@ -131,12 +131,6 @@ class ChopChopWrapper(Scorer):
         chopchop_output = pandas.read_csv(output_path, sep='\t')
         chopchop_output['Target sequence'] = chopchop_output['Target sequence'].str[0:-3]
 
-        # dna_encoder_decoder = DNAEncoderDecoder()
-
-        # encoded_guides: list[float] = chopchop_output['Target sequence'].apply(
-        #     lambda x: dna_encoder_decoder.encode(x)
-        # ).tolist()
-
         # Map +/- to F/R 0.0/1.0
         equivalent_strand = dict({'+': 'F', '-': 'RC'})
         strands: list[str] = chopchop_output['Strand'].map(equivalent_strand).tolist()
@@ -144,8 +138,6 @@ class ChopChopWrapper(Scorer):
         locations: list[int] = chopchop_output['Genomic location'].apply(
             lambda x: int(x.split(':')[1])
         ).tolist()
-
-        # efficiency: list[float] = chopchop_output['Efficiency'].tolist()
 
         return (chopchop_output['Target sequence'].tolist(),
                 # below is intentional -- chopchop does not capture a context around the sequence
