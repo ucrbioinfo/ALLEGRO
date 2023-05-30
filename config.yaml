@@ -1,11 +1,17 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'clustering'
+experiment_name: 'track_e'
 # ---
 
 # Choices: 'from_genome', 'from_cds'
 mode: 'from_cds'
+# ---
+
+track: 'track_e'
+
+# 
+container_names: ['LYS2', 'LYS5', 'MET17', 'TRP1', 'URA3', 'FCY1', 'GAP1', 'CAN1']
 # ---
 
 # Choices: 'chopchop', 'dummy'
@@ -13,13 +19,13 @@ mode: 'from_cds'
 scorer: 'dummy'
 # ---
 
-# (Affects performance) Default: False
-# False reduces running time and reduces memory consumption.
-# If False, discards guides with 5 or more repeated 2-mers.
+# (Affects performance) Default: True
+# True reduces running time and reduces memory consumption.
+# If True, discards guides with 5 or more repeated 2-mers.
 # For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC
 #  since it contains 7 'AC' 2-mers.
 # Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT.
-include_repetitive: False
+filter_repetitive: True
 # ---
 
 # (Affects performance) Default: 4
