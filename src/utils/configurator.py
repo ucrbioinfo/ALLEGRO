@@ -3,6 +3,10 @@ import yaml
 import argparse
 
 
+def greeting() -> None:
+    print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml')
+
+
 def parse_configurations() -> argparse.Namespace:
     config_parser = argparse.ArgumentParser(add_help=False)
 
@@ -38,17 +42,6 @@ def parse_configurations() -> argparse.Namespace:
         '--experiment_name',
         type=str,
         help=help
-    )
-
-    help = '''
-    - Options are: 'from_genome', 'from_cds'
-    - Is this experiment finding guides throughtout the genome, or the input CDS files?
-    '''
-    parser.add_argument(
-        '-m',
-        '--mode',
-        type=str,
-        help=help,
     )
 
     help = '''
@@ -127,7 +120,7 @@ def parse_configurations() -> argparse.Namespace:
     parser.add_argument(
         '--mismatches_allowed_after_seed_region',
         type=int,
-        default=5,
+        default=4,
         help=help,
     )
 
@@ -152,9 +145,14 @@ def parse_configurations() -> argparse.Namespace:
         help=help,
     )
 
+    help = '''
+    - The desired column name of the .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.
+    - Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds.
+    '''
     parser.add_argument(
-        '--input_genomes_directory',
+        '--input_species_path_column',
         type=str,
+        help=help,
     )
 
     parser.add_argument(
@@ -163,10 +161,10 @@ def parse_configurations() -> argparse.Namespace:
     )
 
     help = '''
-    - Files in this directory must end with _cds.fna or _cds.faa or _cds.fasta.
+    - Files in this directory must end with .fna.
     '''
     parser.add_argument(
-        '--input_cds_directory',
+        '--input_directory',
         type=str,
         help=help,
     )
@@ -237,16 +235,14 @@ def parse_configurations() -> argparse.Namespace:
 
 
 def check_and_fix_configurations(args: argparse.Namespace) -> argparse.Namespace:
-    if args.mode not in ['from_cds', 'from_genome']:
-        print('Unknown mode', args.mode, 'selected. Aborting.')
-        raise ValueError
-
     if args.track not in ['track_a', 'track_e']:
         print('Unknown track', args.track, 'selected. Aborting.')
         raise ValueError
 
     if args.multiplicity < 1:
-        print('WARNING: Multiplicity is set to {m}, a value smaller than 1. Auto adjusting multiplicity to 1.')
+        print('WARNING: Multiplicity is set to {m}, a value smaller than 1. Auto adjusting multiplicity to 1.'.format(
+            m=args.multiplicity
+        ))
         args.multiplicity = 1
 
     if args.mp_threshold <= 0:
@@ -256,13 +252,13 @@ def check_and_fix_configurations(args: argparse.Namespace) -> argparse.Namespace
         args.mp_threshold = 0
 
     if args.mp_threshold > 0 and args.mp_threshold < args.multiplicity:
-        print('WARNING: mp_threshold is set to {mp}, a non-zero value smaller than the multiplicity {mult}.'.format(
+        print('WARNING: mp_threshold is set to {mp}, a positive value smaller than the multiplicity {mult}.'.format(
             mp=args.mp_threshold,
             mult=args.multiplicity))
         print('ALLEGRO cannot remove all but {mp} guides from each container and still ensure each container is targeted at least {m} times.'.format(
             mp=args.mp_threshold,
             mult=args.multiplicity))
-        print('Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this memory-saving feature.')
+        print('Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature.')
         args.mp_threshold = args.multiplicity
 
     if args.beta <= 0:
@@ -278,11 +274,11 @@ def check_and_fix_configurations(args: argparse.Namespace) -> argparse.Namespace
         # No feasible solutions if there are fewer guides than beta
         # Say there are 5 species, 5 guides total, and beta is set to 1. Say that none of the species share any guides.
         # This will ask ALLEGRO to find 1 guide out of 5 to cover all 5 species. There is no solution.
-        print('The scorer is set to dummy and beta to non-zero {b}. ALLEGRO will try to find (approximately) {b} guides to cover all guide containers.'.format(b=args.beta))
+        print('The scorer is set to dummy and beta to the positive value {b}. ALLEGRO will try to find (approximately) {b} guides to cover all guide containers.'.format(b=args.beta))
         print('WARNING: ALLEGRO may find that there is no feasible solution if the number of shared guides is fewer than beta.')
 
     if args.beta > 0 and args.beta < args.multiplicity:
-        print('WARNING: Beta is set to {b}, a non-zero value smaller than the multiplicity {mp}'.format(
+        print('WARNING: Beta is set to {b}, a positive value smaller than the multiplicity {mp}'.format(
             b=args.beta,
             mp=args.multiplicity
         ))
@@ -359,23 +355,3 @@ def configure_scorer_settings(args: argparse.Namespace):
                 raise ValueError
     
     return scorer_settings
-
-
-def configure_mode_settings(args: argparse.Namespace) -> dict[str, str]:
-    mode_settings: dict[str, str] = dict()
-
-    match args.mode:
-        case 'from_genome':
-            mode_settings['input_sequence_directory'] = args.input_genomes_directory
-            mode_settings['paths_csv_column_name'] = 'genome_file_name'
-
-        case 'from_cds':
-            mode_settings['container_names'] = args.container_names
-            mode_settings['input_sequence_directory'] = args.input_cds_directory
-            mode_settings['paths_csv_column_name'] = 'cds_file_name'
-        
-        case _:
-            print('Unknown mode selected. Aborting.')
-            raise ValueError
-        
-    return mode_settings

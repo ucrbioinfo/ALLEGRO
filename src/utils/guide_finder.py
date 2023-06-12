@@ -153,7 +153,7 @@ class GuideFinder:
             * sequence: A guide RNA nucleotide sequence.
             * file_path: The file path to the DNA sequence (genome or CDS genes) fasta file. 
                 Must be relative to the root directory of ALLEGRO.
-            * to_upper: (Default: True) convert the fasta sequence to upper case or not?
+            * to_upper: (Default: True) convert the fasta sequence to upper case?
 
         ## Returns:
             A list of tuples of 5 items: list[tuple[str, str, int, int, str]]:
@@ -174,12 +174,10 @@ class GuideFinder:
 
                 misc_list: list[str] = list()
                 match = re.search(r'\[gene=(.*?)\]', record.description)
-                if match:
-                    misc_list.append('Gene: ' + match.group(1))
+                if match: misc_list.append('Gene: ' + match.group(1))
 
                 match = re.search(r'\[protein_id=(.*?)\]', record.description)
-                if match:
-                    misc_list.append('Protein: ' + match.group(1))
+                if match: misc_list.append('Protein: ' + match.group(1))
 
                 misc = ', '.join(misc_list)
 
@@ -194,6 +192,7 @@ class GuideFinder:
         return chrom_strand_start_end
 
 
+# UNUSED IN RELEASE CODE
 class GuideFinderDebug:
     def __init__(self) -> None:
         self.pam_dict = {

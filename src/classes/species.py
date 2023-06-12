@@ -7,18 +7,14 @@ from classes.guide_container_factory import GuideContainerFactory
 class Species:
     __slots__ = [
         'name',
-        'cds_path',
-        'genome_path',
-        'guide_source',
+        'records_path',
         'guide_scorer',
         'guide_containers_list',
         'guide_container_factory'
         ]
 
     name: str
-    cds_path: str
-    genome_path: str
-    guide_source: str
+    records_path: str
     guide_scorer: Scorer
     guide_containers_list: list[GuideContainer]
     guide_container_factory: GuideContainerFactory
@@ -26,18 +22,14 @@ class Species:
     def __init__(
         self,
         name: str,
-        cds_path: str,
-        genome_path: str,
-        guide_source: str,
+        records_path: str,
         guide_scorer: Scorer,
         guide_container_factory: GuideContainerFactory,
         ) -> None:
         
         self.name = name
-        self.cds_path = cds_path
-        self.genome_path = genome_path
-        self.guide_source = guide_source  # from_orthogroups, or from_genome
-        self.guide_scorer = guide_scorer  # chopchop, or other options in config.yaml
+        self.records_path = records_path
+        self.guide_scorer = guide_scorer  # dummy, chopchop, or other options in config.yaml
         self.guide_container_factory = guide_container_factory
 
         self.guide_containers_list: list[GuideContainer]
@@ -46,10 +38,8 @@ class Species:
     def make_guide_containers(self) -> None:
         self.guide_containers_list = self.guide_container_factory.make_guide_containers(
             species_name=self.name,
-            guide_source=self.guide_source,
-            guide_scorer_obj=self.guide_scorer,
-            cds_path=self.cds_path,
-            genome_path=self.genome_path
+            records_path=self.records_path,
+            guide_scorer_obj=self.guide_scorer
         )
 
 

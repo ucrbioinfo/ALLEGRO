@@ -165,5 +165,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/coverset2.dir/DependInfo.cmake"
+  "CMakeFiles/kirschtorte.dir/DependInfo.cmake"
   )

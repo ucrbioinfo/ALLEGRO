@@ -117,72 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named coverset2
+# Target rules for targets named kirschtorte
 
 # Build rule for target.
-coverset2: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 coverset2
-.PHONY : coverset2
+kirschtorte: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kirschtorte
+.PHONY : kirschtorte
 
 # fast build rule for target.
-coverset2/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/build
-.PHONY : coverset2/fast
-
-coverset2.o: coverset2.cpp.o
-.PHONY : coverset2.o
-
-# target to build an object file
-coverset2.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/coverset2.cpp.o
-.PHONY : coverset2.cpp.o
-
-coverset2.i: coverset2.cpp.i
-.PHONY : coverset2.i
-
-# target to preprocess a source file
-coverset2.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/coverset2.cpp.i
-.PHONY : coverset2.cpp.i
-
-coverset2.s: coverset2.cpp.s
-.PHONY : coverset2.s
-
-# target to generate assembly for a file
-coverset2.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/coverset2.cpp.s
-.PHONY : coverset2.cpp.s
-
-coverset2.o: coverset2.cxx.o
-.PHONY : coverset2.o
-
-# target to build an object file
-coverset2.cxx.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/coverset2.cxx.o
-.PHONY : coverset2.cxx.o
-
-coverset2.i: coverset2.cxx.i
-.PHONY : coverset2.i
-
-# target to preprocess a source file
-coverset2.cxx.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/coverset2.cxx.i
-.PHONY : coverset2.cxx.i
-
-coverset2.s: coverset2.cxx.s
-.PHONY : coverset2.s
-
-# target to generate assembly for a file
-coverset2.cxx.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/coverset2.cxx.s
-.PHONY : coverset2.cxx.s
+kirschtorte/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/build
+.PHONY : kirschtorte/fast
 
 decode_bitset.o: decode_bitset.cpp.o
 .PHONY : decode_bitset.o
 
 # target to build an object file
 decode_bitset.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/decode_bitset.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/decode_bitset.cpp.o
 .PHONY : decode_bitset.cpp.o
 
 decode_bitset.i: decode_bitset.cpp.i
@@ -190,7 +142,7 @@ decode_bitset.i: decode_bitset.cpp.i
 
 # target to preprocess a source file
 decode_bitset.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/decode_bitset.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/decode_bitset.cpp.i
 .PHONY : decode_bitset.cpp.i
 
 decode_bitset.s: decode_bitset.cpp.s
@@ -198,15 +150,39 @@ decode_bitset.s: decode_bitset.cpp.s
 
 # target to generate assembly for a file
 decode_bitset.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/decode_bitset.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/decode_bitset.cpp.s
 .PHONY : decode_bitset.cpp.s
+
+decorators.o: decorators.cpp.o
+.PHONY : decorators.o
+
+# target to build an object file
+decorators.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/decorators.cpp.o
+.PHONY : decorators.cpp.o
+
+decorators.i: decorators.cpp.i
+.PHONY : decorators.i
+
+# target to preprocess a source file
+decorators.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/decorators.cpp.i
+.PHONY : decorators.cpp.i
+
+decorators.s: decorators.cpp.s
+.PHONY : decorators.s
+
+# target to generate assembly for a file
+decorators.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/decorators.cpp.s
+.PHONY : decorators.cpp.s
 
 ilp_approximators.o: ilp_approximators.cpp.o
 .PHONY : ilp_approximators.o
 
 # target to build an object file
 ilp_approximators.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/ilp_approximators.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/ilp_approximators.cpp.o
 .PHONY : ilp_approximators.cpp.o
 
 ilp_approximators.i: ilp_approximators.cpp.i
@@ -214,7 +190,7 @@ ilp_approximators.i: ilp_approximators.cpp.i
 
 # target to preprocess a source file
 ilp_approximators.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/ilp_approximators.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/ilp_approximators.cpp.i
 .PHONY : ilp_approximators.cpp.i
 
 ilp_approximators.s: ilp_approximators.cpp.s
@@ -222,15 +198,63 @@ ilp_approximators.s: ilp_approximators.cpp.s
 
 # target to generate assembly for a file
 ilp_approximators.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/ilp_approximators.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/ilp_approximators.cpp.s
 .PHONY : ilp_approximators.cpp.s
+
+kirschtorte.o: kirschtorte.cpp.o
+.PHONY : kirschtorte.o
+
+# target to build an object file
+kirschtorte.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/kirschtorte.cpp.o
+.PHONY : kirschtorte.cpp.o
+
+kirschtorte.i: kirschtorte.cpp.i
+.PHONY : kirschtorte.i
+
+# target to preprocess a source file
+kirschtorte.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/kirschtorte.cpp.i
+.PHONY : kirschtorte.cpp.i
+
+kirschtorte.s: kirschtorte.cpp.s
+.PHONY : kirschtorte.s
+
+# target to generate assembly for a file
+kirschtorte.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/kirschtorte.cpp.s
+.PHONY : kirschtorte.cpp.s
+
+kirschtorte.o: kirschtorte.cxx.o
+.PHONY : kirschtorte.o
+
+# target to build an object file
+kirschtorte.cxx.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/kirschtorte.cxx.o
+.PHONY : kirschtorte.cxx.o
+
+kirschtorte.i: kirschtorte.cxx.i
+.PHONY : kirschtorte.i
+
+# target to preprocess a source file
+kirschtorte.cxx.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/kirschtorte.cxx.i
+.PHONY : kirschtorte.cxx.i
+
+kirschtorte.s: kirschtorte.cxx.s
+.PHONY : kirschtorte.s
+
+# target to generate assembly for a file
+kirschtorte.cxx.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/kirschtorte.cxx.s
+.PHONY : kirschtorte.cxx.s
 
 logger.o: logger.cpp.o
 .PHONY : logger.o
 
 # target to build an object file
 logger.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/logger.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/logger.cpp.o
 .PHONY : logger.cpp.o
 
 logger.i: logger.cpp.i
@@ -238,7 +262,7 @@ logger.i: logger.cpp.i
 
 # target to preprocess a source file
 logger.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/logger.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/logger.cpp.i
 .PHONY : logger.cpp.i
 
 logger.s: logger.cpp.s
@@ -246,7 +270,7 @@ logger.s: logger.cpp.s
 
 # target to generate assembly for a file
 logger.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/coverset2.dir/build.make CMakeFiles/coverset2.dir/logger.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kirschtorte.dir/build.make CMakeFiles/kirschtorte.dir/logger.cpp.s
 .PHONY : logger.cpp.s
 
 # Help Target
@@ -257,19 +281,22 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... coverset2"
-	@echo "... coverset2.o"
-	@echo "... coverset2.i"
-	@echo "... coverset2.s"
-	@echo "... coverset2.o"
-	@echo "... coverset2.i"
-	@echo "... coverset2.s"
+	@echo "... kirschtorte"
 	@echo "... decode_bitset.o"
 	@echo "... decode_bitset.i"
 	@echo "... decode_bitset.s"
+	@echo "... decorators.o"
+	@echo "... decorators.i"
+	@echo "... decorators.s"
 	@echo "... ilp_approximators.o"
 	@echo "... ilp_approximators.i"
 	@echo "... ilp_approximators.s"
+	@echo "... kirschtorte.o"
+	@echo "... kirschtorte.i"
+	@echo "... kirschtorte.s"
+	@echo "... kirschtorte.o"
+	@echo "... kirschtorte.i"
+	@echo "... kirschtorte.s"
 	@echo "... logger.o"
 	@echo "... logger.i"
 	@echo "... logger.s"

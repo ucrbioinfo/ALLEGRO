@@ -74,113 +74,12 @@ def graph_score_dist(
     matplotlib.pyplot.savefig(output_path)
 
 
-
-def write_cds_solution_to_file(
-    container_names: list[str],
-    solution: list[tuple[str, str]],
-    experiment_name: str,
-    input_csv_path: str,
-    input_sequence_directory: str,
-    paths_csv_column_name: str,
-    species_names_csv_column_name: str,
-    output_directory: str,
-    ) -> str:
-
-    output_txt_path = os.path.join(output_directory, experiment_name + '.txt')
-    output_csv_path = os.path.join(output_directory, experiment_name + '.csv')
-
-    print('Writing to file:', output_txt_path)
-    with open(output_txt_path, 'w') as f:
-
-        for tuple_elem in solution:
-            f.write('Guide {g} targets {n} genes.\n'.format(
-                g=tuple_elem[0],
-                n=len(tuple_elem[1])
-            ))
-
-        f.write('We can cut the following {n} genes: {genes}.\n'.format(
-            n=len(container_names),
-            genes=str(container_names),
-            )
-        )
-
-        f.write('Using the following {n} guides: {guides}.\n'.format(
-            n=str(len(solution)),
-            guides=str(solution),
-            )
-        )
-
-    paths: list[str] = list()
-    misc_list: list[str] = list()
-    species_list: list[str] = list()
-    scores: list[int] = list()
-    strands: list[str] = list()
-    sequences: list[str] = list()
-    end_positions: list[int] = list()
-    start_positions: list[int] = list()
-    chromosomes_or_genes: list[str] = list()
-
-    guide_finder = GuideFinder()
-    input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
-
-    for pair in solution:
-        seq = pair[0]
-        hit_species = pair[1]
-
-        for species_gene_tupe in hit_species:
-            species_gene_tupe = species_gene_tupe.split(', ')
-
-            gene_name = ''
-            if len(species_gene_tupe) > 1:
-                gene_name = ', ' + species_gene_tupe[1]
-
-            df_file_path = input_df[input_df[species_names_csv_column_name] == species_gene_tupe[0]][paths_csv_column_name].values[0]
-            full_path = os.path.join(input_sequence_directory, df_file_path)
-
-            list_of_tuples = guide_finder.locate_guides_in_sequence(sequence=seq, file_path=full_path, to_upper=True)
-
-            for tupe in list_of_tuples:
-                container = tupe[0]
-                strand = tupe[1]
-                start_pos = tupe[2]
-                end_pos = tupe[3]
-                misc = tupe[4]
-
-                sequences.append(seq)
-                paths.append(df_file_path)
-                scores.append(1)  # TODO fix for other than 1
-                strands.append(strand)
-                start_positions.append(start_pos)
-                end_positions.append(end_pos)
-                chromosomes_or_genes.append(container + gene_name)
-                species_list.append(species_gene_tupe[0])
-                misc_list.append(misc)
-            
-    
-    pandas.DataFrame(list(zip(
-        sequences,
-        species_list,
-        scores,
-        chromosomes_or_genes,
-        strands,
-        start_positions,
-        end_positions,
-        misc_list,
-        paths,
-        )),
-    columns=['sequence', 'targets', 'score', 'chromosome_or_gene',
-    'strand', 'start_position', 'end_position', 'misc', 'path']).to_csv(output_csv_path, index=False)
-    
-    print('Done. Check {path} for the output.'.format(path=output_csv_path))
-    return output_csv_path
-
-
 def write_solution_to_file(
     species_names: list[str],
     solution: list[tuple[str, str]],
     experiment_name: str,
     input_csv_path: str,
-    input_sequence_directory: str,
+    input_directory: str,
     paths_csv_column_name: str,
     species_names_csv_column_name: str,
     output_directory: str,
@@ -193,7 +92,7 @@ def write_solution_to_file(
     with open(output_txt_path, 'w') as f:
 
         for tuple_elem in solution:
-            f.write('Guide {g} targets {n} species.\n'.format(
+            f.write('Guide {g} targets {n} genes/chromosomes.\n'.format(
                 g=tuple_elem[0],
                 n=len(tuple_elem[1])
             ))
@@ -223,18 +122,25 @@ def write_solution_to_file(
     guide_finder = GuideFinder()
     input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
 
-    for pair in solution:
-        seq = pair[0]
-        hit_species = pair[1]
+    for tup in solution:
+        seq = tup[0]
+        # score = tup[1]
+        hit_species = tup[1]
 
-        for species in hit_species:
-            df_file_path = input_df[input_df[species_names_csv_column_name] == species][paths_csv_column_name].values[0]
-            full_path = os.path.join(input_sequence_directory, df_file_path)
+        for species_gene_tupe in hit_species:
+            species_gene_tupe = species_gene_tupe.split(', ')
+
+            record_name = ''
+            if len(species_gene_tupe) > 1:
+                record_name = ', ' + species_gene_tupe[1]
+
+            df_file_path = input_df[input_df[species_names_csv_column_name] == species_gene_tupe[0]][paths_csv_column_name].values[0]
+            full_path = os.path.join(input_directory, df_file_path)
 
             list_of_tuples = guide_finder.locate_guides_in_sequence(sequence=seq, file_path=full_path, to_upper=True)
 
             for tupe in list_of_tuples:
-                chromosome = tupe[0]
+                container = tupe[0]
                 strand = tupe[1]
                 start_pos = tupe[2]
                 end_pos = tupe[3]
@@ -242,12 +148,12 @@ def write_solution_to_file(
 
                 sequences.append(seq)
                 paths.append(df_file_path)
-                scores.append('-')  # TODO fix for other than 1
+                scores.append(1)
                 strands.append(strand)
                 start_positions.append(start_pos)
                 end_positions.append(end_pos)
-                chromosomes_or_genes.append(chromosome)
-                species_list.append(species)
+                chromosomes_or_genes.append(container + record_name)
+                species_list.append(species_gene_tupe[0])
                 misc_list.append(misc)
             
     
@@ -262,7 +168,7 @@ def write_solution_to_file(
         misc_list,
         paths,
         )),
-    columns=['sequence','targets', 'score', 'chromosome_or_gene',
+    columns=['sequence', 'targets', 'score', 'chromosome_or_gene',
     'strand', 'start_position', 'end_position', 'misc', 'path']).to_csv(output_csv_path, index=False)
     
     print('Done. Check {path} for the output.'.format(path=output_csv_path))

@@ -17,4 +17,4 @@ clean:
 	-rm *.o
 	cmake . -Bbuild -DCMAKE_PREFIX_PATH=$(shell pwd) -DBOOST_ROOT=$(BOOST_ROOT)
 	cmake --build build
-	-mv build/rammingstone.so ./
+	-mv build/kirschtorte.so ./

@@ -134,7 +134,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=coverset2
+CMAKE_PROJECT_NAME:STATIC=kirschtorte
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION:STATIC=1.0
@@ -243,8 +243,8 @@ Eigen3_DIR:PATH=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/share/e
 //The directory containing a CMake configuration file for Osi.
 Osi_DIR:PATH=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/lib/cmake/Osi
 
-//Add module coverset2
-PYTHON_ENABLE_MODULE_coverset2:BOOL=ON
+//Add module kirschtorte
+PYTHON_ENABLE_MODULE_kirschtorte:BOOL=ON
 
 //Path to a program.
 PYTHON_EXECUTABLE:FILEPATH=/home/amohs002/miniconda3/envs/allegro/bin/python
@@ -258,8 +258,8 @@ PYTHON_LIBRARY:FILEPATH=/home/amohs002/miniconda3/envs/allegro/lib/libpython3.10
 //Path to a library.
 PYTHON_LIBRARY_DEBUG:FILEPATH=PYTHON_LIBRARY_DEBUG-NOTFOUND
 
-//Add module coverset2 shared
-PYTHON_MODULE_coverset2_BUILD_SHARED:BOOL=ON
+//Add module kirschtorte shared
+PYTHON_MODULE_kirschtorte_BUILD_SHARED:BOOL=ON
 
 //The directory containing a CMake configuration file for Protobuf.
 Protobuf_DIR:PATH=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/lib/cmake/protobuf
@@ -280,13 +280,13 @@ ZLIB_LIBRARY_RELEASE:FILEPATH=/home/amohs002/projects/research/ALLEGRO/src/cytho
 absl_DIR:PATH=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/lib/cmake/absl
 
 //Value Computed by CMake
-coverset2_BINARY_DIR:STATIC=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/build
+kirschtorte_BINARY_DIR:STATIC=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/build
 
 //Value Computed by CMake
-coverset2_IS_TOP_LEVEL:STATIC=ON
+kirschtorte_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
-coverset2_SOURCE_DIR:STATIC=/home/amohs002/projects/research/ALLEGRO/src/cython_libs
+kirschtorte_SOURCE_DIR:STATIC=/home/amohs002/projects/research/ALLEGRO/src/cython_libs
 
 //The directory containing a CMake configuration file for ortools.
 ortools_DIR:PATH=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/lib/cmake/ortools
@@ -472,8 +472,8 @@ FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 FIND_PACKAGE_MESSAGE_DETAILS_ZLIB:INTERNAL=[/home/amohs002/projects/research/ALLEGRO/src/cython_libs/lib/libz.a][/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include][c ][v1.2.11()]
 //Details about finding re2
 FIND_PACKAGE_MESSAGE_DETAILS_re2:INTERNAL=[/home/amohs002/projects/research/ALLEGRO/src/cython_libs/lib/cmake/re2/re2Config.cmake][v9.0.0()]
-//ADVANCED property for variable: PYTHON_ENABLE_MODULE_coverset2
-PYTHON_ENABLE_MODULE_coverset2-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PYTHON_ENABLE_MODULE_kirschtorte
+PYTHON_ENABLE_MODULE_kirschtorte-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PYTHON_EXECUTABLE
 PYTHON_EXECUTABLE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PYTHON_INCLUDE_DIR
@@ -482,8 +482,8 @@ PYTHON_INCLUDE_DIR-ADVANCED:INTERNAL=1
 PYTHON_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PYTHON_LIBRARY_DEBUG
 PYTHON_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: PYTHON_MODULE_coverset2_BUILD_SHARED
-PYTHON_MODULE_coverset2_BUILD_SHARED-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PYTHON_MODULE_kirschtorte_BUILD_SHARED
+PYTHON_MODULE_kirschtorte_BUILD_SHARED-ADVANCED:INTERNAL=1
 //Result of TRY_COMPILE
 THREADS_HAVE_PTHREAD_ARG:INTERNAL=TRUE
 //ADVANCED property for variable: ZLIB_INCLUDE_DIR

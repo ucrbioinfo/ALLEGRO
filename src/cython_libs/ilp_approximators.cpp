@@ -2,40 +2,60 @@
 
 std::vector<std::pair<std::string, std::string>> randomized_rounding(
     std::vector<operations_research::MPVariable *> &feasible_solutions,
-    boost::dynamic_bitset<> &all_species_bitset,
-    std::unordered_map<boost::dynamic_bitset<>, std::pair<char, boost::dynamic_bitset<>>> &coversets,
-    std::size_t num_containers,
+    boost::dynamic_bitset<> all_containers_bitset,
+    std::map<boost::dynamic_bitset<>, std::pair<char, boost::dynamic_bitset<>>> &coversets,
+    std::size_t multiplicity,
     std::size_t num_trials,
     std::ostringstream &log_buffer)
 {
-    // Algorithm source:
-    // https://web.archive.org/web/20230325165759/https://theory.stanford.edu/~trevisan/cs261/lecture08.pdf
     std::cout << "Using randomized rounding with " << num_trials << " trials." << std::endl;
     log_buffer << "Using randomized rounding with " << num_trials << " trials." << std::endl;
 
-    std::unordered_set<std::string> winners;
+    std::size_t original_size = all_containers_bitset.size();
+    std::size_t new_size = original_size * multiplicity;
+
+    boost::dynamic_bitset<> extended_all_containers_bitset(new_size);
+    all_containers_bitset.resize(new_size);
+
+    for (std::size_t i = 0; i < multiplicity; i++)
+    {
+        extended_all_containers_bitset <<= original_size;
+        extended_all_containers_bitset |= all_containers_bitset;
+    }
+
+    std::set<std::string> winners;
     std::size_t len_winners = INT_MAX; // Inifinity, initially
     std::size_t trial_with_smallest_size = 0;
 
     // On each invocation, dist(rng) returns a random floating-point value
-    //  uniformly distributed in the range [min, max).
+    // uniformly distributed in the range [min, max).
     boost::random::mt19937 rng(std::time(nullptr));
     boost::random::uniform_real_distribution<double> dist(0, 1);
 
-    for (std::size_t trial = 1; trial < num_trials + 1; trial++)
+    std::size_t trial = 1;
+    while (trial < num_trials + 1)
     {
+        if (trial % 1000 == 0)
+        {
+            std::cout << "\rTrial " << trial << std::flush;
+        }
+
         // Guide containers to cover
-        boost::dynamic_bitset<> I_this_trial(num_containers);
-        std::unordered_set<std::string> winners_this_trial;
+        boost::dynamic_bitset<> I_this_trial(new_size);
+        std::set<std::string> winners_this_trial;
         std::size_t iterations_this_trial = 100000; // while-loop exit condition in case of bad luck
 
-        while ((I_this_trial != all_species_bitset) && (iterations_this_trial != 0))
+        while ((I_this_trial != extended_all_containers_bitset) && (iterations_this_trial != 0))
         {
             iterations_this_trial--;
 
             for (auto var_ptr : feasible_solutions)
             {
                 operations_research::MPVariable *var = var_ptr;
+
+                if (winners_this_trial.find(var->name()) != winners_this_trial.end()) {
+                    continue;
+                }
 
                 if ((var->solution_value() == 1.0) || (var->solution_value() > dist(rng)))
                 {
@@ -45,7 +65,16 @@ std::vector<std::pair<std::string, std::string>> randomized_rounding(
                     // The species bit vector hit by this binary DNA sequence
                     boost::dynamic_bitset<> species_hit_by_this_guide = coversets[bitset].second;
 
-                    I_this_trial |= species_hit_by_this_guide;
+                    species_hit_by_this_guide.resize(new_size);
+                    boost::dynamic_bitset<> old_I(new_size);
+
+                    while (species_hit_by_this_guide.find_first() != boost::dynamic_bitset<>::npos)
+                    {
+                        old_I = I_this_trial;
+                        I_this_trial |= species_hit_by_this_guide;
+                        species_hit_by_this_guide &= old_I;
+                        species_hit_by_this_guide <<= original_size;
+                    }
 
                     winners_this_trial.insert(var->name());
                 }
@@ -67,6 +96,12 @@ std::vector<std::pair<std::string, std::string>> randomized_rounding(
             len_winners = len_winners_this_trial;
             trial_with_smallest_size = trial;
         }
+
+        trial += 1;
+    }
+
+    if (trial > 1000) {
+        std::cout << std::endl;
     }
 
     std::vector<std::pair<std::string, std::string>> decoded_winners;
@@ -76,6 +111,7 @@ std::vector<std::pair<std::string, std::string>> randomized_rounding(
     for (auto winner_str : winners)
     {
         boost::dynamic_bitset<> bitset(winner_str);
+        // char score = coversets[bitset].first;
         boost::dynamic_bitset<> species_hit_by_this_guide = coversets[bitset].second;
 
         std::string buffer;
