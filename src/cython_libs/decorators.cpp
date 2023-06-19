@@ -4,9 +4,9 @@ void decorate_with_monophonic(
     std::size_t cut_multiplicity,
     std::size_t monophonic_threshold,
     std::ostringstream &log_buffer,
-    std::map<boost::dynamic_bitset<>, std::pair<char, boost::dynamic_bitset<>>> &coversets)
+    std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets)
 {
-    std::unordered_map<boost::dynamic_bitset<>, std::vector<std::pair<boost::dynamic_bitset<>, char>>> containers_already_hit_by_unique_guide;
+    std::unordered_map<boost::dynamic_bitset<>, std::vector<std::pair<boost::dynamic_bitset<>, double>>> containers_already_hit_by_unique_guide;
 
     log_buffer << "Monophonic threshold: " << monophonic_threshold << std::endl;
 
@@ -16,7 +16,7 @@ void decorate_with_monophonic(
         while (it != coversets.end())
         {
             boost::dynamic_bitset<> new_guide = it->first;
-            unsigned char new_score = it->second.first;
+            double new_score = it->second.first;
             boost::dynamic_bitset<> container_bitset = it->second.second;
 
             // Below, we want to keep only m guides per species where that guide hits
@@ -33,13 +33,13 @@ void decorate_with_monophonic(
                     if (container_bitset_iterator->second.size() == cut_multiplicity)
                     {
                         // Get the vector of representative guides and their scores in pairs
-                        std::vector<std::pair<boost::dynamic_bitset<>, char>> represent_guides_vector = container_bitset_iterator->second;
+                        std::vector<std::pair<boost::dynamic_bitset<>, double>> represent_guides_vector = container_bitset_iterator->second;
 
-                        std::pair<boost::dynamic_bitset<>, char> smallest_pair;
+                        std::pair<boost::dynamic_bitset<>, double> smallest_pair;
                         boost::dynamic_bitset<> smallest_old_guide = represent_guides_vector[0].first;
-                        char smallest_score = represent_guides_vector[0].second;
+                        double smallest_score = represent_guides_vector[0].second;
 
-                        for (const std::pair<boost::dynamic_bitset<>, char> &pair : represent_guides_vector)
+                        for (const std::pair<boost::dynamic_bitset<>, double> &pair : represent_guides_vector)
                         {
                             if (pair.second < smallest_score)
                             {
@@ -66,15 +66,15 @@ void decorate_with_monophonic(
                     {
                         // Vector is not full yet. Add the new guide to it.
                         // I.e., the multiplicity count is not met yet. This container still needs to be hit more times.
-                        containers_already_hit_by_unique_guide[container_bitset].push_back(std::pair<boost::dynamic_bitset<>, char>(new_guide, new_score));
+                        containers_already_hit_by_unique_guide[container_bitset].push_back(std::pair<boost::dynamic_bitset<>, double>(new_guide, new_score));
                     }
                 }
                 // If this species still needs a representative guide...
                 else
                 {
                     // Indicate that this species has a representative guide now.
-                    std::vector<std::pair<boost::dynamic_bitset<>, char>> vector_of_representatives;
-                    vector_of_representatives.push_back(std::pair<boost::dynamic_bitset<>, char>(new_guide, new_score));
+                    std::vector<std::pair<boost::dynamic_bitset<>, double>> vector_of_representatives;
+                    vector_of_representatives.push_back(std::pair<boost::dynamic_bitset<>, double>(new_guide, new_score));
                     containers_already_hit_by_unique_guide[container_bitset] = vector_of_representatives;
                 }
             }
@@ -86,6 +86,6 @@ void decorate_with_monophonic(
 
 void decorate_with_clustering(
     std::ostringstream &log_buffer,
-    std::map<boost::dynamic_bitset<>, std::pair<char, boost::dynamic_bitset<>>> &coversets) {
+    std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets) {
         // TODO - preclustering
     }
