@@ -7,14 +7,18 @@ from cython_libs.kirschtorte import KirschtorteCython as coverset  # type: ignor
 
 
 def main() -> int:
-    configurator.greeting()
+    configurator.greet()  # Guten Tag!
     
+    # Read command line arguments and config.yaml
+    # Settings specified on the command line have priority over and will replace those in config.yaml
     args = configurator.parse_configurations()
-    args = configurator.check_and_fix_configurations(args)
+    args = configurator.check_and_fix_configurations(args)  # Warnings and info to help with user error
+
+    # Create the output folder using the output directory and experiment name
     args.output_directory = configurator.create_output_directory(args.output_directory, args.experiment_name)
     
     scorer_settings = configurator.configure_scorer_settings(args)
-    configurator.log_args(args)
+    configurator.log_args(args)  # Write the current configuration to a log file in the output folder
     
     coversets_obj = coverset(
         beta=args.beta,
@@ -22,8 +26,8 @@ def main() -> int:
         monophonic_threshold=args.mp_threshold,
         track=args.track,
         num_trials=args.num_trials,
-        cas_variant=args.cas,
-        guide_length=args.protospacer_length,
+        cas_variant='cas9',
+        guide_length=20,
         scorer_name=args.scorer,
         scorer_settings=scorer_settings,
         output_directory=args.output_directory,
