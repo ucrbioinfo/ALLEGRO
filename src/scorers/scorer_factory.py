@@ -1,6 +1,7 @@
 from scorers.scorer_base import Scorer
 from scorers.dummy_scorer import DummyScorer
 from scorers.chopchop_wrapper import ChopChopWrapper
+from scorers.ucrispr_scorer import uCRISPR_scorer
 
 
 class ScorerFactory:
@@ -18,17 +19,24 @@ class ScorerFactory:
         match scorer_name:
             case 'chopchop':
                 if scorer_settings == None:
-                    print('Error: ChopChopWrapper requires scorer_settings.')
+                    print('Dev Error: ChopChopWrapper requires scorer_settings.')
                     raise ValueError
 
                 return ChopChopWrapper(scorer_settings)
             
             case 'dummy':
                 if scorer_settings == None:
-                    print('Error: DummyScorer requires scorer_settings.')
+                    print('Dev Error: DummyScorer requires scorer_settings.')
                     raise ValueError
                 
                 return DummyScorer(scorer_settings)
+            
+            case 'uCRISPR' | 'ucrispr':
+                if scorer_settings == None:
+                    print('Dev Error: uCRISPR_scorer requires scorer_settings.')
+                    raise ValueError
+                
+                return uCRISPR_scorer(scorer_settings)
             
             case _:
                 print('Unknown scorer selected. Aborting.')
