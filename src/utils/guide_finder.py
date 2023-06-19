@@ -1,6 +1,6 @@
 # Functions imported by ALLEGRO. No need to run it manually.
 # You can import this .py file separately, instantiate GuideFinder,
-# and check for guides in your custom sequence.
+# and check for guides in your custom sequence by calling identify_guides_and_indicate_strand(...).
 import re
 import gc
 import pandas
@@ -39,30 +39,31 @@ class GuideFinder:
             * sequence: A nucleotide/DNA sequence to find substrings of guide RNA in.
             * protospacer_length: The length of the string toward 5-prime of the PAM.
             * context_toward_five_prime: The number of nucleotides to extract toward
-                the 5-prime after the protospacer.
+                the 5-prime after the protospacer (to the left of the sequence).
             * context_toward_three_prime: The number of nucleotides to extract toward
-                the 3-prime after (and excluding) the PAM.
+                the 3-prime after (and excluding) the PAM (to the right side of the sequence).
             * filter_repetitive: Discards a guide if the protospace contains 2-mers
-                repeated 5 or more times
+                repeated 5 or more times.
 
         ## Returns:
             A tuple of four lists:
-            * The first list[str] is a list of the guides found in `sequence`.
-            * The second list[str] is a list of the guides with their context around them.
+            * The first list[str] is a list of the protospacers found in `sequence`.
+            * The second list[str] is a list of the protospacers with their context around them.
+            This includes the PAM by default.
             * The third list[str] is a list of 'F's and 'RC's indicating on
-                which strand, forward or reverse complement, each respective guide resides.
+                which strand, Forward or Reverse Complement, each respective guide resides.
             * The fourth list[int] shows the location of the PAM of each guide in `sequence`.
 
         ## Example
             Input: find_guides_and_indicate_strand(
                 pam='NGG',
-                sequence='AAAAAACCAAAAAGGTTTTTT',
-                protospacer_length=3,
-                context_toward_five_prime=2,
-                context_toward_three_prime=2,
+                sequence='AGCGTACCCCCAGGTCTTGCAGG',
+                protospacer_length=20,
+                context_toward_five_prime=0,
+                context_toward_three_prime=0,
             )
             Output:
-            (['AAA', 'TTT'], ['CAAAAAGGTT', 'CTTTTTGGTT'], ['F', 'RC'], [12, 12])
+            (['AGCGTACCCCCAGGTCTTGC'], ['AGCGTACCCCCAGGTCTTGCAGG'], ['F'], [20])
         '''
 
         guides_list: list[str] = list()
