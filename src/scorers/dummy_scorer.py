@@ -16,7 +16,7 @@ class DummyScorer(Scorer):
     def score_sequence(
         self,
         guide_container: GuideContainer
-        ) -> tuple[list[str], list[str], list[str], list[int], list[int]]:
+        ) -> tuple[list[str], list[str], list[str], list[int], list[float]]:
         '''
         Assigns all guides in param sequence a score of 1
         '''
@@ -33,6 +33,6 @@ class DummyScorer(Scorer):
             filter_repetitive=self.filter_repetitive
         )
         
-        scores = [1] * len(guides_list)
+        scores = [1.0] * len(guides_list)
         
         return guides_list, guides_context_list, strands_list, locations_list, scores

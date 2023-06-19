@@ -88,7 +88,7 @@ class ChopChopWrapper(Scorer):
     def score_sequence(
         self,
         guide_container: GuideContainer,
-        ) -> tuple[list[str], list[str], list[str], list[int], list[int]]: 
+        ) -> tuple[list[str], list[str], list[str], list[int], list[float]]: 
         silent = True
         
         species_name = guide_container.species_name
@@ -144,6 +144,6 @@ class ChopChopWrapper(Scorer):
                 chopchop_output['Target sequence'].tolist(),
                 strands,
                 locations,
-                chopchop_output['Efficiency'].astype(int).tolist()
+                chopchop_output['Efficiency'].astype(float).tolist()
         )
     
