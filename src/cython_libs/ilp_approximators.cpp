@@ -1,9 +1,10 @@
+#include "allegro/decode_bitset.h"
 #include "allegro/ilp_approximators.h"
 
-std::vector<std::pair<std::string, std::string>> randomized_rounding(
+std::vector<GuideStruct> randomized_rounding(
     std::vector<operations_research::MPVariable *> &feasible_solutions,
     boost::dynamic_bitset<> all_containers_bitset,
-    std::map<boost::dynamic_bitset<>, std::pair<char, boost::dynamic_bitset<>>> &coversets,
+    std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
     std::size_t multiplicity,
     std::size_t num_trials,
     std::ostringstream &log_buffer)
@@ -37,6 +38,7 @@ std::vector<std::pair<std::string, std::string>> randomized_rounding(
     {
         if (trial % 1000 == 0)
         {
+            // Writes on the same line
             std::cout << "\rTrial " << trial << std::flush;
         }
 
@@ -104,21 +106,29 @@ std::vector<std::pair<std::string, std::string>> randomized_rounding(
         std::cout << std::endl;
     }
 
-    std::vector<std::pair<std::string, std::string>> decoded_winners;
+    // std::vector<std::pair<std::string, std::string>> decoded_winners;
+    std::vector<GuideStruct> decoded_winners;
 
     std::cout << "Winners are:" << std::endl;
     log_buffer << "Winners are:" << std::endl;
     for (auto winner_str : winners)
     {
         boost::dynamic_bitset<> bitset(winner_str);
-        // char score = coversets[bitset].first;
+
+        double score = coversets[bitset].first;
         boost::dynamic_bitset<> species_hit_by_this_guide = coversets[bitset].second;
 
         std::string buffer;
         boost::to_string(species_hit_by_this_guide, buffer);
 
         std::string decoded_bitset = decode_bitset(winner_str);
-        decoded_winners.push_back(std::pair<std::string, std::string>(decoded_bitset, buffer));
+
+        GuideStruct guide;
+        guide.sequence = decoded_bitset;
+        guide.score = score;
+        guide.species_hit = buffer;
+        
+        decoded_winners.push_back(guide);
 
         std::cout << decoded_bitset << std::endl;
         log_buffer << decoded_bitset << std::endl;
