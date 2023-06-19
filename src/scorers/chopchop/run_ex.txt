@@ -1,0 +1,1 @@
+python chopchop.py -F -Target NP_009673.1_seq.fasta -o ./ -G saccharomyces_cerevisiae --scoringMethod ZHANG_2019 > ./NP_009673.1_scores.csv
