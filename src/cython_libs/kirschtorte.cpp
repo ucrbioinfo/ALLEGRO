@@ -22,7 +22,7 @@ namespace Kirschtorte
 
     int Kirschtorte::encode_and_save_dna(
         std::string seq,
-        std::size_t score,
+        double score,
         std::size_t container_id)
     {
         std::string encoded_str("");
@@ -71,7 +71,7 @@ namespace Kirschtorte
             bitset.set(container_id); // Set the appropriate bit for this container to 1
 
             // Indicate that this guide (its encoded bitset) has a pair<score, and the container it targets>
-            this->coversets[encoded_bitset] = std::pair<char, boost::dynamic_bitset<>>(score, bitset);
+            this->coversets[encoded_bitset] = std::pair<double, boost::dynamic_bitset<>>(score, bitset);
         }
 
         // Keep a record of which species should be hit. We compare against this later in randomized_rounding
@@ -84,11 +84,12 @@ namespace Kirschtorte
         return 0;
     }
 
-    std::vector<std::pair<std::string, std::string>> Kirschtorte::setup_and_solve(
+    std::vector<GuideStruct> Kirschtorte::setup_and_solve(
         std::size_t monophonic_threshold,
         std::size_t cut_multiplicity,
         std::size_t beta)
     {
+        // Disable ORTOOLS warning
         ::google::InitGoogleLogging("ALLEGRO");
 
         // Create the linear solver with the GLOP backend.
@@ -120,7 +121,7 @@ namespace Kirschtorte
         auto it = this->coversets.begin();
         while (it != this->coversets.end())
         {
-            unsigned char score = it->second.first;
+            double score = it->second.first;
 
             // Remove redundant guides. Either predicted inefficient by the scorer,
             // or marked as not needed above.
@@ -242,7 +243,7 @@ namespace Kirschtorte
         {
             LOG(FATAL) << "The problem does not have an optimal solution!";
             this->log_buffer << "The problem does not have an optimal solution!" << std::endl;
-            return std::vector<std::pair<std::string, std::string>>();
+            return std::vector<GuideStruct>();
         }
 
         // Save the feasible variables.
@@ -256,7 +257,7 @@ namespace Kirschtorte
 
             if (var->solution_value() > 0.0)
             {
-                std::cout << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
+                // std::cout << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
                 this->log_buffer << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
 
                 feasible_solutions.push_back(var);
@@ -271,7 +272,9 @@ namespace Kirschtorte
         // --------------------------------------------------
         // -------------- RANDOMIZED ROUND ------------------
         // --------------------------------------------------
-        std::vector<std::pair<std::string, std::string>> solution_set;
+
+        // vector of guide structs [guide sequence, score, container bit vector that it cuts]
+        std::vector<GuideStruct> solution_set;
 
         if (len_solutions > 0)
         {
@@ -288,7 +291,8 @@ namespace Kirschtorte
             // Empty -- A problem with 0 feasible solutions (empty inputs or no guides in the fasta files)
             // still returns an OPTIMAL status by GLOP. Return an empty vector in this edge case.
             // Why would you input no guides? :/
-            solution_set = std::vector<std::pair<std::string, std::string>>();
+            std::cout << "No feasible solutions." << len_solutions << std::endl;
+            this->log_buffer << "No feasible solutions." << len_solutions << std::endl;
         }
 
         log_info(this->log_buffer, this->output_directory);
