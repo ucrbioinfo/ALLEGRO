@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/allegro/kirschtorte.h" "/home/amohs002/projects/research/ALLEGRO/src/cython_libs/build/kirschtorte.cxx"
+  "/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/allegro/guide_struct.h" "/home/amohs002/projects/research/ALLEGRO/src/cython_libs/build/kirschtorte.cxx"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

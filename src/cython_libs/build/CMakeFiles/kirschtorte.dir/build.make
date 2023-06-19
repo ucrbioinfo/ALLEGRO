@@ -70,7 +70,7 @@ include CMakeFiles/kirschtorte.dir/progress.make
 include CMakeFiles/kirschtorte.dir/flags.make
 
 kirschtorte.cxx: /home/amohs002/projects/research/ALLEGRO/src/cython_libs/kirschtorte.pyx
-kirschtorte.cxx: /home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/allegro/kirschtorte.h
+kirschtorte.cxx: /home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/allegro/guide_struct.h
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Compiling Cython CXX source for kirschtorte..."
 	/home/amohs002/miniconda3/envs/allegro/bin/cython --cplus -3 --output-file /home/amohs002/projects/research/ALLEGRO/src/cython_libs/build/kirschtorte.cxx /home/amohs002/projects/research/ALLEGRO/src/cython_libs/kirschtorte.pyx
 
