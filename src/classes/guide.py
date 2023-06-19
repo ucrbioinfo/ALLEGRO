@@ -8,7 +8,7 @@ class Guide:
         ]
     
     strand: str
-    score: int
+    score: float
     sequence: str
     genomic_location: int
     guide_container_metadata_dict: dict
@@ -16,7 +16,7 @@ class Guide:
     def __init__(
         self,
         strand: str,
-        score: int,
+        score: float,
         sequence: str,
         genomic_location: int,
         guide_container_metadata_dict: dict,
