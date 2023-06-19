@@ -22,9 +22,13 @@ from classes.guide_container import GuideContainer
 from classes.guide_container_factory import GuideContainerFactory
 import utils.records_count_finder as records_count_finder
 
-# ctypedef (string, int, string) tuple_string_int_string
+# Declare a C++ class with cdef
+cdef extern from "allegro/guide_struct.h":
+    cdef cppclass GuideStruct:
+        string sequence
+        double score
+        string species_hit
 
-# Declare the class with cdef
 cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
     cdef cppclass Kirschtorte:
         Kirschtorte(
@@ -39,7 +43,7 @@ cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
         # that shows which species this sequence hits, e.g., '1110'.
         # The width of the bitset is equal to the number of input species found in
         # species_df .csv normally found in data/input/species.csv
-        vector[pair[string, string]] setup_and_solve(
+        vector[GuideStruct] setup_and_solve(
             size_t monophonic_threshold,
             size_t cut_multiplicity,
             size_t beta)
@@ -48,7 +52,7 @@ cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
         # this seq hits.
         int encode_and_save_dna(
             string seq,
-            size_t score,
+            double score,
             size_t container_id)
 
 
@@ -74,13 +78,13 @@ cdef class KirschtorteCython:
         ) -> None:
 
         try:
-            print('Reading species input file from {path}'.format(path=input_species_csv_file_path))
+            print(f'Reading species input file from {input_species_csv_file_path}')
             self.species_df = pandas.read_csv(input_species_csv_file_path)
         except pandas.errors.EmptyDataError:
-            print('EmptyDataError exception in kirschtorte.pyx: File', input_species_csv_file_path, 'is empty. Exiting.')
+            print(f'EmptyDataError exception in kirschtorte.pyx: File {input_species_csv_file_path} is empty. Exiting.')
             sys.exit(1)
         except FileNotFoundError:
-            print('FileNotFoundError exception in kirschtorte.pyx: Cannot find file', input_species_csv_file_path, 'Did you spell the path/file name correctly? Exiting.')
+            print(f'FileNotFoundError exception in kirschtorte.pyx: Cannot find file {input_species_csv_file_path}. Did you spell the path/file name correctly? Exiting.')
             sys.exit(1)
 
         self.beta = beta
@@ -113,7 +117,7 @@ cdef class KirschtorteCython:
             self.track_e()
 
 
-    def track_a(self) -> list[tuple[str, list[str]]]:
+    def track_a(self) -> list[tuple[str, float, list[str]]]:
         # Make an object for each species
         for idx, row in self.species_df.iterrows():
             self.guide_origin[idx] = row.species_name
@@ -139,7 +143,7 @@ cdef class KirschtorteCython:
                     'a preprocessing step. Set the include_repetitive option to False in config.yaml ' +
                     'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
-                print('No such cas variant as', self.cas_variant, '. Modify this value in config.yaml. Exiting.\n')
+                print(f'No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
                 raise NotImplementedError
 
             for guide_object in guide_objects_list:
@@ -148,18 +152,22 @@ cdef class KirschtorteCython:
                 # interact with C++ -- encode and pass the sequence string, score, and index
                 self.kirschtorte.encode_and_save_dna(guide_sequence.encode('utf-8'), guide_object.score, idx)
                 
-            print('Done with', idx + 1, 'species...', end='\r')
+            print(f'Done with {idx + 1} species...', end='\r')
         print('\nCreated coversets for all species.')
-        print('Setting up the linear program...')
+        print('Setting up and solving the linear program...')
 
         # Deallocate
         del self.species_df
 
         # Interface with the C++ functions.
-        winners_bytes_pairs = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
+        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
 
-        self.solution: list[tuple[str, list[str]]] = list()
-        for seq, binary_hits in winners_bytes_pairs:
+        self.solution: list[tuple[str, float, list[str]]] = list()
+        for guide_struct in guide_struct_vector:
+            seq = guide_struct.sequence
+            score = guide_struct.score
+            binary_hits = guide_struct.species_hit
+
             # Decode the bytes object and reverse the binary string
             binary_hits = binary_hits.decode('utf-8')[::-1]  # e.g., '0111'
             seq = seq.decode('utf-8')  # e.g., 'ACCTGAG...'
@@ -171,14 +179,16 @@ cdef class KirschtorteCython:
             for idx in [idx.start() for idx in re.finditer('1', binary_hits)]:
                 names_hits.append(self.guide_origin[idx])
             
-            # E.g., ('ACCTGAG...', ['saccharomyces', 'yarrowia', 'kmarx'])
-            self.solution.append((seq, names_hits))
+            # E.g., ('ACCTGAG...', 6, ['saccharomyces', 'yarrowia', 'kmarx'])
+            self.solution.append((seq, score, names_hits))
+
+        return self.solution
     
 
-    def track_e(self) -> list[tuple[str, list[str]]]:
+    def track_e(self) -> list[tuple[str, float, list[str]]]:
         container_idx: int = 0
-        # Make an object for each species
-        for _, row in self.species_df.iterrows():
+        
+        for _, row in self.species_df.iterrows():  # Make an object for each species
             records_path = os.path.join(self.input_directory, row[self.file_column_name])
             
             species_object = Species(
@@ -200,7 +210,7 @@ cdef class KirschtorteCython:
                     'a preprocessing step. Set the include_repetitive option to False in config.yaml ' +
                     'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
-                print('No such cas variant as', self.cas_variant, '. Modify this value in config.yaml. Exiting.\n')
+                print(f'No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
                 raise NotImplementedError
 
             for guide_container in guide_containers_list:
@@ -212,7 +222,6 @@ cdef class KirschtorteCython:
                 container_target_name = record_ortho_to if record_ortho_to != 'N/A' else record_string_id
 
                 guide_objects_list: list[Guide] = guide_container.get_cas9_guides()
-
                 for guide_object in guide_objects_list:
                     guide_sequence = guide_object.sequence
                     
@@ -228,18 +237,22 @@ cdef class KirschtorteCython:
                 
                 container_idx += 1
                 
-                print('Done with', container_idx, 'genes...', end='\r')
+                print(f'Done with {container_idx} genes...', end='\r')
         print('\nCreated coversets for all genes.')
-        print('Setting up the linear program...')
+        print('Setting up and solving the linear program...')
 
         # Deallocate
         del self.species_df
 
         # Interface with the C++ functions.
-        winners_bytes_pairs = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
+        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
 
-        self.solution: list[tuple[str, list[str]]] = list()
-        for seq, binary_hits in winners_bytes_pairs:
+        self.solution: list[tuple[str, float, list[str]]] = list()
+        for guide_struct in guide_struct_vector:
+            seq = guide_struct.sequence
+            score = guide_struct.score
+            binary_hits = guide_struct.species_hit
+
             # Decode the bytes object and reverse the binary string
             binary_hits = binary_hits.decode('utf-8')[::-1]  # e.g., '0111'
             seq = seq.decode('utf-8')  # e.g., 'ACCTGAG...'
@@ -251,8 +264,8 @@ cdef class KirschtorteCython:
             for idx in [idx.start() for idx in re.finditer('1', binary_hits)]:
                 names_hits.append(self.guide_origin[idx])
             
-            # E.g., ('ACCTGAG...', ['saccharomyces, LYS2', 'yarrowia, URA3', 'kmarx, LYS3'])
-            self.solution.append((seq, names_hits))
+            # E.g., ('ACCTGAG...', 6, ['saccharomyces, LYS2', 'yarrowia, URA3', 'kmarx, LYS3'])
+            self.solution.append((seq, score, names_hits))
 
 
     @property
