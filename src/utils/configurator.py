@@ -1,9 +1,10 @@
+# Functions imported by ALLEGRO. No need to run it manually.
 import os
 import yaml
 import argparse
 
 
-def greeting() -> None:
+def greet() -> None:
     print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml')
 
 
@@ -46,12 +47,24 @@ def parse_configurations() -> argparse.Namespace:
 
     help = '''
     - Which scoring method to use? Default: 'dummy'
-    - Options are 'chopchop', 'dummy' where 'dummy' assigns a score of 1.0 to all guides.
+    - Options are 'chopchop', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides.
     '''
     parser.add_argument(
         '--scorer',
         type=str,
         default='dummy',
+        help=help,
+    )
+
+    help = '''
+    - Which track to use?
+    - Options are 'track_e', 'track_a'
+    - track_a: any of the genes in container_names can be targeted. There will be multiplicity targets per guide container (species or genes).
+    - track_e: each species/gene has to be targeted at least multiplicity times,
+    '''
+    parser.add_argument(
+        '--track',
+        type=str,
         help=help,
     )
 
@@ -69,15 +82,15 @@ def parse_configurations() -> argparse.Namespace:
         help=help
     )
 
-    help = '''
-    - Which cas endonuclease to use? Default: 'cas9'. Options are: 'cas9'.
-    '''
-    parser.add_argument(
-        '--cas',
-        type=str,
-        default='cas9',
-        help=help,
-    )
+    # help = '''
+    # - Which cas endonuclease to use? Default: 'cas9'. Options are: 'cas9'.
+    # '''
+    # parser.add_argument(
+    #     '--cas',
+    #     type=str,
+    #     default='cas9',
+    #     help=help,
+    # )
 
     help = '''
     - Ensures to cut each species/gene at least this many times. Default: 1
@@ -197,16 +210,16 @@ def parse_configurations() -> argparse.Namespace:
         help=help,
     )
 
-    help = '''
-    - Search all combinatorial possibilities unless there are more feasible solutions than this (then uses randomized rounding).
-    - The number of calculations grows exponentially.
-    - ONLY increase this parameter when the number of guides in under about twenty.
-    '''
-    parser.add_argument(
-        '--exhaustive_threshold',
-        type=int,
-        help=help,
-    )
+    # help = '''
+    # - Search all combinatorial possibilities unless there are more feasible solutions than this (then uses randomized rounding).
+    # - The number of calculations grows exponentially.
+    # - ONLY increase this parameter when the number of guides in under about twenty.
+    # '''
+    # parser.add_argument(
+    #     '--exhaustive_threshold',
+    #     type=int,
+    #     help=help,
+    # )
 
     help = '''
     - Only used if the number of feasible guides is above the exhaustive_threshold.
@@ -236,34 +249,26 @@ def parse_configurations() -> argparse.Namespace:
 
 def check_and_fix_configurations(args: argparse.Namespace) -> argparse.Namespace:
     if args.track not in ['track_a', 'track_e']:
-        print('Unknown track', args.track, 'selected. Aborting.')
+        print(f'Unknown track {args.track} selected. Aborting.')
         raise ValueError
 
     if args.multiplicity < 1:
-        print('WARNING: Multiplicity is set to {m}, a value smaller than 1. Auto adjusting multiplicity to 1.'.format(
-            m=args.multiplicity
-        ))
+        print(f'WARNING: Multiplicity is set to {args.multiplicity}, a value smaller than 1. Auto adjusting multiplicity to 1.')
         args.multiplicity = 1
 
     if args.mp_threshold <= 0:
-        print('mp_threshold is set to {mp} and thus disabled. Saving all guides to memory.'.format(
-            mp=args.mp_threshold
-        ))
+        print(f'mp_threshold is set to {args.mp_threshold} and thus disabled. Saving all guides to memory.')
         args.mp_threshold = 0
 
     if args.mp_threshold > 0 and args.mp_threshold < args.multiplicity:
-        print('WARNING: mp_threshold is set to {mp}, a positive value smaller than the multiplicity {mult}.'.format(
-            mp=args.mp_threshold,
-            mult=args.multiplicity))
-        print('ALLEGRO cannot remove all but {mp} guides from each container and still ensure each container is targeted at least {m} times.'.format(
-            mp=args.mp_threshold,
-            mult=args.multiplicity))
+        print(f'WARNING: mp_threshold is set to {args.mp_threshold}, a positive value smaller than the multiplicity {args.multiplicity}.')
+        print(f'ALLEGRO cannot remove all but {args.mp_threshold} guides from each container and still ensure each container is targeted at least {args.multiplicity} times.')
         print('Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature.')
         args.mp_threshold = args.multiplicity
 
     if args.beta <= 0:
         args.beta = 0
-        print('Beta is set to {b} and thus disabled.'.format(b=args.beta))
+        print(f'Beta is set to {args.beta} and thus disabled.')
 
         if args.scorer != 'dummy':
             print('ALLEGRO will find the guides with the best efficiency. It will not be minimizing the set size.')
@@ -274,18 +279,12 @@ def check_and_fix_configurations(args: argparse.Namespace) -> argparse.Namespace
         # No feasible solutions if there are fewer guides than beta
         # Say there are 5 species, 5 guides total, and beta is set to 1. Say that none of the species share any guides.
         # This will ask ALLEGRO to find 1 guide out of 5 to cover all 5 species. There is no solution.
-        print('The scorer is set to dummy and beta to the positive value {b}. ALLEGRO will try to find (approximately) {b} guides to cover all guide containers.'.format(b=args.beta))
+        print(f'The scorer is set to dummy and beta to the positive value {args.beta}. ALLEGRO will try to find (approximately) {args.beta} guides to cover all guide containers.')
         print('WARNING: ALLEGRO may find that there is no feasible solution if the number of shared guides is fewer than beta.')
 
     if args.beta > 0 and args.beta < args.multiplicity:
-        print('WARNING: Beta is set to {b}, a positive value smaller than the multiplicity {mp}'.format(
-            b=args.beta,
-            mp=args.multiplicity
-        ))
-        print('ALLEGRO cannot find a total of {b} guides while each guide container is required to be targeted at least {m} times.'.format(
-            b=args.beta,
-            mp=args.multiplicity
-        ))
+        print(f'WARNING: Beta is set to {args.beta}, a positive value smaller than the multiplicity {args.multiplicity}')
+        print(f'ALLEGRO cannot find a total of {args.beta} guides while each guide container is required to be targeted at least {args.multiplicity} times.')
         print('Auto adjusting beta to be equal to the multiplicity. You may also set beta to 0. See the documentation for more details.')
         args.beta = args.multiplicity
 
@@ -303,7 +302,7 @@ def log_args(args: argparse.Namespace) -> None:
     output_txt_path = os.path.join(args.output_directory, args.experiment_name + '_config_used.txt')
 
     with open(output_txt_path, 'w') as f:
-        f.write('Config used for experiment ' + args.experiment_name + '\n')
+        f.write(f'Config used for experiment {args.experiment_name}\n')
         for key, value in vars(args).items():
             f.writelines(key + ': ' + str(value) + '\n')
 
@@ -343,11 +342,20 @@ def configure_scorer_settings(args: argparse.Namespace):
 
             case 'dummy':
                 scorer_settings = {
-                    'pam': args.pam,
-                    'protospacer_length': args.protospacer_length,
+                    'pam': 'NGG',
+                    'protospacer_length': 20,
                     'filter_repetitive': args.filter_repetitive,
-                    'context_toward_five_prime': args.context_toward_five_prime,
-                    'context_toward_three_prime': args.context_toward_three_prime,
+                    'context_toward_five_prime': 0,
+                    'context_toward_three_prime': 0,
+                }
+
+            case 'uCRISPR' | 'ucrispr':
+                scorer_settings = {
+                    'pam': 'NGG',
+                    'protospacer_length': 20,
+                    'filter_repetitive': args.filter_repetitive,
+                    'context_toward_five_prime': 0,
+                    'context_toward_three_prime': 0,
                 }
 
             case _:
