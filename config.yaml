@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'track_e_genes_unweight_mult1'
+experiment_name: 'track_a_m3'
 # ---
 
 # --------------------------------------------------------------------
@@ -9,27 +9,37 @@ experiment_name: 'track_e_genes_unweight_mult1'
 # --------------------------------------------------------------------
 output_directory: 'data/output/'
 input_directory: 'data/input/cds/orthogroups'
-input_species_path: 'data/input/final_ncbi_concat_1k_input_species.csv'   # either a .csv file with the right format, or list of species paths
+input_species_path: 'data/input/one.csv'   # either a .csv file with the right format, or list of species paths
 input_species_path_column: 'cds_file_name'
 # ---
 
 # track_a: any of the genes in container_names can be targeted.
 # There will be multiplicity targets per species.
 # track_e: each gene has to be targeted at least multiplicity times,
-track: 'track_e'
+track: 'track_a'
 
 # ---
 # In track_a, every species needs to be targeted at least this many times anywhere.
 # In track_e, each gene needs to be targeted at least this many times in that gene.
-multiplicity: 1
+multiplicity: 3
 # ---
 
-# Choices: 'chopchop', 'dummy'
+# Integer value, default: 0
+beta: 1   # The final size of the guides set must be <= than this. Think of it as your budget.
+          # Set to 0 to disable: this causes ALLEGRO to find the smallest gRNA set IGNORING scores
+          # (treats all of the guides as equals).
+          # If set to the number of input species, the final size of the set may be up to
+          # the number of species you have (worst case, one guide per species).
+          # If set to a number HIGHER than the number of species, finds the best #beta guides
+          # and ensures each species is hit at least once.
+# ---
+
+# Choices: 'chopchop', 'dummy', 'ucrispr'
 # dummy assigns a score of 1.0 to all guides
-scorer: 'dummy'
+scorer: 'ucrispr'
 # ---
 
-# (Affects time and memory performance) Default: True
+# (Affects running time and memory performance) Default: True
 # True reduces running time and reduces memory consumption.
 # If True, discards guides with 5 or more repeated 2-mers.
 # For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC
@@ -39,7 +49,7 @@ scorer: 'dummy'
 filter_repetitive: True
 # ---
 
-# (Affects time and memory performance) Default: 4
+# (Affects running time and memory performance) Default: 4
 # A higher number decreases running time and reduces memory consumption,
 # especially when you have millions of guides.
 # Pre-select guides that hit only up to this number of species to act as representatives
@@ -47,7 +57,7 @@ filter_repetitive: True
 mp_threshold: 0
 # ---
 
-# (Affects time performance) Number of randomized rounding trials
+# (Affects running time performance) Number of randomized rounding trials
 # Default: 1000
 # A higher number increases running time but attempts to find a smaller cover set.
 # Integer value: Only used if the number of feasible guides is above the exhaustive_threshold.
@@ -55,7 +65,7 @@ mp_threshold: 0
 num_trials: 1000
 # ---
 
-# (Affects time performance) Post-processing. Default: True, 10, 4
+# (Affects running time performance) Post-processing. Default: True, 10, 4
 # Compresses the output guide set by clustering similar guides.
 # Adds a new column 'cluster' to output.csv
 cluster_guides: True
@@ -63,38 +73,28 @@ seed_region_is_n_from_pam: 10
 mismatches_allowed_after_seed_region: 4
 # ---
 
-# Integer value, default: 0
-beta: 0   # The final size of the guides set must be <= than this. Think of it as your budget.
-          # Set to 0 to disable: this causes ALLEGRO to find the smallest gRNA set IGNORING scores
-          # (treats all of the guides as equals).
-          # If set to the number of input species, the final size of the set may be up to
-          # the number of species you have (worst case, one guide per species).
-          # If set to a number HIGHER than the number of species, finds the best #beta guides
-          # and ensures each species is hit at least once.
-# ---
-
-# --------------------------------------------------------------------
-# Endonuclease settings
-# --------------------------------------------------------------------
-cas: 'cas9'  # default: 'cas9'
-pam: 'NGG'  # default for cas9: 'NGG'
-            # Supports 'NGG' which looks for 'A/C/T/G' + 'GG' 
-            # Any other PAM will be treated as a literal string.
-
-protospacer_length: 20  # Integer, default: 20
-context_toward_five_prime: 0  # Integer, default: 5
-context_toward_three_prime: 0  # Integer, default: 3
-# --------------------------------------------------------------------
-
 # ---
 # Required if scorer is set to 'chopchop' -- ignored otherwise
-chopchop_scoring_method: 'ZHANG_2019'  # choices: "XU_2015", "DOENCH_2014", "DOENCH_2016", "MORENO_MATEOS_2015", "CHARI_2015", "G_20", "KIM_2018", "ALKAN_2018", "ZHANG_2019", "ALL"
-absolute_path_to_chopchop: '/home/amohs002/projects/research/chopchop/'  # directory only
+chopchop_scoring_method: 'DOENCH_2016'  # choices: "XU_2015", "DOENCH_2014", "DOENCH_2016", "MORENO_MATEOS_2015", "CHARI_2015", "G_20", "KIM_2018", "ALKAN_2018", "ZHANG_2019", "ALL"
+absolute_path_to_chopchop: '/home/amohs002/projects/research/ALLEGRO/src/scorers/chopchop/'  # directory only
 absolute_path_to_genomes_directory: '/home/amohs002/projects/research/ALLEGRO/data/input/genomes/'
 # ---
 
+# --------------------------------------------------------------------
+# Endonuclease settings -- Currently disabled -- Default values are shown below.
+# uncommenting this code does NOTHING. Values are hard-coded internally.
+# --------------------------------------------------------------------
+# cas: 'cas9'  # default: 'cas9'
+# pam: 'NGG'  # default for cas9: 'NGG'
+            # Supports 'NGG' which looks for 'A/C/T/G' + 'GG' 
+            # Any other PAM will be treated as a literal string.
+
+# protospacer_length: 20  # Integer, default: 20
+# --------------------------------------------------------------------
+
 # ---
 # (Affects performance -- currently not implemented)
+# uncommenting this code does NOTHING. Values are hard-coded internally.
 # A higher number increases running time and reduces memory consumption.
 # Integer value: Search all combinatorial possibilities unless there are more
 # feasible solutions than this (then use randomized rounding)
