@@ -266,6 +266,8 @@ cdef class KirschtorteCython:
             
             # E.g., ('ACCTGAG...', 6, ['saccharomyces, LYS2', 'yarrowia, URA3', 'kmarx, LYS3'])
             self.solution.append((seq, score, names_hits))
+            
+        return self.solution
 
 
     @property
