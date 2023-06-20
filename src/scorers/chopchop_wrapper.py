@@ -49,7 +49,7 @@ class ChopChopWrapper(Scorer):
                 os.makedirs(output_directory)
 
             print('Running bowtie-build for', species_name)
-            # conda run -n chopchop path_to/bowtie/bowtie-build ../../data/input/genomes/hpolymorpha_genomic.fna hpoly
+            # Example run: conda run -n chopchop path_to/bowtie/bowtie-build ../../data/input/genomes/hpolymorpha_genomic.fna hpoly
             os.system('conda run -n chopchop' + ' ' + self.absolute_path_to_chopchop + 'bowtie/bowtie-build ' + absolute_path_to_species_genome + ' ' + species_name + ' ' + '-q')
             os.system('mv *.ebwt' + ' ' + output_directory)
             print('Bowtie is done.')
