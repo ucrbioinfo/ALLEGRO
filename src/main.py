@@ -10,14 +10,14 @@ def main() -> int:
     configurator.greet()  # Guten Tag!
     
     # Read command line arguments and config.yaml
-    # Settings specified on the command line have priority over and will replace those in config.yaml
+    # Some arguments are not shown in config.yaml and are defaulted in parse_configurations().
+    # Arguments specified on the command line have priority over and will replace those in config.yaml
     args = configurator.parse_configurations()
-    args = configurator.check_and_fix_configurations(args)  # Warnings and info to help with user error
 
-    # Create the output folder using the output directory and experiment name
-    args.output_directory = configurator.create_output_directory(args.output_directory, args.experiment_name)
+    # This is the only function that changes the arguments in args.
+    # Warnings and info to help with user error. Also hard-codes some paths and arguments.
+    args, scorer_settings = configurator.check_and_fix_configurations(args)
     
-    scorer_settings = configurator.configure_scorer_settings(args)
     configurator.log_args(args)  # Write the current configuration to a log file in the output folder
     
     coversets_obj = coverset(
