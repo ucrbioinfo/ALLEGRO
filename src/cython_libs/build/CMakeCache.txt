@@ -15,13 +15,13 @@
 ########################
 
 //No help, variable specified on the command line.
-BOOST_ROOT:PATH=/home/amohs002/projects/packages/boost_1_81_0/
+BOOST_ROOT:PATH=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/../utils/boost_1_81_0/
 
 //The directory containing a CMake configuration file for Boost.
 Boost_DIR:PATH=Boost_DIR-NOTFOUND
 
 //Path to a file.
-Boost_INCLUDE_DIR:PATH=/home/amohs002/projects/packages/boost_1_81_0
+Boost_INCLUDE_DIR:PATH=/home/amohs002/projects/research/ALLEGRO/src/utils/boost_1_81_0
 
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
@@ -451,7 +451,7 @@ CYTHON_FLAGS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CYTHON_NO_DOCSTRINGS
 CYTHON_NO_DOCSTRINGS-ADVANCED:INTERNAL=1
 //Details about finding Boost
-FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/home/amohs002/projects/packages/boost_1_81_0][c ][v1.81.0()]
+FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/home/amohs002/projects/research/ALLEGRO/src/utils/boost_1_81_0][c ][v1.81.0()]
 //Details about finding Cbc
 FIND_PACKAGE_MESSAGE_DETAILS_Cbc:INTERNAL=[/home/amohs002/projects/research/ALLEGRO/src/cython_libs/lib/cmake/Cbc/CbcConfig.cmake][v2.10.7()]
 //Details about finding Clp
@@ -493,11 +493,11 @@ ZLIB_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: ZLIB_LIBRARY_RELEASE
 ZLIB_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
 //Last used BOOST_ROOT value.
-_BOOST_ROOT_LAST:INTERNAL=/home/amohs002/projects/packages/boost_1_81_0/
+_BOOST_ROOT_LAST:INTERNAL=/home/amohs002/projects/research/ALLEGRO/src/cython_libs/../utils/boost_1_81_0/
 //Components requested for this build tree.
 _Boost_COMPONENTS_SEARCHED:INTERNAL=
 //Last used Boost_INCLUDE_DIR value.
-_Boost_INCLUDE_DIR_LAST:INTERNAL=/home/amohs002/projects/packages/boost_1_81_0
+_Boost_INCLUDE_DIR_LAST:INTERNAL=/home/amohs002/projects/research/ALLEGRO/src/utils/boost_1_81_0
 //Last used Boost_NAMESPACE value.
 _Boost_NAMESPACE_LAST:INTERNAL=boost
 //Last used Boost_USE_MULTITHREADED value.

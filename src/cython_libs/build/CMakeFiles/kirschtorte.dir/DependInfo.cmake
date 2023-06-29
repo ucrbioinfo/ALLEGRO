@@ -30,7 +30,7 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/home/amohs002/miniconda3/envs/allegro/include/python3.10"
   "/home/amohs002/projects/research/ALLEGRO/src/cython_libs"
-  "/home/amohs002/projects/packages/boost_1_81_0"
+  "/home/amohs002/projects/research/ALLEGRO/src/utils/boost_1_81_0"
   "/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include"
   "/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/coin"
   "/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/eigen3"
