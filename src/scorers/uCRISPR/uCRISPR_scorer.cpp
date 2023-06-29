@@ -499,15 +499,36 @@ namespace uCRISPR_scorer
         std::string rna = "";
         std::string pam = "";
 
-        dna = sequence;
-        rna = sequence.substr(0, 20);
-        pam = sequence.substr(21);
+        if (sequence.size() == 23)
+        {
+            dna = sequence;
+            rna = sequence.substr(0, 20);
+            pam = sequence.substr(21);
+        }
+        else if (sequence.size() == 30)
+        {
+            dna = sequence.substr(0, 25);
+            dna += sequence.substr(27);
+            rna = sequence.substr(4, 20);
+            pam = sequence.substr(25, 2);
+        }
 
         double E_C = 0.0;
-        for (int ii = 0; ii < 20; ii++)
+        if (sequence.size() == 23)
         {
-            std::string pname = dna.substr(ii, 2) + "_" + std::to_string(ii + 1);
-            E_C += parameters_on[pname];
+            for (int ii = 0; ii < 20; ii++)
+            {
+                std::string pname = dna.substr(ii, 2) + "_" + std::to_string(ii + 1);
+                E_C += parameters_on[pname];
+            }
+        }
+        else if (sequence.size() == 30)
+        {
+            for (int ii = -3; ii < 24; ii++)
+            {
+                std::string pname = dna.substr(ii + 3, 2) + "_" + std::to_string(ii);
+                E_C += parameters_on[pname];
+            }
         }
 
         double EsgRNA = GetSgRNAEnergy(rna);
