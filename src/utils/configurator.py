@@ -1,5 +1,6 @@
 # Functions imported by ALLEGRO. No need to run it manually.
 import os
+import sys
 import yaml
 import argparse
 
@@ -7,6 +8,13 @@ import argparse
 def greet() -> None:
     print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml')
 
+
+def conda_env_exists(env_name: str) -> bool:
+    if os.system(f'conda env list | grep {env_name} > /dev/null') == 0:
+        return True
+    else:
+        return False
+    
 
 def parse_configurations() -> argparse.Namespace:
     config_parser = argparse.ArgumentParser(add_help=False)
@@ -171,6 +179,7 @@ def parse_configurations() -> argparse.Namespace:
     parser.add_argument(
         '--output_directory',
         type=str,
+        default="data/output/"
     )
 
     help = '''
@@ -247,10 +256,33 @@ def parse_configurations() -> argparse.Namespace:
     return args
 
 
-def check_and_fix_configurations(args: argparse.Namespace) -> argparse.Namespace:
+def check_and_fix_configurations(args: argparse.Namespace) -> tuple[argparse.Namespace, dict]:
+    # If chopchop is the selected scorer, set chopchop scoring method
+    if 'chopchop' in args.scorer or 'CHOPCHOP' in args.scorer:
+        # Set paths for CHOPCHOP
+        args.absolute_path_to_chopchop = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scorers/chopchop/'))
+        args.absolute_path_to_genomes_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'data/input/genomes/'))
+        
+        if conda_env_exists('chopchop') == False:
+            print('\nATTENTION: You have selected CHOPCHOP as the guide RNA scorer. ALLEGRO will attempt to run CHOPCHOP with a conda environment called "chopchop" that must include python 2.7 and all the other python libraries for running CHOPCHOP.\n')
+            print('For more info, see here https://bitbucket.org/valenlab/chopchop/src/master/\n')
+            print('ALLEGRO ships with CHOPCHOP and Bowtie so you do not need to download the repository or set any paths manually. You only need to create a conda environment called "chopchop" with python 2.7, and install any required scorer libraries in it such as scikit-learn, keras, theano, and etc.\n')
+            print('When CHOPCHOP is selected as the scorer, you need to place the fasta genome files of every input species in data/input/genomes/ to be used with Bowtie.')
+            sys.exit(1)
+
+        split = args.scorer.split('_')
+        join = '_'.join(split[1:])
+
+        if join == '':
+            print('Please select a scorer for CHOPCHOP in config.yaml. Exiting.')
+            sys.exit(1)
+
+        args.chopchop_scoring_method = join.upper()
+        args.scorer = 'chopchop'
+
     if args.track not in ['track_a', 'track_e']:
-        print(f'Unknown track {args.track} selected. Aborting.')
-        raise ValueError
+        print(f'Unknown track {args.track} selected in config.yaml. Exiting.')
+        sys.exit(1)
 
     if args.multiplicity < 1:
         print(f'WARNING: Multiplicity is set to {args.multiplicity}, a value smaller than 1. Auto adjusting multiplicity to 1.')
@@ -271,7 +303,7 @@ def check_and_fix_configurations(args: argparse.Namespace) -> argparse.Namespace
         print(f'Beta is set to {args.beta} and thus disabled.')
 
         if args.scorer != 'dummy':
-            print('ALLEGRO will find the guides with the best efficiency. It will not be minimizing the set size.')
+            print('ALLEGRO will find the guides with the best efficiency. It will NOT be minimizing the set size.')
         else:
             print('ALLEGRO will minimize the set size.')
         
@@ -295,7 +327,12 @@ def check_and_fix_configurations(args: argparse.Namespace) -> argparse.Namespace
         print('num_trials is <= 0. Running randomized rounding only once. Note that the solution may not be the one with the smallest size.')
         args.num_trials = 1
 
-    return args
+    scorer_settings = configure_scorer_settings(args)
+
+    # Create the output folder using the output directory and experiment name
+    args.output_directory = create_output_directory(args.output_directory, args.experiment_name)
+
+    return args, scorer_settings
 
 
 def log_args(args: argparse.Namespace) -> None:
@@ -315,10 +352,10 @@ def create_output_directory(output_directory: str, experiment_name: str) -> str:
         # If it exists, append a number to the directory name
         i = 1
 
-        while os.path.exists(dir_name + "_" + str(i)):
+        while os.path.exists(dir_name + '_' + str(i)):
             i += 1
 
-        dir_name = dir_name + "_" + str(i)
+        dir_name = dir_name + '_' + str(i)
 
     print('Creating directory', dir_name)
     os.makedirs(dir_name)
@@ -326,7 +363,7 @@ def create_output_directory(output_directory: str, experiment_name: str) -> str:
     return dir_name
 
 
-def configure_scorer_settings(args: argparse.Namespace):
+def configure_scorer_settings(args: argparse.Namespace) -> dict:
     scorer_settings = dict()
 
     match args.scorer:
@@ -354,12 +391,13 @@ def configure_scorer_settings(args: argparse.Namespace):
                     'pam': 'NGG',
                     'protospacer_length': 20,
                     'filter_repetitive': args.filter_repetitive,
-                    'context_toward_five_prime': 0,
-                    'context_toward_three_prime': 0,
+                    'context_toward_five_prime': 4,  # example: ACAATTTAAAGCTTGCCTCTAACTTGGCCA
+                    'context_toward_three_prime': 3,  # 4 refers to ACAA, followed by a 20mer,
+                                                        # then TGG PAM, then 3 bases CCA 
                 }
 
             case _:
-                print('Unknown scorer selected. Aborting.')
-                raise ValueError
+                print('Unknown scorer selected in config.yaml. Exiting.')
+                sys.exit(1)
     
     return scorer_settings
