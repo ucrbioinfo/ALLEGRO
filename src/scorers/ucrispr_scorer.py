@@ -1,4 +1,5 @@
 import subprocess
+import scipy.stats
 
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
@@ -49,6 +50,8 @@ class uCRISPR_scorer(Scorer):
 
         output = process.stdout.read().decode()  # Read the output strings from the C++ program
         output = output.strip().split('\n')  # Split the output into a list of strings
-        scores = [float(s.split(' ')[1]) for s in output]
+
+        # Caclulation from CHOPCHOP
+        scores = [scipy.stats.norm.cdf(float(s.split(' ')[1]), loc=11.92658, scale=0.2803797) * 100 for s in output]
 
         return guides_list, guides_context_list, strands_list, locations_list, scores
