@@ -3036,6 +3036,7 @@ def main():
             output = prog.communicate()
             output = output[0].splitlines()
             output = output[1:]
+
             # distribution calculated on 100k random guides
             output = [ss.norm.cdf(float(x.split()[1]), loc=11.92658, scale=0.2803797) for x in output]
             for i, guide in enumerate(results):
