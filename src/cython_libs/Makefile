@@ -1,6 +1,6 @@
 VERSION := 9.5.2237
 
-BOOST_ROOT := /home/amohs002/projects/packages/boost_1_81_0/
+BOOST_ROOT := $(shell pwd)/../utils/boost_1_81_0/
 
 ##############
 ##  SOURCE  ##
@@ -9,7 +9,7 @@ BOOST_ROOT := /home/amohs002/projects/packages/boost_1_81_0/
 .PHONY: clean
 
 build:
-	cmake . -Bbuild -DCMAKE_PREFIX_PATH=$(shell pwd)
+	cmake . -Bbuild -DCMAKE_PREFIX_PATH=$(shell pwd) -DBOOST_ROOT=$(BOOST_ROOT)
 	cmake --build build
 
 clean:
