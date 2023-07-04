@@ -55,7 +55,8 @@ std::vector<GuideStruct> randomized_rounding(
             {
                 operations_research::MPVariable *var = var_ptr;
 
-                if (winners_this_trial.find(var->name()) != winners_this_trial.end()) {
+                if (winners_this_trial.find(var->name()) != winners_this_trial.end())
+                {
                     continue;
                 }
 
@@ -102,11 +103,11 @@ std::vector<GuideStruct> randomized_rounding(
         trial += 1;
     }
 
-    if (trial > 1000) {
+    if (trial > 1000)
+    {
         std::cout << std::endl;
     }
 
-    // std::vector<std::pair<std::string, std::string>> decoded_winners;
     std::vector<GuideStruct> decoded_winners;
 
     std::cout << "Winners are:" << std::endl;
@@ -127,7 +128,7 @@ std::vector<GuideStruct> randomized_rounding(
         guide.sequence = decoded_bitset;
         guide.score = score;
         guide.species_hit = buffer;
-        
+
         decoded_winners.push_back(guide);
 
         std::cout << decoded_bitset << std::endl;

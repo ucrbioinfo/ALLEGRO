@@ -21,7 +21,7 @@ class uCRISPR_scorer(Scorer):
         guide_container: GuideContainer
         ) -> tuple[list[str], list[str], list[str], list[int], list[float]]:
         '''
-        Identifies guides guide_container.sequence and pipes the guides to the
+        Identifies guides in guide_container.sequence and pipes the guides to the
         uCRISPR_scorer C++ program. Receives the scores back from the uCRISPR 
         program and returns them.
         '''
@@ -51,7 +51,7 @@ class uCRISPR_scorer(Scorer):
         output = process.stdout.read().decode()  # Read the output strings from the C++ program
         output = output.strip().split('\n')  # Split the output into a list of strings
 
-        # Caclulation from CHOPCHOP
+        # Caclulation method taken from CHOPCHOP
         scores = [scipy.stats.norm.cdf(float(s.split(' ')[1]), loc=11.92658, scale=0.2803797) * 100 for s in output]
 
         return guides_list, guides_context_list, strands_list, locations_list, scores

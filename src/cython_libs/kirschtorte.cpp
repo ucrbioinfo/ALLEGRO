@@ -92,7 +92,7 @@ namespace Kirschtorte
         // Disable ORTOOLS warning
         ::google::InitGoogleLogging("ALLEGRO");
 
-        // Create the linear solver with the GLOP backend.
+        // Create a linear solver with the GLOP backend.
         std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
         const double infinity = solver->infinity(); // Used for constraints to denote >= 1 and <= 1
 
@@ -101,6 +101,8 @@ namespace Kirschtorte
         // --------------------------------------------------
         if (monophonic_threshold > 0)
         {
+            // Inside this function, guides deemed not needed have their scores set to 0.
+            // These guides will be removed below where we have: if (score <= 0) {...}
             decorate_with_monophonic(cut_multiplicity, monophonic_threshold, this->log_buffer, this->coversets);
         }
 
@@ -115,7 +117,11 @@ namespace Kirschtorte
             beta_constraint = solver->MakeRowConstraint(-infinity, beta);
         }
 
+        // Maps a bitset (representing a guide container (gene or species) to 
+        // a set of bitsets (representing a protospacer sequence).
         std::map<boost::dynamic_bitset<>, std::set<boost::dynamic_bitset<>>> hit_containers;
+
+        // Maps a bitset (representing a protospace sequence) to an OR-TOOLS variable.
         std::map<boost::dynamic_bitset<>, operations_research::MPVariable *> map_seq_to_vars;
 
         auto it = this->coversets.begin();
@@ -123,8 +129,8 @@ namespace Kirschtorte
         {
             double score = it->second.first;
 
-            // Remove redundant guides. Either predicted inefficient by the scorer,
-            // or marked as not needed above.
+            // Remove useless guides.
+            // Either predicted inefficient by the scorer, or marked as not needed above.
             if (score <= 0)
             {
                 it = this->coversets.erase(it);
@@ -288,14 +294,13 @@ namespace Kirschtorte
         }
         else
         {
-            // Empty -- A problem with 0 feasible solutions (empty inputs or no guides in the fasta files)
-            // still returns an OPTIMAL status by GLOP. Return an empty vector in this edge case.
-            // Why would you input no guides? :/
             std::cout << "No feasible solutions." << len_solutions << std::endl;
             this->log_buffer << "No feasible solutions." << len_solutions << std::endl;
         }
 
+        // Write all buffer messages to disk
         log_info(this->log_buffer, this->output_directory);
+
         return solution_set;
     }
 }

@@ -47,12 +47,12 @@ class GuideFinder:
 
         ## Returns:
             A tuple of four lists:
-            * The first list[str] is a list of the protospacers found in `sequence`.
+            * The first list[str] is a list of the protospacers (WITHOUT PAM) found in `sequence`.
             * The second list[str] is a list of the protospacers with their context around them.
             This includes the PAM by default.
             * The third list[str] is a list of 'F's and 'RC's indicating on
                 which strand, Forward or Reverse Complement, each respective guide resides.
-            * The fourth list[int] shows the location of the PAM of each guide in `sequence`.
+            * The fourth list[int] shows the location of the start of the PAM of each guide in `sequence`.
 
         ## Example
             Input: find_guides_and_indicate_strand(
@@ -117,18 +117,22 @@ class GuideFinder:
                     if position-protospacer_length-context_toward_five_prime >= 0 and position+len(pam)+context_toward_three_prime < len(seq) + 1:
                         guide_with_context = seq[position-protospacer_length-context_toward_five_prime:position+len(pam)+context_toward_three_prime]
                     
-                    # There is not enough context on the right side -- extract as many chars as possible
-                    elif position-protospacer_length-context_toward_five_prime >= 0:
-                        guide_with_context = seq[position-protospacer_length-context_toward_five_prime:]
+                    # Commented below out. Partial-contexted sequences would not work with the uCRISPR scorer.
+                    # --------
+                    # # There is not enough context on the right side -- extract as many chars as possible
+                    # elif position-protospacer_length-context_toward_five_prime >= 0:
+                    #     guide_with_context = seq[position-protospacer_length-context_toward_five_prime:]
                     
-                    # There is not enough context on the left side
-                    #  extract from the start of the string to the specified context on the right side
-                    elif position+len(pam)+context_toward_three_prime < len(seq) + 1:
-                        guide_with_context = seq[:position+len(pam)+context_toward_three_prime]
+                    # # There is not enough context on the left side
+                    # #  extract from the start of the string to the specified context on the right side
+                    # elif position+len(pam)+context_toward_three_prime < len(seq) + 1:
+                    #     guide_with_context = seq[:position+len(pam)+context_toward_three_prime]
                     
                     # There is not enough context on either side
+                    # --------
                     else:
-                        guide_with_context = seq
+                        continue
+                        # guide_with_context = seq
 
                     guides_list.append(guide)
                     guides_context_list.append(guide_with_context)

@@ -1,5 +1,6 @@
 VERSION := 9.5.2237
 
+# Boost is included in utils
 BOOST_ROOT := $(shell pwd)/../utils/boost_1_81_0/
 
 ##############

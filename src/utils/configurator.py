@@ -4,9 +4,14 @@ import sys
 import yaml
 import argparse
 
+class bcolors:
+    ORANGE = '\033[38;5;208m'
+    ENDC = '\033[0m'
+
 
 def greet() -> None:
-    print('Welcome to ALLEGRO. All unspecified command-line arguments default to the values in config.yaml')
+    print(f'Welcome to {bcolors.ORANGE}ALLEGRO{bcolors.ENDC}.')
+    print('All unspecified command-line arguments default to the values in config.yaml.')
 
 
 def conda_env_exists(env_name: str) -> bool:

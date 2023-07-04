@@ -22,7 +22,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib/cmake/cmake-cython
 # This defines cython_add_module
 include(UseCython)
 
-# Tells UseCython to compile this file as a c++ file
+# Tells UseCython to compile this file as a C++ file
 set_source_files_properties(kirschtorte.pyx PROPERTIES CYTHON_IS_CXX TRUE)
 
 # Create python module
