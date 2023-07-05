@@ -1,14 +1,15 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'ta_m7_ns'
+experiment_name: 'three_cached'
 # ---
 
 # --------------------------------------------------------------------
 # Path Settings
 # --------------------------------------------------------------------
 input_directory: 'data/input/cds/orthogroups'
-input_species_path: 'data/input/final_ncbi_concat_1k_input_species.csv'   # either a .csv file with the right format, or list of species paths
+# input_species_path: 'data/input/final_ncbi_concat_1k_input_species.csv'   # either a .csv file with the right format, or list of species paths
+input_species_path: 'data/input/three.csv'
 input_species_path_column: 'cds_file_name'
 # ---
 
@@ -20,7 +21,7 @@ track: 'track_a'
 # ---
 # In track_a, every species needs to be targeted at least this many times anywhere.
 # In track_e, each gene needs to be targeted at least this many times in that gene.
-multiplicity: 7
+multiplicity: 1
 # ---
 
 # Integer value, default: 0
@@ -38,7 +39,7 @@ beta: 0   # The final size of the guides set must be <= than this. Think of it a
 # For example, scorer: "chopchop_doench_2016"
 # scorer: 'ucrispr' uses a faster implementation of 'chopchop_zhang_2019'
 # dummy assigns a score of 1.0 to all guides
-scorer: 'dummy'
+scorer: 'ucrispr'
 # ---
 
 # (Affects running time and memory performance) Default: True
