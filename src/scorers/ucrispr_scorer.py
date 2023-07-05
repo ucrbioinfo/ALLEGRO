@@ -1,3 +1,5 @@
+import os
+import pickle
 import subprocess
 import scipy.stats
 
@@ -8,13 +10,25 @@ from utils.guide_finder import GuideFinder
 
 class uCRISPR_scorer(Scorer):
     def __init__(self, settings: dict) -> None:
-        self.pam = settings['pam']
-        self.filter_repetitive = settings['filter_repetitive']
-        self.protospacer_length = settings['protospacer_length']
-        self.context_toward_five_prime = settings['context_toward_five_prime']
-        self.context_toward_three_prime = settings['context_toward_three_prime']
-        self.guide_finder = GuideFinder()
-        
+        self.pam: str = settings['pam']
+        self.filter_repetitive: bool = settings['filter_repetitive']
+        self.protospacer_length: int = settings['protospacer_length']
+        self.use_secondary_memory: bool = settings['use_secondary_memory']
+        self.context_toward_five_prime: int = settings['context_toward_five_prime']
+        self.context_toward_three_prime: int = settings['context_toward_three_prime']
+
+        self.guide_finder: GuideFinder = GuideFinder()
+        self.saved_guides: dict[str, float] = dict()
+
+        if self.use_secondary_memory == True:
+            if not os.path.exists('data/cache/'):
+                os.mkdir('data/cache/')
+
+            elif os.path.exists('data/cache/saved_guides.pickle'):
+                with open('data/cache/saved_guides.pickle', 'rb') as f:
+                    self.saved_guides = pickle.load(f)
+                    print('Loaded cached guide scores.')
+
 
     def score_sequence(
         self,
@@ -38,20 +52,43 @@ class uCRISPR_scorer(Scorer):
             filter_repetitive=self.filter_repetitive
         )
 
-        cpp_program_path = 'src/scorers/uCRISPR/uCRISPR_scorer'  # Relative path from root to 
-                                                                 # uCRISPR C++ program executable
-        process = subprocess.Popen(cpp_program_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        
-        for guide in guides_context_list:
-            process.stdin.write(guide.encode() + b'\n')  # Send each encoded binary string from 
-                                                         # the list to the standard input of the C++ program
-        
-        process.stdin.close()  # Close the standard input of the C++ program
+        scores: list = list()
+        indices_of_uncached_guides: list[int] = list()
 
-        output = process.stdout.read().decode()  # Read the output strings from the C++ program
-        output = output.strip().split('\n')  # Split the output into a list of strings
+        for idx, guide in enumerate(guides_context_list):
+            score = self.saved_guides.get(guide)
+            scores.append(score)
+            
+            if score == None:
+                indices_of_uncached_guides.append(idx)
 
-        # Caclulation method taken from CHOPCHOP
-        scores = [scipy.stats.norm.cdf(float(s.split(' ')[1]), loc=11.92658, scale=0.2803797) * 100 for s in output]
+        if len(indices_of_uncached_guides) > 0:
+            cpp_program_path = 'src/scorers/uCRISPR/uCRISPR_scorer'  # Relative path from root to 
+                                                                     # uCRISPR C++ program executable.
+            process = subprocess.Popen(cpp_program_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            
+            for i in indices_of_uncached_guides:
+                process.stdin.write(guides_context_list[i].encode() + b'\n')  # Send each encoded binary string from 
+                                                                              # the list to the standard input of the C++ program.
+            
+            process.stdin.close()  # Close the standard input of the C++ program.
+
+            output = process.stdout.read().decode()  # Read the output strings from the C++ program.
+            output = output.strip().split('\n')      # Split the output into a list of strings.
+
+            # Caclulation method taken from CHOPCHOP's code.
+            uncached_scores = [scipy.stats.norm.cdf(float(s.split(' ')[1]), loc=11.92658, scale=0.2803797) * 100 for s in output]
+
+            for idx, s in enumerate(uncached_scores):
+                scores[indices_of_uncached_guides[idx]] = s
+                self.saved_guides[guides_context_list[indices_of_uncached_guides[idx]]] = s
+            
+            print('Cached new guides and scores.')
 
         return guides_list, guides_context_list, strands_list, locations_list, scores
+    
+
+    def save_guides_to_disk(self) -> None:
+        if self.use_secondary_memory == True:
+            with open('data/cache/saved_guides.pickle', 'wb') as f:
+                pickle.dump(self.saved_guides, f)

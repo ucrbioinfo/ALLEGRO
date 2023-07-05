@@ -4,6 +4,7 @@ import sys
 import yaml
 import argparse
 
+
 class bcolors:
     ORANGE = '\033[38;5;208m'
     ENDC = '\033[0m'
@@ -14,6 +15,8 @@ def greet() -> None:
     print('All unspecified command-line arguments default to the values in config.yaml.')
 
 
+# TO use CHOPCHOP, ALLEGRO needs a conda environment called 'chopchop' with all the appropriate
+# CHOPCHOP dependencies and python 2.7. If not found, an error is printed out.
 def conda_env_exists(env_name: str) -> bool:
     if os.system(f'conda env list | grep {env_name} > /dev/null') == 0:
         return True
@@ -162,6 +165,19 @@ def parse_configurations() -> argparse.Namespace:
     )
 
     help = '''
+    - (Affects performance) Default: True
+    - True decreases subsequent running time but increases memory consumption.
+    - If True, saves guides and their scores to data/cache/saved_guides.pickle for future lookups.
+    - If False, each guide has to be scored again every time ALLEGRO is run.
+    '''
+    parser.add_argument(
+        '--use_secondary_memory',
+        type=bool,
+        default=True,
+        help=help
+    )
+
+    help = '''
     - The .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.
     - Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds.
     '''
@@ -262,7 +278,7 @@ def parse_configurations() -> argparse.Namespace:
 
 
 def check_and_fix_configurations(args: argparse.Namespace) -> tuple[argparse.Namespace, dict]:
-    # If chopchop is the selected scorer, set chopchop scoring method
+    # If CHOPCHOP is the selected scorer, set the chopchop scoring method.
     if 'chopchop' in args.scorer or 'CHOPCHOP' in args.scorer:
         # Set paths for CHOPCHOP
         args.absolute_path_to_chopchop = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scorers/chopchop/'))
@@ -272,7 +288,7 @@ def check_and_fix_configurations(args: argparse.Namespace) -> tuple[argparse.Nam
             print('\nATTENTION: You have selected CHOPCHOP as the guide RNA scorer. ALLEGRO will attempt to run CHOPCHOP with a conda environment called "chopchop" that must include python 2.7 and all the other python libraries for running CHOPCHOP.\n')
             print('For more info, see here https://bitbucket.org/valenlab/chopchop/src/master/\n')
             print('ALLEGRO ships with CHOPCHOP and Bowtie so you do not need to download the repository or set any paths manually. You only need to create a conda environment called "chopchop" with python 2.7, and install any required scorer libraries in it such as scikit-learn, keras, theano, and etc.\n')
-            print('When CHOPCHOP is selected as the scorer, you need to place the fasta genome files of every input species in data/input/genomes/ to be used with Bowtie.')
+            print('When CHOPCHOP is selected as the scorer, you need to place the genome fasta files of every input species in data/input/genomes/ to be used with Bowtie.')
             sys.exit(1)
 
         split = args.scorer.split('_')
@@ -394,6 +410,7 @@ def configure_scorer_settings(args: argparse.Namespace) -> dict:
             case 'uCRISPR' | 'ucrispr':
                 scorer_settings = {
                     'pam': 'NGG',
+                    'use_secondary_memory': args.use_secondary_memory,
                     'protospacer_length': 20,
                     'filter_repetitive': args.filter_repetitive,
                     'context_toward_five_prime': 4,  # example: ACAATTTAAAGCTTGCCTCTAACTTGGCCA
