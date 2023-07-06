@@ -1,5 +1,4 @@
 #include <iostream>
-#include <algorithm>
 
 #include "allegro/logger.h"
 #include "allegro/decorators.h"
@@ -126,7 +125,7 @@ namespace Kirschtorte
             beta_constraint = solver->MakeRowConstraint(-infinity, beta);
         }
 
-        // Maps a bitset (representing a guide container (gene or species) to 
+        // Maps a bitset (representing a guide container (gene or species) to
         // a set of bitsets (representing a protospacer sequence).
         std::map<boost::dynamic_bitset<>, std::set<boost::dynamic_bitset<>>> hit_containers;
 
@@ -260,7 +259,8 @@ namespace Kirschtorte
             this->log_buffer << "The problem does not have an optimal solution!" << std::endl;
             return std::vector<GuideStruct>();
         }
-        else {
+        else
+        {
             std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
         }
 

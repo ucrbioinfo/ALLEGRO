@@ -86,6 +86,7 @@ void decorate_with_monophonic(
 
 void decorate_with_clustering(
     std::ostringstream &log_buffer,
-    std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets) {
-        // TODO - preclustering
-    }
+    std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets)
+{
+    // TODO - preclustering
+}

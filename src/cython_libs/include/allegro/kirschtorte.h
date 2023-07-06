@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 #include <boost/dynamic_bitset.hpp>
 
 #include "allegro/guide_struct.h"

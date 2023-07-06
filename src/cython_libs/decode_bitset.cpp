@@ -1,7 +1,6 @@
 #include "allegro/definitions.h"
 #include "allegro/decode_bitset.h"
 
-
 std::string decode_bitset(boost::dynamic_bitset<> encoded)
 {
     std::string decoded = "";
@@ -34,7 +33,6 @@ std::string decode_bitset(boost::dynamic_bitset<> encoded)
 
     return decoded;
 }
-
 
 std::string decode_bitset(const std::string &encoded_str)
 {

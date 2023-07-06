@@ -3,7 +3,8 @@
 
 #include <string>
 
-struct GuideStruct {
+struct GuideStruct
+{
     std::string sequence;
     double score;
     std::string species_hit; // looks like this "010101001"

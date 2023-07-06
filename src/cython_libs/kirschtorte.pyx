@@ -5,7 +5,6 @@ import sys
 import pandas
 
 # ALLEGRO CYTHON CUSTOM LIBS.
-# C++ function setup_and_solve() returns type vector[tuple[string, int, string]].
 import kirschtorte  # Cythonized custom C++ lib, AKA kirschtorte.so.
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -232,7 +231,7 @@ cdef class KirschtorteCython:
                 for guide_object in guide_objects_list:
                     guide_sequence = guide_object.sequence
                     
-                    # interact with C++ -- encode and pass the sequence string, score, and index.
+                    # Interact with C++ -- encode and pass the sequence string, score, and index.
                     status = self.kirschtorte.encode_and_save_dna(
                         guide_sequence.encode('utf-8'),
                         guide_object.score,

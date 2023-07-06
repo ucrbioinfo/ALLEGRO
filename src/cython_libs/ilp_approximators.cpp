@@ -111,7 +111,7 @@ std::vector<GuideStruct> randomized_rounding(
 
     std::vector<GuideStruct> decoded_winners;
 
-    std::cout <<  BLUE << "> " << RESET << "Winners are:" << std::endl;
+    std::cout << BLUE << "> " << RESET << "Winners are:" << std::endl;
     log_buffer << "Winners are:" << std::endl;
     for (auto winner_str : winners)
     {
