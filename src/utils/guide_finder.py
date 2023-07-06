@@ -149,6 +149,7 @@ class GuideFinder:
 
     def locate_guides_in_sequence(
         self,
+        pam: str,
         sequence: str,
         file_path: str,
         to_upper: bool=True
@@ -186,6 +187,7 @@ class GuideFinder:
 
                 misc = ', '.join(misc_list)
 
+                seq = re.compile(seq + self.pam_dict[pam])
                 for match in re.finditer(seq, dna):
                     chrom_strand_start_end.append((record.id, strand, match.start(), match.end(), misc))
 

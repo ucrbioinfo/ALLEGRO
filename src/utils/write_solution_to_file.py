@@ -9,7 +9,9 @@ import pandas
 from utils.guide_finder import GuideFinder
 from utils.shell_colors import bcolors
 
+
 def write_solution_to_file(
+    pam: str,
     species_names: list[str],
     solution: list[tuple[str, float, str]],
     experiment_name: str,
@@ -63,7 +65,7 @@ def write_solution_to_file(
             df_file_path = input_df[input_df[species_names_csv_column_name] == species_gene_tupe[0]][paths_csv_column_name].values[0]
             full_path = os.path.join(input_directory, df_file_path)
 
-            list_of_tuples = guide_finder.locate_guides_in_sequence(sequence=seq, file_path=full_path, to_upper=True)
+            list_of_tuples = guide_finder.locate_guides_in_sequence(pam=pam, sequence=seq, file_path=full_path, to_upper=True)
 
             for tupe in list_of_tuples:
                 container = tupe[0]

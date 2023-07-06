@@ -37,6 +37,7 @@ def main() -> int:
     )
 
     output_path = write_solution.write_solution_to_file(
+        pam='NGG',
         species_names=coversets_obj.species_names,
         solution=coversets_obj.solution,
         experiment_name=args.experiment_name,
