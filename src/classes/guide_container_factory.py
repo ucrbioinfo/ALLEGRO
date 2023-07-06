@@ -1,8 +1,10 @@
 import re
+import sys
 from Bio import SeqIO
 
 from scorers.scorer_base import Scorer
 from classes.guide_container import GuideContainer
+from utils.shell_colors import bcolors
 
 
 class GuideContainerFactory:
@@ -19,7 +21,13 @@ class GuideContainerFactory:
         
         guide_container_list: list[GuideContainer] = list()
 
-        records = list(SeqIO.parse(open(records_path), 'fasta'))
+        records = list()
+
+        try:
+            records = list(SeqIO.parse(open(records_path), 'fasta'))
+        except FileNotFoundError:
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: Cannot find the fasta file {records_path} specified in the input csv for this species. Is the genome file for this species available? Exiting.')
+            sys.exit(1)
 
         gene_regex = r'\[gene=(.*?)\]'
         tag_regex = r'\[locus_tag=(.*?)\]'
