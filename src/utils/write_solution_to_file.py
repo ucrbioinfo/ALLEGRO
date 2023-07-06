@@ -7,6 +7,7 @@ import pandas
 # matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
 from utils.guide_finder import GuideFinder
+from utils.shell_colors import bcolors
 
 def write_solution_to_file(
     species_names: list[str],
@@ -22,7 +23,7 @@ def write_solution_to_file(
     output_txt_path = os.path.join(output_directory, experiment_name + '.txt')
     output_csv_path = os.path.join(output_directory, experiment_name + '.csv')
 
-    print(f'Writing to file: {output_txt_path}')
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Writing to file: {output_txt_path}')
     with open(output_txt_path, 'w') as f:
 
         for tup in solution:
@@ -96,9 +97,11 @@ def write_solution_to_file(
     columns=['sequence', 'target', 'score', 'chromosome_or_gene',
     'strand', 'start_position', 'end_position', 'misc', 'path']).to_csv(output_csv_path, index=False)
     
-    print(f'Done. Check {output_csv_path} for the output.')
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Done. Check {output_csv_path} for the output.')
     return output_csv_path
 
+
+# ATRIFACT CODE BELOW
 
 # def graph_size_dist(
 #     beta: int,

@@ -1,3 +1,4 @@
+#include "allegro/definitions.h"
 #include "allegro/decode_bitset.h"
 #include "allegro/ilp_approximators.h"
 
@@ -9,7 +10,7 @@ std::vector<GuideStruct> randomized_rounding(
     std::size_t num_trials,
     std::ostringstream &log_buffer)
 {
-    std::cout << "Using randomized rounding with " << num_trials << " trials." << std::endl;
+    std::cout << BLUE << "> " << RESET << "Using randomized rounding with " << num_trials << " trials." << std::endl;
     log_buffer << "Using randomized rounding with " << num_trials << " trials." << std::endl;
 
     std::size_t original_size = all_containers_bitset.size();
@@ -39,7 +40,7 @@ std::vector<GuideStruct> randomized_rounding(
         if (trial % 1000 == 0)
         {
             // Writes on the same line
-            std::cout << "\rTrial " << trial << std::flush;
+            std::cout << BLUE << "\r> " << RESET << "Trial " << trial << std::flush;
         }
 
         // Guide containers to cover
@@ -110,7 +111,7 @@ std::vector<GuideStruct> randomized_rounding(
 
     std::vector<GuideStruct> decoded_winners;
 
-    std::cout << "Winners are:" << std::endl;
+    std::cout <<  BLUE << "> " << RESET << "Winners are:" << std::endl;
     log_buffer << "Winners are:" << std::endl;
     for (auto winner_str : winners)
     {
@@ -131,7 +132,7 @@ std::vector<GuideStruct> randomized_rounding(
 
         decoded_winners.push_back(guide);
 
-        std::cout << decoded_bitset << std::endl;
+        std::cout << BLUE << "> " << RESET << decoded_bitset << std::endl;
         log_buffer << decoded_bitset << std::endl;
     }
 

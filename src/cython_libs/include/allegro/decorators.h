@@ -4,7 +4,6 @@
 #include <map>
 #include <sstream>
 #include <algorithm>
-
 #include <boost/dynamic_bitset.hpp>
 
 void decorate_with_monophonic(

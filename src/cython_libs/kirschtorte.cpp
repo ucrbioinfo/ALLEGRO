@@ -1,4 +1,13 @@
+#include <iostream>
+#include <algorithm>
+
+#include "allegro/logger.h"
+#include "allegro/decorators.h"
 #include "allegro/kirschtorte.h"
+#include "allegro/definitions.h"
+#include "allegro/decode_bitset.h"
+#include "allegro/ilp_approximators.h"
+#include "ortools/linear_solver/linear_solver.h"
 
 namespace Kirschtorte
 {
@@ -243,13 +252,16 @@ namespace Kirschtorte
         const operations_research::MPSolver::ResultStatus result_status = solver->Solve();
 
         // Check that the problem has an optimal solution.
-        std::cout << "Status: " << result_status << std::endl;
         this->log_buffer << "Status: " << result_status << std::endl;
         if (result_status != operations_research::MPSolver::OPTIMAL)
         {
+            std::cout << RED << "> Status: " << result_status << RESET << std::endl;
             LOG(FATAL) << "The problem does not have an optimal solution!";
             this->log_buffer << "The problem does not have an optimal solution!" << std::endl;
             return std::vector<GuideStruct>();
+        }
+        else {
+            std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
         }
 
         // Save the feasible variables.
@@ -273,7 +285,7 @@ namespace Kirschtorte
         map_seq_to_vars.clear();
 
         std::size_t len_solutions = feasible_solutions.size();
-        std::cout << "Number of feasible candidate guides: " << len_solutions << std::endl;
+        std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << std::endl;
         this->log_buffer << "Number of feasible candidate guides: " << len_solutions << std::endl;
         // --------------------------------------------------
         // -------------- RANDOMIZED ROUND ------------------

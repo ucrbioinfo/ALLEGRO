@@ -4,15 +4,12 @@ import sys
 import yaml
 import argparse
 
-
-class bcolors:
-    ORANGE = '\033[38;5;208m'
-    ENDC = '\033[0m'
+from utils.shell_colors import bcolors
 
 
 def greet() -> None:
-    print(f'Welcome to {bcolors.ORANGE}ALLEGRO{bcolors.ENDC}.')
-    print('All unspecified command-line arguments default to the values in config.yaml.')
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Welcome to {bcolors.ORANGE}ALLEGRO{bcolors.RESET}.')
+    print(f'{bcolors.BLUE}>{bcolors.RESET} All unspecified command-line arguments default to the values in config.yaml.')
 
 
 # TO use CHOPCHOP, ALLEGRO needs a conda environment called 'chopchop' with all the appropriate
@@ -285,17 +282,17 @@ def check_and_fix_configurations(args: argparse.Namespace) -> tuple[argparse.Nam
         args.absolute_path_to_genomes_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'data/input/genomes/'))
         
         if conda_env_exists('chopchop') == False:
-            print('\nATTENTION: You have selected CHOPCHOP as the guide RNA scorer. ALLEGRO will attempt to run CHOPCHOP with a conda environment called "chopchop" that must include python 2.7 and all the other python libraries for running CHOPCHOP.\n')
-            print('For more info, see here https://bitbucket.org/valenlab/chopchop/src/master/\n')
-            print('ALLEGRO ships with CHOPCHOP and Bowtie so you do not need to download the repository or set any paths manually. You only need to create a conda environment called "chopchop" with python 2.7, and install any required scorer libraries in it such as scikit-learn, keras, theano, and etc.\n')
-            print('When CHOPCHOP is selected as the scorer, you need to place the genome fasta files of every input species in data/input/genomes/ to be used with Bowtie.')
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: You have selected CHOPCHOP as the guide RNA scorer. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will attempt to run CHOPCHOP with a conda environment called "chopchop" that must include python 2.7 and all the other python libraries for running CHOPCHOP.\n')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} For more info, see here https://bitbucket.org/valenlab/chopchop/src/master/\n')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} ships with CHOPCHOP and Bowtie so you do not need to download the repository or set any paths manually. You only need to create a conda environment called "chopchop" with python 2.7, and install any required scorer libraries in it such as scikit-learn, keras, theano, and etc.\n')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} When CHOPCHOP is selected as the scorer, you need to place the genome fasta files of every input species in data/input/genomes/ to be used with Bowtie.')
             sys.exit(1)
 
         split = args.scorer.split('_')
         join = '_'.join(split[1:])
 
         if join == '':
-            print('Please select a scorer for CHOPCHOP in config.yaml. Exiting.')
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: Please select a scorer for CHOPCHOP in config.yaml. Exiting.')
             sys.exit(1)
 
         args.chopchop_scoring_method = join.upper()
@@ -306,46 +303,46 @@ def check_and_fix_configurations(args: argparse.Namespace) -> tuple[argparse.Nam
         sys.exit(1)
 
     if args.multiplicity < 1:
-        print(f'WARNING: Multiplicity is set to {args.multiplicity}, a value smaller than 1. Auto adjusting multiplicity to 1.')
+        print(f'{bcolors.RED}> Warning{bcolors.RESET}: Multiplicity is set to {args.multiplicity}, a value smaller than 1. Auto adjusting multiplicity to 1.')
         args.multiplicity = 1
 
     if args.mp_threshold <= 0:
-        print(f'mp_threshold is set to {args.mp_threshold} and thus disabled. Saving all guides to memory.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} mp_threshold is set to {args.mp_threshold} and thus disabled. Saving all guides to memory.')
         args.mp_threshold = 0
 
     if args.mp_threshold > 0 and args.mp_threshold < args.multiplicity:
-        print(f'WARNING: mp_threshold is set to {args.mp_threshold}, a positive value smaller than the multiplicity {args.multiplicity}.')
-        print(f'ALLEGRO cannot remove all but {args.mp_threshold} guides from each container and still ensure each container is targeted at least {args.multiplicity} times.')
-        print('Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature.')
+        print(f'{bcolors.RED}> Warning{bcolors.RESET}: mp_threshold is set to {args.mp_threshold}, a positive value smaller than the multiplicity {args.multiplicity}.')
+        print(f'{bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot remove all but {args.mp_threshold} guides from each container and still ensure each container is targeted at least {args.multiplicity} times.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature.')
         args.mp_threshold = args.multiplicity
 
     if args.beta <= 0:
         args.beta = 0
-        print(f'Beta is set to {args.beta} and thus disabled.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Beta is set to {args.beta} and thus disabled.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will minimize the set size.')
 
         if args.scorer != 'dummy':
-            print('ALLEGRO will find the guides with the best efficiency. It will NOT be minimizing the set size.')
-        else:
-            print('ALLEGRO will minimize the set size.')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Scorer is set to {args.scorer}. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will score the guides for information only and will not use them in calculations.')
+        
         
     if args.scorer == 'dummy' and args.beta > 0:
         # No feasible solutions if there are fewer guides than beta
         # Say there are 5 species, 5 guides total, and beta is set to 1. Say that none of the species share any guides.
         # This will ask ALLEGRO to find 1 guide out of 5 to cover all 5 species. There is no solution.
-        print(f'The scorer is set to dummy and beta to the positive value {args.beta}. ALLEGRO will try to find (approximately) {args.beta} guides to cover all guide containers.')
-        print('WARNING: ALLEGRO may find that there is no feasible solution if the number of shared guides is fewer than beta.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} The scorer is set to dummy and beta to the positive value {args.beta}. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will try to find (approximately) {args.beta} guides to cover all guide containers.')
+        print(f'{bcolors.RED}> Warning{bcolors.RESET}: {bcolors.ORANGE}ALLEGRO{bcolors.RESET} may find that there is no feasible solution if the number of shared guides is fewer than beta.')
 
     if args.beta > 0 and args.beta < args.multiplicity:
-        print(f'WARNING: Beta is set to {args.beta}, a positive value smaller than the multiplicity {args.multiplicity}')
-        print(f'ALLEGRO cannot find a total of {args.beta} guides while each guide container is required to be targeted at least {args.multiplicity} times.')
-        print('Auto adjusting beta to be equal to the multiplicity. You may also set beta to 0. See the documentation for more details.')
+        print(f'{bcolors.RED}> Warning{bcolors.RESET}: Beta is set to {args.beta}, a positive value smaller than the multiplicity {args.multiplicity}')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot find a total of {args.beta} guides while each guide container is required to be targeted at least {args.multiplicity} times.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting beta to be equal to the multiplicity. You may also set beta to 0. See the manual for more details.')
         args.beta = args.multiplicity
 
     if args.filter_repetitive == True:
-        print('filter_repetitive is set to True. Filtering guides with repetitive sequences.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} filter_repetitive is set to True. Filtering guides with repetitive sequences.')
 
     if args.num_trials <= 0:
-        print('num_trials is <= 0. Running randomized rounding only once. Note that the solution may not be the one with the smallest size.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} num_trials is <= 0. Running randomized rounding only once. Note that the solution may not be the one with the smallest size.')
         args.num_trials = 1
 
     scorer_settings = configure_scorer_settings(args)
@@ -378,7 +375,7 @@ def create_output_directory(output_directory: str, experiment_name: str) -> str:
 
         dir_name = dir_name + '_' + str(i)
 
-    print('Creating directory', dir_name)
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Creating directory', dir_name)
     os.makedirs(dir_name)
 
     return dir_name
@@ -419,7 +416,7 @@ def configure_scorer_settings(args: argparse.Namespace) -> dict:
                 }
 
             case _:
-                print('Unknown scorer selected in config.yaml. Exiting.')
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: Unknown scorer {args.scorer} selected in config.yaml. Exiting.')
                 sys.exit(1)
     
     return scorer_settings

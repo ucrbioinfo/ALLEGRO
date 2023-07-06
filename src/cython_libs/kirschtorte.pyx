@@ -20,6 +20,7 @@ from scorers.scorer_factory import ScorerFactory
 from classes.guide_container import GuideContainer
 from classes.guide_container_factory import GuideContainerFactory
 import utils.records_count_finder as records_count_finder
+from utils.shell_colors import bcolors
 
 # Declare a C++ class with cdef.
 cdef extern from "allegro/guide_struct.h":
@@ -77,13 +78,13 @@ cdef class KirschtorteCython:
         ) -> None:
 
         try:
-            print(f'Reading species input file from {input_species_csv_file_path}')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Reading species input file from {input_species_csv_file_path}')
             self.species_df = pandas.read_csv(input_species_csv_file_path)
         except pandas.errors.EmptyDataError:
-            print(f'EmptyDataError exception in kirschtorte.pyx: File {input_species_csv_file_path} is empty. Exiting.')
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: File {input_species_csv_file_path} is empty. Exiting.')
             sys.exit(1)
         except FileNotFoundError:
-            print(f'FileNotFoundError exception in kirschtorte.pyx: Cannot find file {input_species_csv_file_path}. Did you spell the path/file name correctly? Exiting.')
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: Cannot find file {input_species_csv_file_path}. Did you spell the path/file name correctly? Exiting.')
             sys.exit(1)
 
         self.beta = beta
@@ -144,12 +145,12 @@ cdef class KirschtorteCython:
                 guide_objects_list: list[Guide] = species_object.get_guides_from_containers()
 
                 if len(guide_objects_list) == 0:
-                    print('* WARNING: Species', row.species_name, 'contains no cas9 guides, or ' +
+                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Species', row.species_name, 'contains no cas9 guides, or ' +
                     'all of its cas9 guides have been marked as repetitive and thus removed in ' +
                     'a preprocessing step. Set the include_repetitive option to False in config.yaml ' +
                     'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
-                print(f'No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
                 raise NotImplementedError
 
             for guide_object in guide_objects_list:
@@ -158,9 +159,9 @@ cdef class KirschtorteCython:
                 # interact with C++ -- encode and pass the sequence string, score, and index.
                 self.kirschtorte.encode_and_save_dna(guide_sequence.encode('utf-8'), guide_object.score, idx)
                 
-            print(f'Done with {idx + 1} species...', end='\r')
-        print('\nCreated coversets for all species.')
-        print('Setting up and solving the linear program...')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1} species...', end='\r')
+        print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all species.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
 
         # Deallocate.
         del self.species_df
@@ -211,12 +212,12 @@ cdef class KirschtorteCython:
                 guide_containers_list = species_object.guide_containers_list
 
                 if len(guide_containers_list) == 0:
-                    print('* WARNING: Species', row.species_name, 'contains no cas9 guides, or ' +
+                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Species', row.species_name, 'contains no cas9 guides, or ' +
                     'all of its cas9 guides have been marked as repetitive and thus removed in ' +
                     'a preprocessing step. Set the include_repetitive option to False in config.yaml ' +
                     'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
-                print(f'No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
                 raise NotImplementedError
 
             for guide_container in guide_containers_list:
@@ -243,9 +244,9 @@ cdef class KirschtorteCython:
                 
                 container_idx += 1
                 
-                print(f'Done with {container_idx} genes...', end='\r')
-        print('\nCreated coversets for all genes.')
-        print('Setting up and solving the linear program...')
+                print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {container_idx} genes...', end='\r')
+        print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all genes.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
 
         # Deallocate.
         del self.species_df

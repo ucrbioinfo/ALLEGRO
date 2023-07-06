@@ -1,6 +1,8 @@
 # Functions imported by ALLEGRO. No need to run it manually.
 import pandas
 
+from utils.shell_colors import bcolors
+
 
 def hamming_distance(str1: str, str2: str, length: int) -> int:
     """
@@ -40,9 +42,8 @@ def cluster_strings(strings: list[str], req_match_len: int, mm_allowed: int) -> 
 
 
 def cluster_solution(solution_path: str, req_match_len: int, mm_allowed: int) -> int:
-    print('Clustering guides:')
-    print('Guides in the same cluster have an identical sequence for the first {n} nucleotides after the PAM (3\' to 5\').'.format(n=req_match_len))
-    print('Guides in the same cluster may mismatch up to {n} nucleotides after the seed region.'.format(n=mm_allowed))
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Clustering guides: Guides in the same cluster have an identical sequence for the first {req_match_len} nucleotides after the PAM (3\' to 5\').')
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Guides in the same cluster may mismatch up to {mm_allowed} nucleotides after the seed region.')
     
     df = pandas.read_csv(solution_path)
     df['cluster'] = 0
@@ -54,7 +55,7 @@ def cluster_solution(solution_path: str, req_match_len: int, mm_allowed: int) ->
         df.loc[df.sequence.isin(cluster), 'cluster'] = idx
 
     df.to_csv(solution_path, index=False)
-    print('Done clustering. Added a new column \'cluster\' to', solution_path)
-    print('The guide RNA set contains {n} clusters.'.format(n=len(clusters)))
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Done clustering. Added a new column \'cluster\' to {solution_path}')
+    print(f'{bcolors.BLUE}>{bcolors.RESET} The output guide RNA set contains {len(clusters)} clusters.')
 
     return len(clusters)

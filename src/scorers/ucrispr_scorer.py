@@ -6,6 +6,7 @@ import scipy.stats
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
 from utils.guide_finder import GuideFinder
+from utils.shell_colors import bcolors
 
 
 class uCRISPR_scorer(Scorer):
@@ -27,7 +28,7 @@ class uCRISPR_scorer(Scorer):
             elif os.path.exists('data/cache/saved_guides.pickle'):
                 with open('data/cache/saved_guides.pickle', 'rb') as f:
                     self.saved_guides = pickle.load(f)
-                    print('Loaded cached guide scores.')
+                    print(f'{bcolors.BLUE}>{bcolors.RESET} Loaded cached guide scores.')
 
 
     def score_sequence(
@@ -55,6 +56,8 @@ class uCRISPR_scorer(Scorer):
         scores: list = list()
         indices_of_uncached_guides: list[int] = list()
 
+        # If there are guides which we do not have the scores for, save their indices.
+        # Score them with the C++ uCRISPR after this block.
         for idx, guide in enumerate(guides_context_list):
             score = self.saved_guides.get(guide)
             scores.append(score)
@@ -79,11 +82,10 @@ class uCRISPR_scorer(Scorer):
             # Caclulation method taken from CHOPCHOP's code.
             uncached_scores = [scipy.stats.norm.cdf(float(s.split(' ')[1]), loc=11.92658, scale=0.2803797) * 100 for s in output]
 
+            # Update the saved guides cache. Call save to disk later when done with all scorings.
             for idx, s in enumerate(uncached_scores):
                 scores[indices_of_uncached_guides[idx]] = s
                 self.saved_guides[guides_context_list[indices_of_uncached_guides[idx]]] = s
-            
-            print('Cached new guides and scores.')
 
         return guides_list, guides_context_list, strands_list, locations_list, scores
     

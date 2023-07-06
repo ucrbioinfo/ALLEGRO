@@ -2,23 +2,12 @@
 #define KIRSCHTORTE_H
 
 #include <map>
-#include <tuple>
 #include <string>
 #include <vector>
 #include <sstream>
-#include <iostream>
-#include <algorithm>
-
 #include <boost/dynamic_bitset.hpp>
 
-#include "allegro/logger.h"
-#include "allegro/decorators.h"
-#include "allegro/definitions.h"
 #include "allegro/guide_struct.h"
-#include "allegro/decode_bitset.h"
-#include "allegro/ilp_approximators.h"
-
-#include "ortools/linear_solver/linear_solver.h"
 
 namespace Kirschtorte
 {

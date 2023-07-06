@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import pandas
 from Bio import SeqIO
@@ -7,16 +8,25 @@ from Bio.SeqRecord import SeqRecord
 
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
-
+from utils.shell_colors import bcolors
 
 class ChopChopWrapper(Scorer):
     def __init__(self, settings: dict) -> None:
-        self.experiment_name = settings['experiment_name']
-        self.output_directory = settings['output_directory']
-        self.scoring_method = settings['chopchop_scoring_method']
-        self.input_species_df = pandas.read_csv(settings['input_species_csv_file_path'])
-        self.absolute_path_to_chopchop = settings['absolute_path_to_chopchop']
-        self.absolute_path_to_genomes_directory = settings['absolute_path_to_genomes_directory']
+        self.experiment_name: str = settings['experiment_name']
+        self.output_directory: str = settings['output_directory']
+        self.scoring_method: str = settings['chopchop_scoring_method']
+        self.input_species_csv_file_path: str = settings['input_species_csv_file_path']
+        self.absolute_path_to_chopchop: str = settings['absolute_path_to_chopchop']
+        self.absolute_path_to_genomes_directory: str = settings['absolute_path_to_genomes_directory']
+
+        try:
+            self.input_species_df = pandas.read_csv(self.input_species_csv_file_path)
+        except pandas.errors.EmptyDataError:
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: File {self.input_species_csv_file_path} is empty. Exiting.')
+            sys.exit(1)
+        except FileNotFoundError:
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: Cannot find file {self.input_species_csv_file_path}. Did you spell the path/file name correctly? Exiting.')
+            sys.exit(1)
 
         self.already_made_bowtie_index_for_these_species = set()
 
@@ -48,11 +58,11 @@ class ChopChopWrapper(Scorer):
             if not os.path.exists(output_directory):
                 os.makedirs(output_directory)
 
-            print('Running bowtie-build for', species_name)
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Running bowtie-build for {species_name}')
             # Example run: conda run -n chopchop path_to/bowtie/bowtie-build ../../data/input/genomes/hpolymorpha_genomic.fna hpoly
             os.system('conda run -n chopchop' + ' ' + self.absolute_path_to_chopchop + '/bowtie/bowtie-build ' + absolute_path_to_species_genome + ' ' + species_name + ' ' + '-q')
             os.system('mv *.ebwt' + ' ' + output_directory)
-            print('Bowtie is done.')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Bowtie is done.')
 
 
     def run_chopchop_for_fasta(
@@ -74,13 +84,12 @@ class ChopChopWrapper(Scorer):
         ' --scoringMethod ' + self.scoring_method + \
         ' > ' + output_path
 
-        print('Running ChopChop for', species_name)
-        # print(command)
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Running ChopChop for {species_name}')
 
         os.system(command)
 
         os.system('rm -rf ' + output_directory + '*.offtargets')
-        print('ChopChop is done.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} ChopChop is done.')
 
         return output_path
 
@@ -99,21 +108,15 @@ class ChopChopWrapper(Scorer):
         target_fasta_path = os.path.join(output_directory, container_name + '_seq.fasta')
 
         if not os.path.exists(output_directory):
-            print('Creating directory', output_directory)
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Creating directory', output_directory)
             os.makedirs(output_directory)
 
         try:
             chopchop_output = pandas.read_csv(output_path, sep='\t')
             
-            if not silent:
-                print('Scores for {species} {gene} already exist in {path}. Reading existing scores.'.format(
-                    species=species_name, 
-                    gene=container_name, 
-                    path=output_path,
-                    )
-                )
+            if not silent: print(f'{bcolors.BLUE}>{bcolors.RESET} Scores for {species_name} {container_name} already exist in {output_path}. Reading existing scores.')
         except (FileNotFoundError, pandas.errors.EmptyDataError):
-            # make chromosome fasta file
+            # Make a fasta file.
             sequence = SeqRecord(Seq(guide_container.sequence), id=guide_container.string_id)
             with open(target_fasta_path, 'w') as f:
                 SeqIO.write(sequence, f, 'fasta')
