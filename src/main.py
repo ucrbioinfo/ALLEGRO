@@ -9,16 +9,17 @@ from cython_libs.kirschtorte import KirschtorteCython as coverset  # type: ignor
 def main() -> int:
     configurator.greet()  # Guten Tag!
     
-    # Read command line arguments and config.yaml
+    # Read command line arguments and config.yaml.
     # Some arguments are not shown in config.yaml and are defaulted in parse_configurations().
-    # Arguments specified on the command line have priority over and will replace those in config.yaml
+    # Arguments specified on the command line have priority over and will replace those in config.yaml.
     args = configurator.parse_configurations()
 
     # This is the only function that changes the arguments in args.
     # Warnings and info to help with user error. Also hard-codes some paths and arguments.
     args, scorer_settings = configurator.check_and_fix_configurations(args)
     
-    configurator.log_args(args)  # Write the current configuration to a log file in the output folder
+    # Write the current configuration to a log file in the output folder.
+    configurator.log_args(args)
     
     coversets_obj = coverset(
         beta=args.beta,
