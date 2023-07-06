@@ -187,8 +187,8 @@ class GuideFinder:
 
                 misc = ', '.join(misc_list)
 
-                seq = re.compile(seq + self.pam_dict[pam])
-                for match in re.finditer(seq, dna):
+                seq_and_pam = re.compile(seq + self.pam_dict[pam])
+                for match in re.finditer(seq_and_pam, dna):
                     chrom_strand_start_end.append((record.id, strand, match.start(), match.end(), misc))
 
         find_matches(seq=sequence, strand='F')  # F means forward strand
@@ -346,7 +346,7 @@ class GuideFinderDebug:
         return guides_list, guides_context_list, strands_list, locations_list
 
 
-    def locate_guides_in_sequence(self, sequence, file_path, to_upper: bool = True):
+    def locate_guides_in_sequence(self, sequence: str, file_path: str, to_upper: bool = True):
         '''
         ## Args:
             * sequence: A guide RNA nucleotide sequence.
