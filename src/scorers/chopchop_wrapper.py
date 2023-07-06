@@ -150,3 +150,6 @@ class ChopChopWrapper(Scorer):
                 chopchop_output['Efficiency'].astype(float).tolist()
         )
     
+
+    def save_guides_to_disk(self) -> None:
+        return
