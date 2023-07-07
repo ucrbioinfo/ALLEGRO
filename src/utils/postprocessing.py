@@ -16,7 +16,7 @@ def hamming_distance(str1: str, str2: str, length: int) -> int:
 
 def cluster_strings(strings: list[str], req_match_len: int, mm_allowed: int) -> list[list[str]]:
     """
-    Clusters a list of strings based on a mismatch in the first 10 letters.
+    Clusters a list of strings based on a mismatch in the first `mm_allowed` letters.
     """
     clusters = list()
     for string in strings:

@@ -5,7 +5,8 @@ import sys
 import pandas
 
 # ALLEGRO CYTHON CUSTOM LIBS.
-import kirschtorte  # Cythonized custom C++ lib, AKA kirschtorte.so.
+# Cythonized custom C++ lib, AKA kirschtorte.so.
+import kirschtorte  # type: ignore
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
@@ -21,12 +22,14 @@ from classes.guide_container_factory import GuideContainerFactory
 import utils.records_count_finder as records_count_finder
 from utils.shell_colors import bcolors
 
+
 # Declare a C++ class with cdef.
 cdef extern from "allegro/guide_struct.h":
     cdef cppclass GuideStruct:
         string sequence
         double score
         string species_hit
+
 
 cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
     cdef cppclass Kirschtorte:
@@ -150,7 +153,7 @@ cdef class KirschtorteCython:
                     'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
-                raise NotImplementedError
+                sys.exit(1)
 
             for guide_object in guide_objects_list:
                 guide_sequence = guide_object.sequence
@@ -217,7 +220,7 @@ cdef class KirschtorteCython:
                     'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
-                raise NotImplementedError
+                sys.exit(1)
 
             for guide_container in guide_containers_list:
                 guide_attributes = guide_container.get_attributes_dict()

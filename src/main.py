@@ -7,7 +7,7 @@ from cython_libs.kirschtorte import KirschtorteCython as coverset  # type: ignor
 
 
 def main() -> int:
-    configurator.greet()  # Guten Tag!
+    configurator.begruessung()  # Guten Tag!
     
     # Read command line arguments and config.yaml.
     # Some arguments are not shown in config.yaml and are defaulted in parse_configurations().

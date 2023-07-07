@@ -7,7 +7,7 @@ import argparse
 from utils.shell_colors import bcolors
 
 
-def greet() -> None:
+def begruessung() -> None:
     print(f'{bcolors.BLUE}>{bcolors.RESET} Welcome to {bcolors.ORANGE}ALLEGRO{bcolors.RESET}.')
     print(f'{bcolors.BLUE}>{bcolors.RESET} All unspecified command-line arguments default to the values in config.yaml.')
 
@@ -158,6 +158,7 @@ def parse_configurations() -> argparse.Namespace:
         '-b',
         '--beta',
         type=int,
+        default=0,
         help=help,
     )
 
@@ -313,17 +314,16 @@ def check_and_fix_configurations(args: argparse.Namespace) -> tuple[argparse.Nam
     if args.mp_threshold > 0 and args.mp_threshold < args.multiplicity:
         print(f'{bcolors.RED}> Warning{bcolors.RESET}: mp_threshold is set to {args.mp_threshold}, a positive value smaller than the multiplicity {args.multiplicity}.')
         print(f'{bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot remove all but {args.mp_threshold} guides from each container and still ensure each container is targeted at least {args.multiplicity} times.')
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature. Refer to the manual for more details.')
         args.mp_threshold = args.multiplicity
 
     if args.beta <= 0:
-        args.beta = 0
         print(f'{bcolors.BLUE}>{bcolors.RESET} Beta is set to {args.beta} and thus disabled.')
         print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will minimize the set size.')
+        args.beta = 0
 
         if args.scorer != 'dummy':
             print(f'{bcolors.BLUE}>{bcolors.RESET} Scorer is set to {args.scorer}. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will score the guides for information only and will not use them in calculations.')
-        
         
     if args.scorer == 'dummy' and args.beta > 0:
         # No feasible solutions if there are fewer guides than beta
@@ -335,14 +335,14 @@ def check_and_fix_configurations(args: argparse.Namespace) -> tuple[argparse.Nam
     if args.beta > 0 and args.beta < args.multiplicity:
         print(f'{bcolors.RED}> Warning{bcolors.RESET}: Beta is set to {args.beta}, a positive value smaller than the multiplicity {args.multiplicity}')
         print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot find a total of {args.beta} guides while each guide container is required to be targeted at least {args.multiplicity} times.')
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting beta to be equal to the multiplicity. You may also set beta to 0. See the manual for more details.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting beta to be equal to the multiplicity. You may also set beta to 0. Refer to the manual for more details.')
         args.beta = args.multiplicity
 
     if args.filter_repetitive == True:
         print(f'{bcolors.BLUE}>{bcolors.RESET} filter_repetitive is set to True. Filtering guides with repetitive sequences.')
 
     if args.num_trials <= 0:
-        print(f'{bcolors.BLUE}>{bcolors.RESET} num_trials is <= 0. Running randomized rounding only once. Note that the solution may not be the one with the smallest size.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} num_trials is <= 0. Auto adjusting to 1 and running randomized rounding only once. ALLEGRO may potentially be able to find a smaller sized solution with larger trial count.')
         args.num_trials = 1
 
     scorer_settings = configure_scorer_settings(args)
