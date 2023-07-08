@@ -173,10 +173,16 @@ class GuideFinder:
 
         chrom_strand_start_end: list[tuple[str, str, int, int, str]] = list()
 
+
         def find_matches(seq: str, strand: str):
             for record in SeqIO.parse(open(file_path, 'r'), 'fasta'):
 
-                dna = str(record.seq).upper() if to_upper else str(record.seq)
+                dna: str = ''
+
+                if strand == 'F':
+                    dna = str(record.seq).upper() if to_upper else str(record.seq)
+                elif strand == 'RC':
+                    dna = str(Seq(record.seq).reverse_complement()).upper() if to_upper else str(Seq(record.seq).reverse_complement())
 
                 misc_list: list[str] = list()
                 match = re.search(r'\[gene=(.*?)\]', record.description)
@@ -192,9 +198,7 @@ class GuideFinder:
                     chrom_strand_start_end.append((record.id, strand, match.start(), match.end(), misc))
 
         find_matches(seq=sequence, strand='F')  # F means forward strand
-        
-        sequence_rev_comp = str(Seq(sequence).reverse_complement())
-        find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
+        find_matches(seq=sequence, strand='RC')  # RC is the reverse complement strand
 
         return chrom_strand_start_end
 
