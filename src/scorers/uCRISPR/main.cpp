@@ -1,5 +1,6 @@
 #include "include/uCRISPR_scorer.h"
 
+#include <map>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -13,11 +14,7 @@ int main(int argc, char* argv[]) {
     }
 
     uCRISPR_scorer::uCRISPR_scorer scorer;
-    std::vector<double> scores_vec = scorer.score_guides(sequences_vec);
-
-    for (int i = 0; i < sequences_vec.size(); i++) {
-        std::cout << sequences_vec[i] + " " + std::to_string(scores_vec[i]) << std::endl;
-    }
+    scorer.score_guides(sequences_vec);
 
     return 0;
 }

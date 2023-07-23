@@ -980,7 +980,7 @@ static const char *__pyx_f[] = {
 /*--- Type declarations ---*/
 struct __pyx_obj_11kirschtorte_KirschtorteCython;
 
-/* "kirschtorte.pyx":59
+/* "kirschtorte.pyx":61
  * 
  * 
  * cdef class KirschtorteCython:             # <<<<<<<<<<<<<<
@@ -1357,9 +1357,6 @@ static CYTHON_INLINE PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject* k
 #define __Pyx_PyObject_GetItem(obj, key)  PyObject_GetItem(obj, key)
 #endif
 
-/* RaiseException.proto */
-static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause);
-
 /* PyIntBinop.proto */
 #if !CYTHON_COMPILING_IN_PYPY
 static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, long intval, int inplace, int zerodivision_check);
@@ -1421,6 +1418,9 @@ static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key);
 #define __Pyx_PyDict_GetItem(d, key) PyObject_GetItem(d, key)
 #define __Pyx_PyObject_Dict_GetItem(obj, name)  PyObject_GetItem(obj, name)
 #endif
+
+/* RaiseException.proto */
+static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause);
 
 /* PyErrExceptionMatches.proto */
 #if CYTHON_FAST_THREAD_STATE
@@ -1554,7 +1554,6 @@ int __pyx_module_is_main_kirschtorte = 0;
 
 /* Implementation of 'kirschtorte' */
 static PyObject *__pyx_builtin_print;
-static PyObject *__pyx_builtin_NotImplementedError;
 static PyObject *__pyx_builtin_TypeError;
 static const char __pyx_k_[] = ">";
 static const char __pyx_k_1[] = "1";
@@ -1648,9 +1647,7 @@ static const char __pyx_k_FileNotFoundError[] = "FileNotFoundError";
 static const char __pyx_k_KirschtorteCython[] = "KirschtorteCython";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_utils_shell_colors[] = "utils.shell_colors";
-static const char __pyx_k_NotImplementedError[] = "NotImplementedError";
 static const char __pyx_k_get_attributes_dict[] = "get_attributes_dict";
-static const char __pyx_k_save_guides_to_disk[] = "save_guides_to_disk";
 static const char __pyx_k_monophonic_threshold[] = "monophonic_threshold";
 static const char __pyx_k_records_count_finder[] = "records_count_finder";
 static const char __pyx_k_GuideContainerFactory[] = "GuideContainerFactory";
@@ -1693,7 +1690,6 @@ static PyObject *__pyx_kp_u_Modify_this_value_in_config_yam;
 static PyObject *__pyx_kp_u_N_A;
 static PyObject *__pyx_kp_u_No_such_cas_variant_as;
 static PyObject *__pyx_kp_u_None;
-static PyObject *__pyx_n_s_NotImplementedError;
 static PyObject *__pyx_n_s_RED;
 static PyObject *__pyx_n_s_RESET;
 static PyObject *__pyx_kp_u_Reading_species_input_file_from;
@@ -1768,7 +1764,6 @@ static PyObject *__pyx_n_s_records_path;
 static PyObject *__pyx_n_s_reduce;
 static PyObject *__pyx_n_s_reduce_cython;
 static PyObject *__pyx_n_s_reduce_ex;
-static PyObject *__pyx_n_s_save_guides_to_disk;
 static PyObject *__pyx_n_s_score;
 static PyObject *__pyx_n_s_scorer;
 static PyObject *__pyx_n_s_scorer_name;
@@ -1810,7 +1805,7 @@ static PyObject *__pyx_tuple__6;
 static PyObject *__pyx_tuple__7;
 /* Late includes */
 
-/* "kirschtorte.pyx":63
+/* "kirschtorte.pyx":65
  *     cdef Kirschtorte *kirschtorte  # Pointer to C++ class instance.
  * 
  *     def __cinit__(             # <<<<<<<<<<<<<<
@@ -1885,77 +1880,77 @@ static int __pyx_pw_11kirschtorte_17KirschtorteCython_1__cinit__(PyObject *__pyx
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cut_multiplicity)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 1); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 1); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_monophonic_threshold)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 2); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 2); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_track)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 3); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 3); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_trials)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 4); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 4); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_scorer_name)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 5); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 5); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cas_variant)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 6); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 6); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_guide_length)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 7); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 7); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_scorer_settings)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 8); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 8); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_output_directory)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 9); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 9); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 10:
         if (likely((values[10] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_input_directory)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 10); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 10); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 11:
         if (likely((values[11] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_file_column_name)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 11); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 11); __PYX_ERR(0, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 12:
         if (likely((values[12] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_input_species_csv_file_path)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 12); __PYX_ERR(0, 63, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, 12); __PYX_ERR(0, 65, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 63, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 65, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 13) {
       goto __pyx_L5_argtuple_error;
@@ -1990,20 +1985,20 @@ static int __pyx_pw_11kirschtorte_17KirschtorteCython_1__cinit__(PyObject *__pyx
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 63, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 13, 13, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 65, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("kirschtorte.KirschtorteCython.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_track), (&PyUnicode_Type), 1, "track", 1))) __PYX_ERR(0, 68, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_scorer_name), (&PyUnicode_Type), 1, "scorer_name", 1))) __PYX_ERR(0, 70, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cas_variant), (&PyUnicode_Type), 1, "cas_variant", 1))) __PYX_ERR(0, 71, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_scorer_settings), (&PyDict_Type), 1, "scorer_settings", 1))) __PYX_ERR(0, 73, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_output_directory), (&PyUnicode_Type), 1, "output_directory", 1))) __PYX_ERR(0, 74, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_input_directory), (&PyUnicode_Type), 1, "input_directory", 1))) __PYX_ERR(0, 75, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_file_column_name), (&PyUnicode_Type), 1, "file_column_name", 1))) __PYX_ERR(0, 76, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_input_species_csv_file_path), (&PyUnicode_Type), 1, "input_species_csv_file_path", 1))) __PYX_ERR(0, 77, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_track), (&PyUnicode_Type), 1, "track", 1))) __PYX_ERR(0, 70, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_scorer_name), (&PyUnicode_Type), 1, "scorer_name", 1))) __PYX_ERR(0, 72, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cas_variant), (&PyUnicode_Type), 1, "cas_variant", 1))) __PYX_ERR(0, 73, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_scorer_settings), (&PyDict_Type), 1, "scorer_settings", 1))) __PYX_ERR(0, 75, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_output_directory), (&PyUnicode_Type), 1, "output_directory", 1))) __PYX_ERR(0, 76, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_input_directory), (&PyUnicode_Type), 1, "input_directory", 1))) __PYX_ERR(0, 77, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_file_column_name), (&PyUnicode_Type), 1, "file_column_name", 1))) __PYX_ERR(0, 78, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_input_species_csv_file_path), (&PyUnicode_Type), 1, "input_species_csv_file_path", 1))) __PYX_ERR(0, 79, __pyx_L1_error)
   __pyx_r = __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(((struct __pyx_obj_11kirschtorte_KirschtorteCython *)__pyx_v_self), __pyx_v_beta, __pyx_v_cut_multiplicity, __pyx_v_monophonic_threshold, __pyx_v_track, __pyx_v_num_trials, __pyx_v_scorer_name, __pyx_v_cas_variant, __pyx_v_guide_length, __pyx_v_scorer_settings, __pyx_v_output_directory, __pyx_v_input_directory, __pyx_v_file_column_name, __pyx_v_input_species_csv_file_path);
 
   /* function exit code */
@@ -2044,7 +2039,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "kirschtorte.pyx":80
+  /* "kirschtorte.pyx":82
  *         ) -> None:
  * 
  *         try:             # <<<<<<<<<<<<<<
@@ -2060,23 +2055,23 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "kirschtorte.pyx":81
+      /* "kirschtorte.pyx":83
  * 
  *         try:
  *             print(f'{bcolors.BLUE}>{bcolors.RESET} Reading species input file from {input_species_csv_file_path}')             # <<<<<<<<<<<<<<
  *             self.species_df = pandas.read_csv(input_species_csv_file_path)
  *         except pandas.errors.EmptyDataError:
  */
-      __pyx_t_4 = PyTuple_New(5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_t_4 = PyTuple_New(5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_4);
       __pyx_t_5 = 0;
       __pyx_t_6 = 127;
-      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      __pyx_t_7 = __Pyx_PyObject_FormatSimple(__pyx_t_8, __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_t_7 = __Pyx_PyObject_FormatSimple(__pyx_t_8, __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) : __pyx_t_6;
@@ -2088,12 +2083,12 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       __pyx_t_5 += 1;
       __Pyx_GIVEREF(__pyx_kp_u_);
       PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_kp_u_);
-      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_RESET); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_RESET); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      __pyx_t_7 = __Pyx_PyObject_FormatSimple(__pyx_t_8, __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_t_7 = __Pyx_PyObject_FormatSimple(__pyx_t_8, __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) : __pyx_t_6;
@@ -2105,31 +2100,31 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       __pyx_t_5 += 33;
       __Pyx_GIVEREF(__pyx_kp_u_Reading_species_input_file_from);
       PyTuple_SET_ITEM(__pyx_t_4, 3, __pyx_kp_u_Reading_species_input_file_from);
-      __pyx_t_7 = __Pyx_PyUnicode_Unicode(__pyx_v_input_species_csv_file_path); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_t_7 = __Pyx_PyUnicode_Unicode(__pyx_v_input_species_csv_file_path); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_7);
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) : __pyx_t_6;
       __pyx_t_5 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_7);
       __Pyx_GIVEREF(__pyx_t_7);
       PyTuple_SET_ITEM(__pyx_t_4, 4, __pyx_t_7);
       __pyx_t_7 = 0;
-      __pyx_t_7 = __Pyx_PyUnicode_Join(__pyx_t_4, 5, __pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_t_7 = __Pyx_PyUnicode_Join(__pyx_t_4, 5, __pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 81, __pyx_L3_error)
+      __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 83, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "kirschtorte.pyx":82
+      /* "kirschtorte.pyx":84
  *         try:
  *             print(f'{bcolors.BLUE}>{bcolors.RESET} Reading species input file from {input_species_csv_file_path}')
  *             self.species_df = pandas.read_csv(input_species_csv_file_path)             # <<<<<<<<<<<<<<
  *         except pandas.errors.EmptyDataError:
  *             print(f'{bcolors.RED}> Warning{bcolors.RESET}: File {input_species_csv_file_path} is empty. Exiting.')
  */
-      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_pandas); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 82, __pyx_L3_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_pandas); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 84, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_read_csv); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 82, __pyx_L3_error)
+      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_read_csv); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 84, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __pyx_t_7 = NULL;
@@ -2144,13 +2139,13 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       }
       __pyx_t_4 = (__pyx_t_7) ? __Pyx_PyObject_Call2Args(__pyx_t_8, __pyx_t_7, __pyx_v_input_species_csv_file_path) : __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_v_input_species_csv_file_path);
       __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
-      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 82, __pyx_L3_error)
+      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 84, __pyx_L3_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_species_df, __pyx_t_4) < 0) __PYX_ERR(0, 82, __pyx_L3_error)
+      if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_species_df, __pyx_t_4) < 0) __PYX_ERR(0, 84, __pyx_L3_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "kirschtorte.pyx":80
+      /* "kirschtorte.pyx":82
  *         ) -> None:
  * 
  *         try:             # <<<<<<<<<<<<<<
@@ -2167,7 +2162,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
     __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-    /* "kirschtorte.pyx":83
+    /* "kirschtorte.pyx":85
  *             print(f'{bcolors.BLUE}>{bcolors.RESET} Reading species input file from {input_species_csv_file_path}')
  *             self.species_df = pandas.read_csv(input_species_csv_file_path)
  *         except pandas.errors.EmptyDataError:             # <<<<<<<<<<<<<<
@@ -2175,12 +2170,12 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
  *             sys.exit(1)
  */
     __Pyx_ErrFetch(&__pyx_t_4, &__pyx_t_8, &__pyx_t_7);
-    __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_pandas); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 83, __pyx_L5_except_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_pandas); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 85, __pyx_L5_except_error)
     __Pyx_GOTREF(__pyx_t_9);
-    __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_errors); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 83, __pyx_L5_except_error)
+    __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_errors); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 85, __pyx_L5_except_error)
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_EmptyDataError); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 83, __pyx_L5_except_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_EmptyDataError); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 85, __pyx_L5_except_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     __pyx_t_11 = __Pyx_PyErr_GivenExceptionMatches(__pyx_t_4, __pyx_t_9);
@@ -2189,28 +2184,28 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
     __pyx_t_4 = 0; __pyx_t_8 = 0; __pyx_t_7 = 0;
     if (__pyx_t_11) {
       __Pyx_AddTraceback("kirschtorte.KirschtorteCython.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_7, &__pyx_t_8, &__pyx_t_4) < 0) __PYX_ERR(0, 83, __pyx_L5_except_error)
+      if (__Pyx_GetException(&__pyx_t_7, &__pyx_t_8, &__pyx_t_4) < 0) __PYX_ERR(0, 85, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_GOTREF(__pyx_t_4);
 
-      /* "kirschtorte.pyx":84
+      /* "kirschtorte.pyx":86
  *             self.species_df = pandas.read_csv(input_species_csv_file_path)
  *         except pandas.errors.EmptyDataError:
  *             print(f'{bcolors.RED}> Warning{bcolors.RESET}: File {input_species_csv_file_path} is empty. Exiting.')             # <<<<<<<<<<<<<<
  *             sys.exit(1)
  *         except FileNotFoundError:
  */
-      __pyx_t_9 = PyTuple_New(6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __pyx_t_9 = PyTuple_New(6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_9);
       __pyx_t_5 = 0;
       __pyx_t_6 = 127;
-      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_RED); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_RED); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = __Pyx_PyObject_FormatSimple(__pyx_t_12, __pyx_empty_unicode); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __pyx_t_10 = __Pyx_PyObject_FormatSimple(__pyx_t_12, __pyx_empty_unicode); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_10) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_10) : __pyx_t_6;
@@ -2222,12 +2217,12 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       __pyx_t_5 += 9;
       __Pyx_GIVEREF(__pyx_kp_u_Warning);
       PyTuple_SET_ITEM(__pyx_t_9, 1, __pyx_kp_u_Warning);
-      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_RESET); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_RESET); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = __Pyx_PyObject_FormatSimple(__pyx_t_12, __pyx_empty_unicode); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __pyx_t_10 = __Pyx_PyObject_FormatSimple(__pyx_t_12, __pyx_empty_unicode); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_10) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_10) : __pyx_t_6;
@@ -2239,7 +2234,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       __pyx_t_5 += 7;
       __Pyx_GIVEREF(__pyx_kp_u_File);
       PyTuple_SET_ITEM(__pyx_t_9, 3, __pyx_kp_u_File);
-      __pyx_t_10 = __Pyx_PyUnicode_Unicode(__pyx_v_input_species_csv_file_path); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __pyx_t_10 = __Pyx_PyUnicode_Unicode(__pyx_v_input_species_csv_file_path); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_10) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_10) : __pyx_t_6;
       __pyx_t_5 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_10);
@@ -2250,24 +2245,24 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       __pyx_t_5 += 19;
       __Pyx_GIVEREF(__pyx_kp_u_is_empty_Exiting);
       PyTuple_SET_ITEM(__pyx_t_9, 5, __pyx_kp_u_is_empty_Exiting);
-      __pyx_t_10 = __Pyx_PyUnicode_Join(__pyx_t_9, 6, __pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __pyx_t_10 = __Pyx_PyUnicode_Join(__pyx_t_9, 6, __pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-      __pyx_t_9 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_10); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 84, __pyx_L5_except_error)
+      __pyx_t_9 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_10); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 86, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_9);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-      /* "kirschtorte.pyx":85
+      /* "kirschtorte.pyx":87
  *         except pandas.errors.EmptyDataError:
  *             print(f'{bcolors.RED}> Warning{bcolors.RESET}: File {input_species_csv_file_path} is empty. Exiting.')
  *             sys.exit(1)             # <<<<<<<<<<<<<<
  *         except FileNotFoundError:
  *             print(f'{bcolors.RED}> Warning{bcolors.RESET}: Cannot find file {input_species_csv_file_path}. Did you spell the path/file name correctly? Exiting.')
  */
-      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_sys); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 85, __pyx_L5_except_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_sys); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 87, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_exit); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 85, __pyx_L5_except_error)
+      __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_10, __pyx_n_s_exit); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 87, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __pyx_t_10 = NULL;
@@ -2282,7 +2277,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       }
       __pyx_t_9 = (__pyx_t_10) ? __Pyx_PyObject_Call2Args(__pyx_t_12, __pyx_t_10, __pyx_int_1) : __Pyx_PyObject_CallOneArg(__pyx_t_12, __pyx_int_1);
       __Pyx_XDECREF(__pyx_t_10); __pyx_t_10 = 0;
-      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 85, __pyx_L5_except_error)
+      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 87, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_9);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
@@ -2292,7 +2287,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       goto __pyx_L4_exception_handled;
     }
 
-    /* "kirschtorte.pyx":86
+    /* "kirschtorte.pyx":88
  *             print(f'{bcolors.RED}> Warning{bcolors.RESET}: File {input_species_csv_file_path} is empty. Exiting.')
  *             sys.exit(1)
  *         except FileNotFoundError:             # <<<<<<<<<<<<<<
@@ -2300,7 +2295,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
  *             sys.exit(1)
  */
     __Pyx_ErrFetch(&__pyx_t_4, &__pyx_t_8, &__pyx_t_7);
-    __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_FileNotFoundError); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 86, __pyx_L5_except_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_FileNotFoundError); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 88, __pyx_L5_except_error)
     __Pyx_GOTREF(__pyx_t_9);
     __pyx_t_11 = __Pyx_PyErr_GivenExceptionMatches(__pyx_t_4, __pyx_t_9);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
@@ -2308,28 +2303,28 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
     __pyx_t_4 = 0; __pyx_t_8 = 0; __pyx_t_7 = 0;
     if (__pyx_t_11) {
       __Pyx_AddTraceback("kirschtorte.KirschtorteCython.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_7, &__pyx_t_8, &__pyx_t_4) < 0) __PYX_ERR(0, 86, __pyx_L5_except_error)
+      if (__Pyx_GetException(&__pyx_t_7, &__pyx_t_8, &__pyx_t_4) < 0) __PYX_ERR(0, 88, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_GOTREF(__pyx_t_4);
 
-      /* "kirschtorte.pyx":87
+      /* "kirschtorte.pyx":89
  *             sys.exit(1)
  *         except FileNotFoundError:
  *             print(f'{bcolors.RED}> Warning{bcolors.RESET}: Cannot find file {input_species_csv_file_path}. Did you spell the path/file name correctly? Exiting.')             # <<<<<<<<<<<<<<
  *             sys.exit(1)
  * 
  */
-      __pyx_t_9 = PyTuple_New(6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __pyx_t_9 = PyTuple_New(6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_9);
       __pyx_t_5 = 0;
       __pyx_t_6 = 127;
-      __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_RED); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_RED); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-      __pyx_t_12 = __Pyx_PyObject_FormatSimple(__pyx_t_10, __pyx_empty_unicode); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __pyx_t_12 = __Pyx_PyObject_FormatSimple(__pyx_t_10, __pyx_empty_unicode); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_12) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_12) : __pyx_t_6;
@@ -2341,12 +2336,12 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       __pyx_t_5 += 9;
       __Pyx_GIVEREF(__pyx_kp_u_Warning);
       PyTuple_SET_ITEM(__pyx_t_9, 1, __pyx_kp_u_Warning);
-      __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_RESET); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_RESET); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-      __pyx_t_12 = __Pyx_PyObject_FormatSimple(__pyx_t_10, __pyx_empty_unicode); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __pyx_t_12 = __Pyx_PyObject_FormatSimple(__pyx_t_10, __pyx_empty_unicode); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_12) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_12) : __pyx_t_6;
@@ -2358,7 +2353,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       __pyx_t_5 += 19;
       __Pyx_GIVEREF(__pyx_kp_u_Cannot_find_file);
       PyTuple_SET_ITEM(__pyx_t_9, 3, __pyx_kp_u_Cannot_find_file);
-      __pyx_t_12 = __Pyx_PyUnicode_Unicode(__pyx_v_input_species_csv_file_path); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __pyx_t_12 = __Pyx_PyUnicode_Unicode(__pyx_v_input_species_csv_file_path); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
       __pyx_t_6 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_12) > __pyx_t_6) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_12) : __pyx_t_6;
       __pyx_t_5 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_12);
@@ -2369,24 +2364,24 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       __pyx_t_5 += 54;
       __Pyx_GIVEREF(__pyx_kp_u_Did_you_spell_the_path_file_nam);
       PyTuple_SET_ITEM(__pyx_t_9, 5, __pyx_kp_u_Did_you_spell_the_path_file_nam);
-      __pyx_t_12 = __Pyx_PyUnicode_Join(__pyx_t_9, 6, __pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __pyx_t_12 = __Pyx_PyUnicode_Join(__pyx_t_9, 6, __pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-      __pyx_t_9 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_12); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 87, __pyx_L5_except_error)
+      __pyx_t_9 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_12); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 89, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_9);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-      /* "kirschtorte.pyx":88
+      /* "kirschtorte.pyx":90
  *         except FileNotFoundError:
  *             print(f'{bcolors.RED}> Warning{bcolors.RESET}: Cannot find file {input_species_csv_file_path}. Did you spell the path/file name correctly? Exiting.')
  *             sys.exit(1)             # <<<<<<<<<<<<<<
  * 
  *         self.beta = beta
  */
-      __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_n_s_sys); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 88, __pyx_L5_except_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_12, __pyx_n_s_sys); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 90, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_12);
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_exit); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 88, __pyx_L5_except_error)
+      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_exit); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 90, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
       __pyx_t_12 = NULL;
@@ -2401,7 +2396,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
       }
       __pyx_t_9 = (__pyx_t_12) ? __Pyx_PyObject_Call2Args(__pyx_t_10, __pyx_t_12, __pyx_int_1) : __Pyx_PyObject_CallOneArg(__pyx_t_10, __pyx_int_1);
       __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
-      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 88, __pyx_L5_except_error)
+      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 90, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_9);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
@@ -2413,7 +2408,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "kirschtorte.pyx":80
+    /* "kirschtorte.pyx":82
  *         ) -> None:
  * 
  *         try:             # <<<<<<<<<<<<<<
@@ -2433,86 +2428,86 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
     __pyx_L8_try_end:;
   }
 
-  /* "kirschtorte.pyx":90
+  /* "kirschtorte.pyx":92
  *             sys.exit(1)
  * 
  *         self.beta = beta             # <<<<<<<<<<<<<<
  *         self.cas_variant = cas_variant
  *         self.cut_multiplicity = cut_multiplicity
  */
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_beta, __pyx_v_beta) < 0) __PYX_ERR(0, 90, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_beta, __pyx_v_beta) < 0) __PYX_ERR(0, 92, __pyx_L1_error)
 
-  /* "kirschtorte.pyx":91
+  /* "kirschtorte.pyx":93
  * 
  *         self.beta = beta
  *         self.cas_variant = cas_variant             # <<<<<<<<<<<<<<
  *         self.cut_multiplicity = cut_multiplicity
  *         self.monophonic_threshold = monophonic_threshold
  */
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_cas_variant, __pyx_v_cas_variant) < 0) __PYX_ERR(0, 91, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_cas_variant, __pyx_v_cas_variant) < 0) __PYX_ERR(0, 93, __pyx_L1_error)
 
-  /* "kirschtorte.pyx":92
+  /* "kirschtorte.pyx":94
  *         self.beta = beta
  *         self.cas_variant = cas_variant
  *         self.cut_multiplicity = cut_multiplicity             # <<<<<<<<<<<<<<
  *         self.monophonic_threshold = monophonic_threshold
  *         self.input_directory = input_directory
  */
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_cut_multiplicity, __pyx_v_cut_multiplicity) < 0) __PYX_ERR(0, 92, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_cut_multiplicity, __pyx_v_cut_multiplicity) < 0) __PYX_ERR(0, 94, __pyx_L1_error)
 
-  /* "kirschtorte.pyx":93
+  /* "kirschtorte.pyx":95
  *         self.cas_variant = cas_variant
  *         self.cut_multiplicity = cut_multiplicity
  *         self.monophonic_threshold = monophonic_threshold             # <<<<<<<<<<<<<<
  *         self.input_directory = input_directory
  *         self.file_column_name = file_column_name
  */
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_monophonic_threshold, __pyx_v_monophonic_threshold) < 0) __PYX_ERR(0, 93, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_monophonic_threshold, __pyx_v_monophonic_threshold) < 0) __PYX_ERR(0, 95, __pyx_L1_error)
 
-  /* "kirschtorte.pyx":94
+  /* "kirschtorte.pyx":96
  *         self.cut_multiplicity = cut_multiplicity
  *         self.monophonic_threshold = monophonic_threshold
  *         self.input_directory = input_directory             # <<<<<<<<<<<<<<
  *         self.file_column_name = file_column_name
  * 
  */
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_input_directory, __pyx_v_input_directory) < 0) __PYX_ERR(0, 94, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_input_directory, __pyx_v_input_directory) < 0) __PYX_ERR(0, 96, __pyx_L1_error)
 
-  /* "kirschtorte.pyx":95
+  /* "kirschtorte.pyx":97
  *         self.monophonic_threshold = monophonic_threshold
  *         self.input_directory = input_directory
  *         self.file_column_name = file_column_name             # <<<<<<<<<<<<<<
  * 
  *         # Set how many clusters we need.
  */
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_file_column_name, __pyx_v_file_column_name) < 0) __PYX_ERR(0, 95, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_file_column_name, __pyx_v_file_column_name) < 0) __PYX_ERR(0, 97, __pyx_L1_error)
 
-  /* "kirschtorte.pyx":100
+  /* "kirschtorte.pyx":102
  *         # If track_a is selected, we have the same number of clusters as species.
  *         # If track_e is selected, count the total number of fasta records in all species input files (uses multithreading).
  *         clusters = self.species_df.shape[0] if track == 'track_a' else records_count_finder.count_records(self.input_directory)             # <<<<<<<<<<<<<<
  * 
  *         # Instantiate a C++ class. The linear programming part of ALLEGRO is done there.
  */
-  __pyx_t_13 = (__Pyx_PyUnicode_Equals(__pyx_v_track, __pyx_n_u_track_a, Py_EQ)); if (unlikely(__pyx_t_13 < 0)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_13 = (__Pyx_PyUnicode_Equals(__pyx_v_track, __pyx_n_u_track_a, Py_EQ)); if (unlikely(__pyx_t_13 < 0)) __PYX_ERR(0, 102, __pyx_L1_error)
   if ((__pyx_t_13 != 0)) {
-    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_species_df); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 100, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_species_df); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_shape); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 100, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_shape); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_7, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 100, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_7, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __pyx_t_4 = __pyx_t_8;
     __pyx_t_8 = 0;
   } else {
-    __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_records_count_finder); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 100, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_records_count_finder); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_count_records); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 100, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_count_records); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_input_directory); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 100, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_input_directory); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __pyx_t_10 = NULL;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_9))) {
@@ -2527,7 +2522,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
     __pyx_t_8 = (__pyx_t_10) ? __Pyx_PyObject_Call2Args(__pyx_t_9, __pyx_t_10, __pyx_t_7) : __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_t_7);
     __Pyx_XDECREF(__pyx_t_10); __pyx_t_10 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 100, __pyx_L1_error)
+    if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __pyx_t_4 = __pyx_t_8;
@@ -2536,52 +2531,52 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
   __pyx_v_clusters = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "kirschtorte.pyx":103
+  /* "kirschtorte.pyx":105
  * 
  *         # Instantiate a C++ class. The linear programming part of ALLEGRO is done there.
  *         self.kirschtorte = new Kirschtorte(clusters, guide_length, num_trials, output_directory.encode('utf-8'))             # <<<<<<<<<<<<<<
  * 
  *         # To translate indices back to legible names later.
  */
-  __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_clusters); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L1_error)
-  __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_guide_length); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L1_error)
-  __pyx_t_16 = __Pyx_PyInt_As_size_t(__pyx_v_num_trials); if (unlikely((__pyx_t_16 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_t_14 = __Pyx_PyInt_As_size_t(__pyx_v_clusters); if (unlikely((__pyx_t_14 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_t_15 = __Pyx_PyInt_As_size_t(__pyx_v_guide_length); if (unlikely((__pyx_t_15 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_t_16 = __Pyx_PyInt_As_size_t(__pyx_v_num_trials); if (unlikely((__pyx_t_16 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L1_error)
   if (unlikely(__pyx_v_output_directory == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 103, __pyx_L1_error)
+    __PYX_ERR(0, 105, __pyx_L1_error)
   }
-  __pyx_t_4 = PyUnicode_AsUTF8String(__pyx_v_output_directory); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_t_4 = PyUnicode_AsUTF8String(__pyx_v_output_directory); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 105, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_17 = __pyx_convert_string_from_py_std__in_string(__pyx_t_4); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_t_17 = __pyx_convert_string_from_py_std__in_string(__pyx_t_4); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   try {
     __pyx_t_18 = new Kirschtorte::Kirschtorte(__pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 103, __pyx_L1_error)
+    __PYX_ERR(0, 105, __pyx_L1_error)
   }
   __pyx_v_self->kirschtorte = __pyx_t_18;
 
-  /* "kirschtorte.pyx":106
+  /* "kirschtorte.pyx":108
  * 
  *         # To translate indices back to legible names later.
  *         self.guide_origin: dict[int, str] = dict()             # <<<<<<<<<<<<<<
  * 
  *         # Instantiate the appropriate scorer.
  */
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 108, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_guide_origin, __pyx_t_4) < 0) __PYX_ERR(0, 106, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_guide_origin, __pyx_t_4) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "kirschtorte.pyx":109
+  /* "kirschtorte.pyx":111
  * 
  *         # Instantiate the appropriate scorer.
  *         scorer_factory = ScorerFactory()             # <<<<<<<<<<<<<<
  *         self.scorer = scorer_factory.make_scorer(scorer_name=scorer_name, scorer_settings=scorer_settings)
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_ScorerFactory); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 109, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_ScorerFactory); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_t_9 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_8))) {
@@ -2595,40 +2590,40 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
   }
   __pyx_t_4 = (__pyx_t_9) ? __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_9) : __Pyx_PyObject_CallNoArg(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
-  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 109, __pyx_L1_error)
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   __pyx_v_scorer_factory = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "kirschtorte.pyx":110
+  /* "kirschtorte.pyx":112
  *         # Instantiate the appropriate scorer.
  *         scorer_factory = ScorerFactory()
  *         self.scorer = scorer_factory.make_scorer(scorer_name=scorer_name, scorer_settings=scorer_settings)             # <<<<<<<<<<<<<<
  * 
  *         # Instantiate the GuideContainerFactory to assign to each Species.
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_scorer_factory, __pyx_n_s_make_scorer); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_scorer_factory, __pyx_n_s_make_scorer); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 112, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_8 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 112, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_scorer_name, __pyx_v_scorer_name) < 0) __PYX_ERR(0, 110, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_scorer_settings, __pyx_v_scorer_settings) < 0) __PYX_ERR(0, 110, __pyx_L1_error)
-  __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_empty_tuple, __pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 110, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_scorer_name, __pyx_v_scorer_name) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_scorer_settings, __pyx_v_scorer_settings) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_empty_tuple, __pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 112, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_scorer, __pyx_t_9) < 0) __PYX_ERR(0, 110, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_scorer, __pyx_t_9) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-  /* "kirschtorte.pyx":116
+  /* "kirschtorte.pyx":118
  *         # This makes mix-and-matching the guide sources easier. You'd have to
  *         # only add another column to the species_df .csv file and read it in in the loop below.
  *         self.guide_container_factory = GuideContainerFactory()             # <<<<<<<<<<<<<<
  * 
  *         # Choose the appropriate track.
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_GuideContainerFactory); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 116, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_GuideContainerFactory); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 118, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_8))) {
@@ -2642,78 +2637,31 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
   }
   __pyx_t_9 = (__pyx_t_4) ? __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_4) : __Pyx_PyObject_CallNoArg(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 116, __pyx_L1_error)
+  if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 118, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_guide_container_factory, __pyx_t_9) < 0) __PYX_ERR(0, 116, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_guide_container_factory, __pyx_t_9) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-  /* "kirschtorte.pyx":119
+  /* "kirschtorte.pyx":121
  * 
  *         # Choose the appropriate track.
  *         if track == 'track_a':             # <<<<<<<<<<<<<<
  *             self.track_a()
  *         elif track == 'track_e':
  */
-  __pyx_t_13 = (__Pyx_PyUnicode_Equals(__pyx_v_track, __pyx_n_u_track_a, Py_EQ)); if (unlikely(__pyx_t_13 < 0)) __PYX_ERR(0, 119, __pyx_L1_error)
+  __pyx_t_13 = (__Pyx_PyUnicode_Equals(__pyx_v_track, __pyx_n_u_track_a, Py_EQ)); if (unlikely(__pyx_t_13 < 0)) __PYX_ERR(0, 121, __pyx_L1_error)
   __pyx_t_19 = (__pyx_t_13 != 0);
   if (__pyx_t_19) {
 
-    /* "kirschtorte.pyx":120
+    /* "kirschtorte.pyx":122
  *         # Choose the appropriate track.
  *         if track == 'track_a':
  *             self.track_a()             # <<<<<<<<<<<<<<
  *         elif track == 'track_e':
  *             self.track_e()
  */
-    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_track_a); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 120, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_4 = NULL;
-    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_8))) {
-      __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_8);
-      if (likely(__pyx_t_4)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_8);
-        __Pyx_INCREF(__pyx_t_4);
-        __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_8, function);
-      }
-    }
-    __pyx_t_9 = (__pyx_t_4) ? __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_4) : __Pyx_PyObject_CallNoArg(__pyx_t_8);
-    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 120, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_9);
-    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-
-    /* "kirschtorte.pyx":119
- * 
- *         # Choose the appropriate track.
- *         if track == 'track_a':             # <<<<<<<<<<<<<<
- *             self.track_a()
- *         elif track == 'track_e':
- */
-    goto __pyx_L13;
-  }
-
-  /* "kirschtorte.pyx":121
- *         if track == 'track_a':
- *             self.track_a()
- *         elif track == 'track_e':             # <<<<<<<<<<<<<<
- *             self.track_e()
- * 
- */
-  __pyx_t_19 = (__Pyx_PyUnicode_Equals(__pyx_v_track, __pyx_n_u_track_e, Py_EQ)); if (unlikely(__pyx_t_19 < 0)) __PYX_ERR(0, 121, __pyx_L1_error)
-  __pyx_t_13 = (__pyx_t_19 != 0);
-  if (__pyx_t_13) {
-
-    /* "kirschtorte.pyx":122
- *             self.track_a()
- *         elif track == 'track_e':
- *             self.track_e()             # <<<<<<<<<<<<<<
- * 
- *         self.scorer.save_guides_to_disk()
- */
-    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_track_e); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 122, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_track_a); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 122, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __pyx_t_4 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_8))) {
@@ -2733,6 +2681,53 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
     /* "kirschtorte.pyx":121
+ * 
+ *         # Choose the appropriate track.
+ *         if track == 'track_a':             # <<<<<<<<<<<<<<
+ *             self.track_a()
+ *         elif track == 'track_e':
+ */
+    goto __pyx_L13;
+  }
+
+  /* "kirschtorte.pyx":123
+ *         if track == 'track_a':
+ *             self.track_a()
+ *         elif track == 'track_e':             # <<<<<<<<<<<<<<
+ *             self.track_e()
+ * 
+ */
+  __pyx_t_19 = (__Pyx_PyUnicode_Equals(__pyx_v_track, __pyx_n_u_track_e, Py_EQ)); if (unlikely(__pyx_t_19 < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_13 = (__pyx_t_19 != 0);
+  if (__pyx_t_13) {
+
+    /* "kirschtorte.pyx":124
+ *             self.track_a()
+ *         elif track == 'track_e':
+ *             self.track_e()             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_track_e); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __pyx_t_4 = NULL;
+    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_8))) {
+      __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_8);
+      if (likely(__pyx_t_4)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_8);
+        __Pyx_INCREF(__pyx_t_4);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_8, function);
+      }
+    }
+    __pyx_t_9 = (__pyx_t_4) ? __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_4) : __Pyx_PyObject_CallNoArg(__pyx_t_8);
+    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+    if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+
+    /* "kirschtorte.pyx":123
  *         if track == 'track_a':
  *             self.track_a()
  *         elif track == 'track_e':             # <<<<<<<<<<<<<<
@@ -2742,36 +2737,7 @@ static int __pyx_pf_11kirschtorte_17KirschtorteCython___cinit__(struct __pyx_obj
   }
   __pyx_L13:;
 
-  /* "kirschtorte.pyx":124
- *             self.track_e()
- * 
- *         self.scorer.save_guides_to_disk()             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_scorer); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 124, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_8);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_save_guides_to_disk); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 124, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_8 = NULL;
-  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
-    __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_4);
-    if (likely(__pyx_t_8)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
-      __Pyx_INCREF(__pyx_t_8);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_4, function);
-    }
-  }
-  __pyx_t_9 = (__pyx_t_8) ? __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_8) : __Pyx_PyObject_CallNoArg(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 124, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_9);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-
-  /* "kirschtorte.pyx":63
+  /* "kirschtorte.pyx":65
  *     cdef Kirschtorte *kirschtorte  # Pointer to C++ class instance.
  * 
  *     def __cinit__(             # <<<<<<<<<<<<<<
@@ -3165,7 +3131,7 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
     __Pyx_GOTREF(__pyx_t_11);
     __pyx_t_12 = (__Pyx_PyUnicode_Equals(__pyx_t_11, __pyx_n_u_cas9, Py_EQ)); if (unlikely(__pyx_t_12 < 0)) __PYX_ERR(0, 143, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    if (likely(__pyx_t_12)) {
+    if (__pyx_t_12) {
 
       /* "kirschtorte.pyx":144
  * 
@@ -3344,7 +3310,7 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  *                     'to include them. Excluding', row.species_name, 'from further consideration.')
  *             else:
  *                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')             # <<<<<<<<<<<<<<
- *                 raise NotImplementedError
+ *                 sys.exit(1)
  * 
  */
     /*else*/ {
@@ -3411,17 +3377,36 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
       /* "kirschtorte.pyx":154
  *             else:
  *                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
- *                 raise NotImplementedError             # <<<<<<<<<<<<<<
+ *                 sys.exit(1)             # <<<<<<<<<<<<<<
  * 
  *             for guide_object in guide_objects_list:
  */
-      __Pyx_Raise(__pyx_builtin_NotImplementedError, 0, 0, 0);
-      __PYX_ERR(0, 154, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_sys); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 154, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_exit); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 154, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_t_11 = NULL;
+      if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_9))) {
+        __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_9);
+        if (likely(__pyx_t_11)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
+          __Pyx_INCREF(__pyx_t_11);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_9, function);
+        }
+      }
+      __pyx_t_1 = (__pyx_t_11) ? __Pyx_PyObject_Call2Args(__pyx_t_9, __pyx_t_11, __pyx_int_1) : __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_int_1);
+      __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     }
     __pyx_L7:;
 
     /* "kirschtorte.pyx":156
- *                 raise NotImplementedError
+ *                 sys.exit(1)
  * 
  *             for guide_object in guide_objects_list:             # <<<<<<<<<<<<<<
  *                 guide_sequence = guide_object.sequence
@@ -3440,23 +3425,23 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
         if (likely(PyList_CheckExact(__pyx_t_1))) {
           if (__pyx_t_13 >= PyList_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_11 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_13); __Pyx_INCREF(__pyx_t_11); __pyx_t_13++; if (unlikely(0 < 0)) __PYX_ERR(0, 156, __pyx_L1_error)
+          __pyx_t_9 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_13); __Pyx_INCREF(__pyx_t_9); __pyx_t_13++; if (unlikely(0 < 0)) __PYX_ERR(0, 156, __pyx_L1_error)
           #else
-          __pyx_t_11 = PySequence_ITEM(__pyx_t_1, __pyx_t_13); __pyx_t_13++; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 156, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_11);
+          __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_13); __pyx_t_13++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 156, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_9);
           #endif
         } else {
           if (__pyx_t_13 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_11 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_13); __Pyx_INCREF(__pyx_t_11); __pyx_t_13++; if (unlikely(0 < 0)) __PYX_ERR(0, 156, __pyx_L1_error)
+          __pyx_t_9 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_13); __Pyx_INCREF(__pyx_t_9); __pyx_t_13++; if (unlikely(0 < 0)) __PYX_ERR(0, 156, __pyx_L1_error)
           #else
-          __pyx_t_11 = PySequence_ITEM(__pyx_t_1, __pyx_t_13); __pyx_t_13++; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 156, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_11);
+          __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_13); __pyx_t_13++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 156, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_9);
           #endif
         }
       } else {
-        __pyx_t_11 = __pyx_t_15(__pyx_t_1);
-        if (unlikely(!__pyx_t_11)) {
+        __pyx_t_9 = __pyx_t_15(__pyx_t_1);
+        if (unlikely(!__pyx_t_9)) {
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
@@ -3464,10 +3449,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
           }
           break;
         }
-        __Pyx_GOTREF(__pyx_t_11);
+        __Pyx_GOTREF(__pyx_t_9);
       }
-      __Pyx_XDECREF_SET(__pyx_v_guide_object, __pyx_t_11);
-      __pyx_t_11 = 0;
+      __Pyx_XDECREF_SET(__pyx_v_guide_object, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":157
  * 
@@ -3476,10 +3461,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  * 
  *                 # interact with C++ -- encode and pass the sequence string, score, and index.
  */
-      __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_object, __pyx_n_s_sequence); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 157, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_XDECREF_SET(__pyx_v_guide_sequence, __pyx_t_11);
-      __pyx_t_11 = 0;
+      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_object, __pyx_n_s_sequence); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 157, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_XDECREF_SET(__pyx_v_guide_sequence, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":160
  * 
@@ -3488,34 +3473,34 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  * 
  *             print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1} species...', end='\r')
  */
-      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_sequence, __pyx_n_s_encode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 160, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
+      __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_sequence, __pyx_n_s_encode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 160, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
       __pyx_t_6 = NULL;
-      if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_9))) {
-        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_9);
+      if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_11))) {
+        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_11);
         if (likely(__pyx_t_6)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
           __Pyx_INCREF(__pyx_t_6);
           __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_9, function);
+          __Pyx_DECREF_SET(__pyx_t_11, function);
         }
       }
-      __pyx_t_11 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_9, __pyx_t_6, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_kp_u_utf_8);
+      __pyx_t_9 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_11, __pyx_t_6, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_11, __pyx_kp_u_utf_8);
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 160, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
+      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 160, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_t_16 = __pyx_convert_string_from_py_std__in_string(__pyx_t_9); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 160, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-      __pyx_t_16 = __pyx_convert_string_from_py_std__in_string(__pyx_t_11); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 160, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_object, __pyx_n_s_score); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 160, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_17 = __pyx_PyFloat_AsDouble(__pyx_t_11); if (unlikely((__pyx_t_17 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 160, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_object, __pyx_n_s_score); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 160, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __pyx_t_17 = __pyx_PyFloat_AsDouble(__pyx_t_9); if (unlikely((__pyx_t_17 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 160, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       __pyx_t_18 = __Pyx_PyInt_As_size_t(__pyx_v_idx); if (unlikely((__pyx_t_18 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 160, __pyx_L1_error)
       (void)(__pyx_v_self->kirschtorte->encode_and_save_dna(__pyx_t_16, __pyx_t_17, __pyx_t_18));
 
       /* "kirschtorte.pyx":156
- *                 raise NotImplementedError
+ *                 sys.exit(1)
  * 
  *             for guide_object in guide_objects_list:             # <<<<<<<<<<<<<<
  *                 guide_sequence = guide_object.sequence
@@ -3535,70 +3520,70 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_13 = 0;
     __pyx_t_14 = 127;
-    __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
-    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_9, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
-    __pyx_t_13 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
-    __Pyx_GIVEREF(__pyx_t_11);
-    PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_11);
-    __pyx_t_11 = 0;
-    __Pyx_INCREF(__pyx_kp_u_);
-    __pyx_t_13 += 1;
-    __Pyx_GIVEREF(__pyx_kp_u_);
-    PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_kp_u_);
-    __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_RESET); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_9);
-    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_9, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
-    __pyx_t_13 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
-    __Pyx_GIVEREF(__pyx_t_11);
-    PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_t_11);
-    __pyx_t_11 = 0;
-    __Pyx_INCREF(__pyx_kp_u_Done_with);
-    __pyx_t_13 += 11;
-    __Pyx_GIVEREF(__pyx_kp_u_Done_with);
-    PyTuple_SET_ITEM(__pyx_t_1, 3, __pyx_kp_u_Done_with);
-    __pyx_t_11 = __Pyx_PyInt_AddObjC(__pyx_v_idx, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
     __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_t_11, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
     __pyx_t_13 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
     __Pyx_GIVEREF(__pyx_t_9);
-    PyTuple_SET_ITEM(__pyx_t_1, 4, __pyx_t_9);
+    PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_9);
     __pyx_t_9 = 0;
+    __Pyx_INCREF(__pyx_kp_u_);
+    __pyx_t_13 += 1;
+    __Pyx_GIVEREF(__pyx_kp_u_);
+    PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_kp_u_);
+    __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
+    __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_RESET); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_t_11, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
+    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
+    __pyx_t_13 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
+    __Pyx_GIVEREF(__pyx_t_9);
+    PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_t_9);
+    __pyx_t_9 = 0;
+    __Pyx_INCREF(__pyx_kp_u_Done_with);
+    __pyx_t_13 += 11;
+    __Pyx_GIVEREF(__pyx_kp_u_Done_with);
+    PyTuple_SET_ITEM(__pyx_t_1, 3, __pyx_kp_u_Done_with);
+    __pyx_t_9 = __Pyx_PyInt_AddObjC(__pyx_v_idx, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
+    __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_9, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
+    __pyx_t_13 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
+    __Pyx_GIVEREF(__pyx_t_11);
+    PyTuple_SET_ITEM(__pyx_t_1, 4, __pyx_t_11);
+    __pyx_t_11 = 0;
     __Pyx_INCREF(__pyx_kp_u_species);
     __pyx_t_13 += 11;
     __Pyx_GIVEREF(__pyx_kp_u_species);
     PyTuple_SET_ITEM(__pyx_t_1, 5, __pyx_kp_u_species);
-    __pyx_t_9 = __Pyx_PyUnicode_Join(__pyx_t_1, 6, __pyx_t_13, __pyx_t_14); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_9);
+    __pyx_t_11 = __Pyx_PyUnicode_Join(__pyx_t_1, 6, __pyx_t_13, __pyx_t_14); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_GIVEREF(__pyx_t_9);
-    PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_9);
-    __pyx_t_9 = 0;
-    __pyx_t_9 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_9);
-    if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_end, __pyx_kp_u__2) < 0) __PYX_ERR(0, 162, __pyx_L1_error)
-    __pyx_t_11 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_t_1, __pyx_t_9); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GIVEREF(__pyx_t_11);
+    PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_11);
+    __pyx_t_11 = 0;
+    __pyx_t_11 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
+    if (PyDict_SetItem(__pyx_t_11, __pyx_n_s_end, __pyx_kp_u__2) < 0) __PYX_ERR(0, 162, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_t_1, __pyx_t_11); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 162, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
     /* "kirschtorte.pyx":129
  *     def track_a(self) -> list[tuple[str, float, list[str]]]:
@@ -3625,46 +3610,46 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
   __pyx_t_4 += 1;
   __Pyx_GIVEREF(__pyx_kp_u__3);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_kp_u__3);
-  __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_11);
-  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-  __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_9, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_11);
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
-  __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
-  __Pyx_GIVEREF(__pyx_t_11);
-  PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_11);
-  __pyx_t_11 = 0;
+  __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_t_11, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_9);
+  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+  __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
+  __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
+  __Pyx_GIVEREF(__pyx_t_9);
+  PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_9);
+  __pyx_t_9 = 0;
   __Pyx_INCREF(__pyx_kp_u_);
   __pyx_t_4 += 1;
   __Pyx_GIVEREF(__pyx_kp_u_);
   PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_kp_u_);
-  __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_11);
-  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_RESET); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-  __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_9, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_RESET); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_11);
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
-  __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
-  __Pyx_GIVEREF(__pyx_t_11);
-  PyTuple_SET_ITEM(__pyx_t_3, 3, __pyx_t_11);
-  __pyx_t_11 = 0;
+  __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_t_11, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_9);
+  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+  __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
+  __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
+  __Pyx_GIVEREF(__pyx_t_9);
+  PyTuple_SET_ITEM(__pyx_t_3, 3, __pyx_t_9);
+  __pyx_t_9 = 0;
   __Pyx_INCREF(__pyx_kp_u_Created_coversets_for_all_speci);
   __pyx_t_4 += 35;
   __Pyx_GIVEREF(__pyx_kp_u_Created_coversets_for_all_speci);
   PyTuple_SET_ITEM(__pyx_t_3, 4, __pyx_kp_u_Created_coversets_for_all_speci);
-  __pyx_t_11 = __Pyx_PyUnicode_Join(__pyx_t_3, 5, __pyx_t_4, __pyx_t_14); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_11);
+  __pyx_t_9 = __Pyx_PyUnicode_Join(__pyx_t_3, 5, __pyx_t_4, __pyx_t_14); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_11); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 163, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+  __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "kirschtorte.pyx":164
@@ -3678,46 +3663,46 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = 0;
   __pyx_t_14 = 127;
-  __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 164, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_11);
-  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-  __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_9, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 164, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_11);
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
-  __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
-  __Pyx_GIVEREF(__pyx_t_11);
-  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_11);
-  __pyx_t_11 = 0;
+  __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_t_11, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_9);
+  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+  __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
+  __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
+  __Pyx_GIVEREF(__pyx_t_9);
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_9);
+  __pyx_t_9 = 0;
   __Pyx_INCREF(__pyx_kp_u_);
   __pyx_t_4 += 1;
   __Pyx_GIVEREF(__pyx_kp_u_);
   PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_kp_u_);
-  __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 164, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_11);
-  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_RESET); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-  __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_9, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_RESET); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 164, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_11);
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
-  __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
-  __Pyx_GIVEREF(__pyx_t_11);
-  PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_t_11);
-  __pyx_t_11 = 0;
+  __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_t_11, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_9);
+  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+  __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
+  __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
+  __Pyx_GIVEREF(__pyx_t_9);
+  PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_t_9);
+  __pyx_t_9 = 0;
   __Pyx_INCREF(__pyx_kp_u_Setting_up_and_solving_the_line);
   __pyx_t_4 += 45;
   __Pyx_GIVEREF(__pyx_kp_u_Setting_up_and_solving_the_line);
   PyTuple_SET_ITEM(__pyx_t_3, 3, __pyx_kp_u_Setting_up_and_solving_the_line);
-  __pyx_t_11 = __Pyx_PyUnicode_Join(__pyx_t_3, 4, __pyx_t_4, __pyx_t_14); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 164, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_11);
+  __pyx_t_9 = __Pyx_PyUnicode_Join(__pyx_t_3, 4, __pyx_t_4, __pyx_t_14); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_11); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_9); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 164, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+  __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "kirschtorte.pyx":167
@@ -3817,28 +3802,28 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  *             seq = seq.decode('utf-8')  # e.g., 'ACCTGAG...'
  * 
  */
-    __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_binary_hits, __pyx_n_s_decode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 179, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_9 = NULL;
-    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_11))) {
-      __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_11);
-      if (likely(__pyx_t_9)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
-        __Pyx_INCREF(__pyx_t_9);
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_binary_hits, __pyx_n_s_decode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
+    __pyx_t_11 = NULL;
+    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_9))) {
+      __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_9);
+      if (likely(__pyx_t_11)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
+        __Pyx_INCREF(__pyx_t_11);
         __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_11, function);
+        __Pyx_DECREF_SET(__pyx_t_9, function);
       }
     }
-    __pyx_t_3 = (__pyx_t_9) ? __Pyx_PyObject_Call2Args(__pyx_t_11, __pyx_t_9, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_11, __pyx_kp_u_utf_8);
-    __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __pyx_t_3 = (__pyx_t_11) ? __Pyx_PyObject_Call2Args(__pyx_t_9, __pyx_t_11, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_kp_u_utf_8);
+    __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
     if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 179, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_t_3, __pyx_slice__4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 179, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __pyx_t_9 = __Pyx_PyObject_GetItem(__pyx_t_3, __pyx_slice__4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_DECREF_SET(__pyx_v_binary_hits, __pyx_t_11);
-    __pyx_t_11 = 0;
+    __Pyx_DECREF_SET(__pyx_v_binary_hits, __pyx_t_9);
+    __pyx_t_9 = 0;
 
     /* "kirschtorte.pyx":180
  *             # Decode the bytes object and reverse the binary string.
@@ -3849,23 +3834,23 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  */
     __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_seq, __pyx_n_s_decode); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 180, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_9 = NULL;
+    __pyx_t_11 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_3))) {
-      __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_3);
-      if (likely(__pyx_t_9)) {
+      __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_3);
+      if (likely(__pyx_t_11)) {
         PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
-        __Pyx_INCREF(__pyx_t_9);
+        __Pyx_INCREF(__pyx_t_11);
         __Pyx_INCREF(function);
         __Pyx_DECREF_SET(__pyx_t_3, function);
       }
     }
-    __pyx_t_11 = (__pyx_t_9) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_9, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_kp_u_utf_8);
-    __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
-    if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 180, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
+    __pyx_t_9 = (__pyx_t_11) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_11, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_kp_u_utf_8);
+    __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
+    if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 180, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_DECREF_SET(__pyx_v_seq, __pyx_t_11);
-    __pyx_t_11 = 0;
+    __Pyx_DECREF_SET(__pyx_v_seq, __pyx_t_9);
+    __pyx_t_9 = 0;
 
     /* "kirschtorte.pyx":183
  * 
@@ -3874,10 +3859,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  * 
  *             # Find all the indices where you have a '1' and transform back to actual species names.
  */
-    __pyx_t_11 = PyList_New(0); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 183, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __Pyx_XDECREF_SET(__pyx_v_names_hits, ((PyObject*)__pyx_t_11));
-    __pyx_t_11 = 0;
+    __pyx_t_9 = PyList_New(0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 183, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
+    __Pyx_XDECREF_SET(__pyx_v_names_hits, ((PyObject*)__pyx_t_9));
+    __pyx_t_9 = 0;
 
     /* "kirschtorte.pyx":186
  * 
@@ -3887,20 +3872,20 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  * 
  */
     { /* enter inner scope */
-      __pyx_t_11 = PyList_New(0); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 186, __pyx_L17_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_re); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 186, __pyx_L17_error)
+      __pyx_t_9 = PyList_New(0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 186, __pyx_L17_error)
       __Pyx_GOTREF(__pyx_t_9);
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_finditer); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 186, __pyx_L17_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_re); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 186, __pyx_L17_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_finditer); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 186, __pyx_L17_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-      __pyx_t_9 = NULL;
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_t_11 = NULL;
       __pyx_t_10 = 0;
       if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
-        __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_1);
-        if (likely(__pyx_t_9)) {
+        __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_1);
+        if (likely(__pyx_t_11)) {
           PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-          __Pyx_INCREF(__pyx_t_9);
+          __Pyx_INCREF(__pyx_t_11);
           __Pyx_INCREF(function);
           __Pyx_DECREF_SET(__pyx_t_1, function);
           __pyx_t_10 = 1;
@@ -3908,25 +3893,25 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
       }
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_1)) {
-        PyObject *__pyx_temp[3] = {__pyx_t_9, __pyx_kp_u_1, __pyx_v_binary_hits};
+        PyObject *__pyx_temp[3] = {__pyx_t_11, __pyx_kp_u_1, __pyx_v_binary_hits};
         __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 186, __pyx_L17_error)
-        __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
+        __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
         __Pyx_GOTREF(__pyx_t_3);
       } else
       #endif
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
-        PyObject *__pyx_temp[3] = {__pyx_t_9, __pyx_kp_u_1, __pyx_v_binary_hits};
+        PyObject *__pyx_temp[3] = {__pyx_t_11, __pyx_kp_u_1, __pyx_v_binary_hits};
         __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 186, __pyx_L17_error)
-        __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
+        __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
         __Pyx_GOTREF(__pyx_t_3);
       } else
       #endif
       {
         __pyx_t_6 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 186, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_6);
-        if (__pyx_t_9) {
-          __Pyx_GIVEREF(__pyx_t_9); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_9); __pyx_t_9 = NULL;
+        if (__pyx_t_11) {
+          __Pyx_GIVEREF(__pyx_t_11); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_11); __pyx_t_11 = NULL;
         }
         __Pyx_INCREF(__pyx_kp_u_1);
         __Pyx_GIVEREF(__pyx_kp_u_1);
@@ -3983,22 +3968,22 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
         __pyx_t_3 = 0;
         __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_7genexpr__pyx_v_idx, __pyx_n_s_start); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 186, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_9 = NULL;
+        __pyx_t_11 = NULL;
         if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_6))) {
-          __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_6);
-          if (likely(__pyx_t_9)) {
+          __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_6);
+          if (likely(__pyx_t_11)) {
             PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
-            __Pyx_INCREF(__pyx_t_9);
+            __Pyx_INCREF(__pyx_t_11);
             __Pyx_INCREF(function);
             __Pyx_DECREF_SET(__pyx_t_6, function);
           }
         }
-        __pyx_t_3 = (__pyx_t_9) ? __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_9) : __Pyx_PyObject_CallNoArg(__pyx_t_6);
-        __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
+        __pyx_t_3 = (__pyx_t_11) ? __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_11) : __Pyx_PyObject_CallNoArg(__pyx_t_6);
+        __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
         if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 186, __pyx_L17_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(__Pyx_ListComp_Append(__pyx_t_11, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 186, __pyx_L17_error)
+        if (unlikely(__Pyx_ListComp_Append(__pyx_t_9, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 186, __pyx_L17_error)
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       }
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -4009,18 +3994,18 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
       goto __pyx_L1_error;
       __pyx_L20_exit_scope:;
     } /* exit inner scope */
-    __pyx_t_1 = __pyx_t_11; __Pyx_INCREF(__pyx_t_1); __pyx_t_4 = 0;
-    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __pyx_t_1 = __pyx_t_9; __Pyx_INCREF(__pyx_t_1); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     for (;;) {
       if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_1)) break;
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_11 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_11); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 186, __pyx_L1_error)
+      __pyx_t_9 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_9); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 186, __pyx_L1_error)
       #else
-      __pyx_t_11 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 186, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 186, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
       #endif
-      __Pyx_XDECREF_SET(__pyx_v_idx, __pyx_t_11);
-      __pyx_t_11 = 0;
+      __Pyx_XDECREF_SET(__pyx_v_idx, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":187
  *             # Find all the indices where you have a '1' and transform back to actual species names.
@@ -4029,11 +4014,11 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  * 
  *             # E.g., ('ACCTGAG...', 6, ['saccharomyces', 'yarrowia', 'kmarx']).
  */
-      __pyx_t_11 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_guide_origin); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 187, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_11, __pyx_v_idx); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 187, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_guide_origin); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 187, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_9, __pyx_v_idx); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 187, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       __pyx_t_23 = __Pyx_PyList_Append(__pyx_v_names_hits, __pyx_t_3); if (unlikely(__pyx_t_23 == ((int)-1))) __PYX_ERR(0, 187, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
@@ -4058,20 +4043,20 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_3 = PyFloat_FromDouble(__pyx_v_score); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 190, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_11 = PyTuple_New(3); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 190, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
+    __pyx_t_9 = PyTuple_New(3); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 190, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
     __Pyx_INCREF(__pyx_v_seq);
     __Pyx_GIVEREF(__pyx_v_seq);
-    PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_v_seq);
+    PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_v_seq);
     __Pyx_GIVEREF(__pyx_t_3);
-    PyTuple_SET_ITEM(__pyx_t_11, 1, __pyx_t_3);
+    PyTuple_SET_ITEM(__pyx_t_9, 1, __pyx_t_3);
     __Pyx_INCREF(__pyx_v_names_hits);
     __Pyx_GIVEREF(__pyx_v_names_hits);
-    PyTuple_SET_ITEM(__pyx_t_11, 2, __pyx_v_names_hits);
+    PyTuple_SET_ITEM(__pyx_t_9, 2, __pyx_v_names_hits);
     __pyx_t_3 = 0;
-    __pyx_t_23 = __Pyx_PyObject_Append(__pyx_t_1, __pyx_t_11); if (unlikely(__pyx_t_23 == ((int)-1))) __PYX_ERR(0, 190, __pyx_L1_error)
+    __pyx_t_23 = __Pyx_PyObject_Append(__pyx_t_1, __pyx_t_9); if (unlikely(__pyx_t_23 == ((int)-1))) __PYX_ERR(0, 190, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
     /* "kirschtorte.pyx":173
  * 
@@ -4090,10 +4075,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_2track_a(struct __py
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_11 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_solution); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 192, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_11);
-  __pyx_r = __pyx_t_11;
-  __pyx_t_11 = 0;
+  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_solution); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_9);
+  __pyx_r = __pyx_t_9;
+  __pyx_t_9 = 0;
   goto __pyx_L0;
 
   /* "kirschtorte.pyx":127
@@ -4505,7 +4490,7 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
     __Pyx_GOTREF(__pyx_t_11);
     __pyx_t_12 = (__Pyx_PyUnicode_Equals(__pyx_t_11, __pyx_n_u_cas9, Py_EQ)); if (unlikely(__pyx_t_12 < 0)) __PYX_ERR(0, 210, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    if (likely(__pyx_t_12)) {
+    if (__pyx_t_12) {
 
       /* "kirschtorte.pyx":211
  * 
@@ -4669,7 +4654,7 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  *                     'to include them. Excluding', row.species_name, 'from further consideration.')
  *             else:
  *                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')             # <<<<<<<<<<<<<<
- *                 raise NotImplementedError
+ *                 sys.exit(1)
  * 
  */
     /*else*/ {
@@ -4736,17 +4721,36 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
       /* "kirschtorte.pyx":221
  *             else:
  *                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
- *                 raise NotImplementedError             # <<<<<<<<<<<<<<
+ *                 sys.exit(1)             # <<<<<<<<<<<<<<
  * 
  *             for guide_container in guide_containers_list:
  */
-      __Pyx_Raise(__pyx_builtin_NotImplementedError, 0, 0, 0);
-      __PYX_ERR(0, 221, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_sys); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 221, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_exit); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 221, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_t_11 = NULL;
+      if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_9))) {
+        __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_9);
+        if (likely(__pyx_t_11)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
+          __Pyx_INCREF(__pyx_t_11);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_9, function);
+        }
+      }
+      __pyx_t_1 = (__pyx_t_11) ? __Pyx_PyObject_Call2Args(__pyx_t_9, __pyx_t_11, __pyx_int_1) : __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_int_1);
+      __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     }
     __pyx_L7:;
 
     /* "kirschtorte.pyx":223
- *                 raise NotImplementedError
+ *                 sys.exit(1)
  * 
  *             for guide_container in guide_containers_list:             # <<<<<<<<<<<<<<
  *                 guide_attributes = guide_container.get_attributes_dict()
@@ -4765,23 +4769,23 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
         if (likely(PyList_CheckExact(__pyx_t_1))) {
           if (__pyx_t_13 >= PyList_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_11 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_13); __Pyx_INCREF(__pyx_t_11); __pyx_t_13++; if (unlikely(0 < 0)) __PYX_ERR(0, 223, __pyx_L1_error)
+          __pyx_t_9 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_13); __Pyx_INCREF(__pyx_t_9); __pyx_t_13++; if (unlikely(0 < 0)) __PYX_ERR(0, 223, __pyx_L1_error)
           #else
-          __pyx_t_11 = PySequence_ITEM(__pyx_t_1, __pyx_t_13); __pyx_t_13++; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 223, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_11);
+          __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_13); __pyx_t_13++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 223, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_9);
           #endif
         } else {
           if (__pyx_t_13 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_11 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_13); __Pyx_INCREF(__pyx_t_11); __pyx_t_13++; if (unlikely(0 < 0)) __PYX_ERR(0, 223, __pyx_L1_error)
+          __pyx_t_9 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_13); __Pyx_INCREF(__pyx_t_9); __pyx_t_13++; if (unlikely(0 < 0)) __PYX_ERR(0, 223, __pyx_L1_error)
           #else
-          __pyx_t_11 = PySequence_ITEM(__pyx_t_1, __pyx_t_13); __pyx_t_13++; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 223, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_11);
+          __pyx_t_9 = PySequence_ITEM(__pyx_t_1, __pyx_t_13); __pyx_t_13++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 223, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_9);
           #endif
         }
       } else {
-        __pyx_t_11 = __pyx_t_15(__pyx_t_1);
-        if (unlikely(!__pyx_t_11)) {
+        __pyx_t_9 = __pyx_t_15(__pyx_t_1);
+        if (unlikely(!__pyx_t_9)) {
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
@@ -4789,10 +4793,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
           }
           break;
         }
-        __Pyx_GOTREF(__pyx_t_11);
+        __Pyx_GOTREF(__pyx_t_9);
       }
-      __Pyx_XDECREF_SET(__pyx_v_guide_container, __pyx_t_11);
-      __pyx_t_11 = 0;
+      __Pyx_XDECREF_SET(__pyx_v_guide_container, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":224
  * 
@@ -4801,25 +4805,25 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  * 
  *                 record_ortho_to = guide_attributes['record_orthologous_to']
  */
-      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_container, __pyx_n_s_get_attributes_dict); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 224, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
+      __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_container, __pyx_n_s_get_attributes_dict); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 224, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
       __pyx_t_6 = NULL;
-      if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_9))) {
-        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_9);
+      if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_11))) {
+        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_11);
         if (likely(__pyx_t_6)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
           __Pyx_INCREF(__pyx_t_6);
           __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_9, function);
+          __Pyx_DECREF_SET(__pyx_t_11, function);
         }
       }
-      __pyx_t_11 = (__pyx_t_6) ? __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_t_6) : __Pyx_PyObject_CallNoArg(__pyx_t_9);
+      __pyx_t_9 = (__pyx_t_6) ? __Pyx_PyObject_CallOneArg(__pyx_t_11, __pyx_t_6) : __Pyx_PyObject_CallNoArg(__pyx_t_11);
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 224, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_guide_attributes, __pyx_t_11);
-      __pyx_t_11 = 0;
+      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 224, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_XDECREF_SET(__pyx_v_guide_attributes, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":226
  *                 guide_attributes = guide_container.get_attributes_dict()
@@ -4828,10 +4832,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  *                 record_string_id = guide_attributes['record_string_id']
  * 
  */
-      __pyx_t_11 = __Pyx_PyObject_Dict_GetItem(__pyx_v_guide_attributes, __pyx_n_u_record_orthologous_to); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 226, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_XDECREF_SET(__pyx_v_record_ortho_to, __pyx_t_11);
-      __pyx_t_11 = 0;
+      __pyx_t_9 = __Pyx_PyObject_Dict_GetItem(__pyx_v_guide_attributes, __pyx_n_u_record_orthologous_to); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 226, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_XDECREF_SET(__pyx_v_record_ortho_to, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":227
  * 
@@ -4840,10 +4844,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  * 
  *                 container_target_name = record_ortho_to if record_ortho_to != 'N/A' else record_string_id
  */
-      __pyx_t_11 = __Pyx_PyObject_Dict_GetItem(__pyx_v_guide_attributes, __pyx_n_u_record_string_id); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 227, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_XDECREF_SET(__pyx_v_record_string_id, __pyx_t_11);
-      __pyx_t_11 = 0;
+      __pyx_t_9 = __Pyx_PyObject_Dict_GetItem(__pyx_v_guide_attributes, __pyx_n_u_record_string_id); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 227, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_XDECREF_SET(__pyx_v_record_string_id, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":229
  *                 record_string_id = guide_attributes['record_string_id']
@@ -4855,13 +4859,13 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
       __pyx_t_12 = (__Pyx_PyUnicode_Equals(__pyx_v_record_ortho_to, __pyx_kp_u_N_A, Py_NE)); if (unlikely(__pyx_t_12 < 0)) __PYX_ERR(0, 229, __pyx_L1_error)
       if (__pyx_t_12) {
         __Pyx_INCREF(__pyx_v_record_ortho_to);
-        __pyx_t_11 = __pyx_v_record_ortho_to;
+        __pyx_t_9 = __pyx_v_record_ortho_to;
       } else {
         __Pyx_INCREF(__pyx_v_record_string_id);
-        __pyx_t_11 = __pyx_v_record_string_id;
+        __pyx_t_9 = __pyx_v_record_string_id;
       }
-      __Pyx_XDECREF_SET(__pyx_v_container_target_name, __pyx_t_11);
-      __pyx_t_11 = 0;
+      __Pyx_XDECREF_SET(__pyx_v_container_target_name, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":231
  *                 container_target_name = record_ortho_to if record_ortho_to != 'N/A' else record_string_id
@@ -4870,25 +4874,25 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  *                 for guide_object in guide_objects_list:
  *                     guide_sequence = guide_object.sequence
  */
-      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_container, __pyx_n_s_get_cas9_guides); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 231, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
+      __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_container, __pyx_n_s_get_cas9_guides); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 231, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
       __pyx_t_6 = NULL;
-      if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_9))) {
-        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_9);
+      if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_11))) {
+        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_11);
         if (likely(__pyx_t_6)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
           __Pyx_INCREF(__pyx_t_6);
           __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_9, function);
+          __Pyx_DECREF_SET(__pyx_t_11, function);
         }
       }
-      __pyx_t_11 = (__pyx_t_6) ? __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_t_6) : __Pyx_PyObject_CallNoArg(__pyx_t_9);
+      __pyx_t_9 = (__pyx_t_6) ? __Pyx_PyObject_CallOneArg(__pyx_t_11, __pyx_t_6) : __Pyx_PyObject_CallNoArg(__pyx_t_11);
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 231, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_guide_objects_list, __pyx_t_11);
-      __pyx_t_11 = 0;
+      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 231, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_XDECREF_SET(__pyx_v_guide_objects_list, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":232
  * 
@@ -4898,35 +4902,35 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  * 
  */
       if (likely(PyList_CheckExact(__pyx_v_guide_objects_list)) || PyTuple_CheckExact(__pyx_v_guide_objects_list)) {
-        __pyx_t_11 = __pyx_v_guide_objects_list; __Pyx_INCREF(__pyx_t_11); __pyx_t_16 = 0;
+        __pyx_t_9 = __pyx_v_guide_objects_list; __Pyx_INCREF(__pyx_t_9); __pyx_t_16 = 0;
         __pyx_t_17 = NULL;
       } else {
-        __pyx_t_16 = -1; __pyx_t_11 = PyObject_GetIter(__pyx_v_guide_objects_list); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 232, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_11);
-        __pyx_t_17 = Py_TYPE(__pyx_t_11)->tp_iternext; if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 232, __pyx_L1_error)
+        __pyx_t_16 = -1; __pyx_t_9 = PyObject_GetIter(__pyx_v_guide_objects_list); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 232, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_9);
+        __pyx_t_17 = Py_TYPE(__pyx_t_9)->tp_iternext; if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 232, __pyx_L1_error)
       }
       for (;;) {
         if (likely(!__pyx_t_17)) {
-          if (likely(PyList_CheckExact(__pyx_t_11))) {
-            if (__pyx_t_16 >= PyList_GET_SIZE(__pyx_t_11)) break;
+          if (likely(PyList_CheckExact(__pyx_t_9))) {
+            if (__pyx_t_16 >= PyList_GET_SIZE(__pyx_t_9)) break;
             #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-            __pyx_t_9 = PyList_GET_ITEM(__pyx_t_11, __pyx_t_16); __Pyx_INCREF(__pyx_t_9); __pyx_t_16++; if (unlikely(0 < 0)) __PYX_ERR(0, 232, __pyx_L1_error)
+            __pyx_t_11 = PyList_GET_ITEM(__pyx_t_9, __pyx_t_16); __Pyx_INCREF(__pyx_t_11); __pyx_t_16++; if (unlikely(0 < 0)) __PYX_ERR(0, 232, __pyx_L1_error)
             #else
-            __pyx_t_9 = PySequence_ITEM(__pyx_t_11, __pyx_t_16); __pyx_t_16++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 232, __pyx_L1_error)
-            __Pyx_GOTREF(__pyx_t_9);
+            __pyx_t_11 = PySequence_ITEM(__pyx_t_9, __pyx_t_16); __pyx_t_16++; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 232, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_11);
             #endif
           } else {
-            if (__pyx_t_16 >= PyTuple_GET_SIZE(__pyx_t_11)) break;
+            if (__pyx_t_16 >= PyTuple_GET_SIZE(__pyx_t_9)) break;
             #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-            __pyx_t_9 = PyTuple_GET_ITEM(__pyx_t_11, __pyx_t_16); __Pyx_INCREF(__pyx_t_9); __pyx_t_16++; if (unlikely(0 < 0)) __PYX_ERR(0, 232, __pyx_L1_error)
+            __pyx_t_11 = PyTuple_GET_ITEM(__pyx_t_9, __pyx_t_16); __Pyx_INCREF(__pyx_t_11); __pyx_t_16++; if (unlikely(0 < 0)) __PYX_ERR(0, 232, __pyx_L1_error)
             #else
-            __pyx_t_9 = PySequence_ITEM(__pyx_t_11, __pyx_t_16); __pyx_t_16++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 232, __pyx_L1_error)
-            __Pyx_GOTREF(__pyx_t_9);
+            __pyx_t_11 = PySequence_ITEM(__pyx_t_9, __pyx_t_16); __pyx_t_16++; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 232, __pyx_L1_error)
+            __Pyx_GOTREF(__pyx_t_11);
             #endif
           }
         } else {
-          __pyx_t_9 = __pyx_t_17(__pyx_t_11);
-          if (unlikely(!__pyx_t_9)) {
+          __pyx_t_11 = __pyx_t_17(__pyx_t_9);
+          if (unlikely(!__pyx_t_11)) {
             PyObject* exc_type = PyErr_Occurred();
             if (exc_type) {
               if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
@@ -4934,25 +4938,25 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
             }
             break;
           }
-          __Pyx_GOTREF(__pyx_t_9);
+          __Pyx_GOTREF(__pyx_t_11);
         }
-        __Pyx_XDECREF_SET(__pyx_v_guide_object, __pyx_t_9);
-        __pyx_t_9 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_guide_object, __pyx_t_11);
+        __pyx_t_11 = 0;
 
         /* "kirschtorte.pyx":233
  *                 guide_objects_list: list[Guide] = guide_container.get_cas9_guides()
  *                 for guide_object in guide_objects_list:
  *                     guide_sequence = guide_object.sequence             # <<<<<<<<<<<<<<
  * 
- *                     # interact with C++ -- encode and pass the sequence string, score, and index.
+ *                     # Interact with C++ -- encode and pass the sequence string, score, and index.
  */
-        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_object, __pyx_n_s_sequence); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 233, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_9);
-        __Pyx_XDECREF_SET(__pyx_v_guide_sequence, __pyx_t_9);
-        __pyx_t_9 = 0;
+        __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_object, __pyx_n_s_sequence); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 233, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_11);
+        __Pyx_XDECREF_SET(__pyx_v_guide_sequence, __pyx_t_11);
+        __pyx_t_11 = 0;
 
         /* "kirschtorte.pyx":237
- *                     # interact with C++ -- encode and pass the sequence string, score, and index.
+ *                     # Interact with C++ -- encode and pass the sequence string, score, and index.
  *                     status = self.kirschtorte.encode_and_save_dna(
  *                         guide_sequence.encode('utf-8'),             # <<<<<<<<<<<<<<
  *                         guide_object.score,
@@ -4970,13 +4974,13 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
             __Pyx_DECREF_SET(__pyx_t_6, function);
           }
         }
-        __pyx_t_9 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_6, __pyx_t_2, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_kp_u_utf_8);
+        __pyx_t_11 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_6, __pyx_t_2, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_kp_u_utf_8);
         __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-        if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 237, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_9);
+        if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_11);
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        __pyx_t_18 = __pyx_convert_string_from_py_std__in_string(__pyx_t_9); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 237, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+        __pyx_t_18 = __pyx_convert_string_from_py_std__in_string(__pyx_t_11); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 237, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
         /* "kirschtorte.pyx":238
  *                     status = self.kirschtorte.encode_and_save_dna(
@@ -4985,10 +4989,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  *                         container_idx,
  *                         )
  */
-        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_object, __pyx_n_s_score); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 238, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_9);
-        __pyx_t_19 = __pyx_PyFloat_AsDouble(__pyx_t_9); if (unlikely((__pyx_t_19 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 238, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+        __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_guide_object, __pyx_n_s_score); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 238, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_11);
+        __pyx_t_19 = __pyx_PyFloat_AsDouble(__pyx_t_11); if (unlikely((__pyx_t_19 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 238, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
         /* "kirschtorte.pyx":239
  *                         guide_sequence.encode('utf-8'),
@@ -5001,7 +5005,7 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
 
         /* "kirschtorte.pyx":236
  * 
- *                     # interact with C++ -- encode and pass the sequence string, score, and index.
+ *                     # Interact with C++ -- encode and pass the sequence string, score, and index.
  *                     status = self.kirschtorte.encode_and_save_dna(             # <<<<<<<<<<<<<<
  *                         guide_sequence.encode('utf-8'),
  *                         guide_object.score,
@@ -5025,19 +5029,19 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  * 
  *                 container_idx += 1
  */
-          __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_row, __pyx_n_s_species_name); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 243, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_9);
-          __pyx_t_6 = PyNumber_Add(__pyx_t_9, __pyx_kp_u__5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
+          __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_row, __pyx_n_s_species_name); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 243, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_11);
+          __pyx_t_6 = PyNumber_Add(__pyx_t_11, __pyx_kp_u__5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-          __pyx_t_9 = PyNumber_Add(__pyx_t_6, __pyx_v_container_target_name); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 243, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_9);
+          __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+          __pyx_t_11 = PyNumber_Add(__pyx_t_6, __pyx_v_container_target_name); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 243, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_11);
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_guide_origin); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          if (unlikely(PyObject_SetItem(__pyx_t_6, __pyx_v_container_idx, __pyx_t_9) < 0)) __PYX_ERR(0, 243, __pyx_L1_error)
+          if (unlikely(PyObject_SetItem(__pyx_t_6, __pyx_v_container_idx, __pyx_t_11) < 0)) __PYX_ERR(0, 243, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-          __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+          __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
           /* "kirschtorte.pyx":242
  *                         )
@@ -5056,7 +5060,7 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  * 
  */
       }
-      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":245
  *                         self.guide_origin[container_idx] = row.species_name + ', ' + container_target_name
@@ -5065,10 +5069,10 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  * 
  *                 print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {container_idx} genes...', end='\r')
  */
-      __pyx_t_11 = __Pyx_PyInt_AddObjC(__pyx_v_container_idx, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 245, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_DECREF_SET(__pyx_v_container_idx, __pyx_t_11);
-      __pyx_t_11 = 0;
+      __pyx_t_9 = __Pyx_PyInt_AddObjC(__pyx_v_container_idx, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 245, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_DECREF_SET(__pyx_v_container_idx, __pyx_t_9);
+      __pyx_t_9 = 0;
 
       /* "kirschtorte.pyx":247
  *                 container_idx += 1
@@ -5077,74 +5081,74 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  *         print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all genes.')
  *         print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
  */
-      __pyx_t_11 = PyTuple_New(6); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_9 = PyTuple_New(6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
       __pyx_t_16 = 0;
       __pyx_t_14 = 127;
-      __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
-      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_BLUE); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 247, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-      __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_t_6, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_6, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
-      __pyx_t_16 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
-      __Pyx_GIVEREF(__pyx_t_9);
-      PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_t_9);
-      __pyx_t_9 = 0;
+      __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
+      __pyx_t_16 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
+      __Pyx_GIVEREF(__pyx_t_11);
+      PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_11);
+      __pyx_t_11 = 0;
       __Pyx_INCREF(__pyx_kp_u_);
       __pyx_t_16 += 1;
       __Pyx_GIVEREF(__pyx_kp_u_);
-      PyTuple_SET_ITEM(__pyx_t_11, 1, __pyx_kp_u_);
-      __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
-      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_RESET); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 247, __pyx_L1_error)
+      PyTuple_SET_ITEM(__pyx_t_9, 1, __pyx_kp_u_);
+      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_bcolors); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_RESET); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 247, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-      __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_t_6, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_6, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
-      __pyx_t_16 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
-      __Pyx_GIVEREF(__pyx_t_9);
-      PyTuple_SET_ITEM(__pyx_t_11, 2, __pyx_t_9);
-      __pyx_t_9 = 0;
+      __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
+      __pyx_t_16 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
+      __Pyx_GIVEREF(__pyx_t_11);
+      PyTuple_SET_ITEM(__pyx_t_9, 2, __pyx_t_11);
+      __pyx_t_11 = 0;
       __Pyx_INCREF(__pyx_kp_u_Done_with);
       __pyx_t_16 += 11;
       __Pyx_GIVEREF(__pyx_kp_u_Done_with);
-      PyTuple_SET_ITEM(__pyx_t_11, 3, __pyx_kp_u_Done_with);
-      __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_v_container_idx, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
-      __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_14;
-      __pyx_t_16 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
-      __Pyx_GIVEREF(__pyx_t_9);
-      PyTuple_SET_ITEM(__pyx_t_11, 4, __pyx_t_9);
-      __pyx_t_9 = 0;
+      PyTuple_SET_ITEM(__pyx_t_9, 3, __pyx_kp_u_Done_with);
+      __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_v_container_idx, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_14 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_14) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_14;
+      __pyx_t_16 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
+      __Pyx_GIVEREF(__pyx_t_11);
+      PyTuple_SET_ITEM(__pyx_t_9, 4, __pyx_t_11);
+      __pyx_t_11 = 0;
       __Pyx_INCREF(__pyx_kp_u_genes);
       __pyx_t_16 += 9;
       __Pyx_GIVEREF(__pyx_kp_u_genes);
-      PyTuple_SET_ITEM(__pyx_t_11, 5, __pyx_kp_u_genes);
-      __pyx_t_9 = __Pyx_PyUnicode_Join(__pyx_t_11, 6, __pyx_t_16, __pyx_t_14); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
-      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      __pyx_t_11 = PyTuple_New(1); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
+      PyTuple_SET_ITEM(__pyx_t_9, 5, __pyx_kp_u_genes);
+      __pyx_t_11 = __Pyx_PyUnicode_Join(__pyx_t_9, 6, __pyx_t_16, __pyx_t_14); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_GIVEREF(__pyx_t_9);
-      PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_t_9);
-      __pyx_t_9 = 0;
-      __pyx_t_9 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
-      if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_end, __pyx_kp_u__2) < 0) __PYX_ERR(0, 247, __pyx_L1_error)
-      __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_t_11, __pyx_t_9); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 247, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+      __pyx_t_9 = PyTuple_New(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __Pyx_GIVEREF(__pyx_t_11);
+      PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_11);
+      __pyx_t_11 = 0;
+      __pyx_t_11 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      if (PyDict_SetItem(__pyx_t_11, __pyx_n_s_end, __pyx_kp_u__2) < 0) __PYX_ERR(0, 247, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_t_9, __pyx_t_11); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 247, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
       /* "kirschtorte.pyx":223
- *                 raise NotImplementedError
+ *                 sys.exit(1)
  * 
  *             for guide_container in guide_containers_list:             # <<<<<<<<<<<<<<
  *                 guide_attributes = guide_container.get_attributes_dict()
@@ -5444,84 +5448,84 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_re); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 271, __pyx_L20_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_finditer); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 271, __pyx_L20_error)
-      __Pyx_GOTREF(__pyx_t_9);
+      __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_finditer); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 271, __pyx_L20_error)
+      __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __pyx_t_6 = NULL;
       __pyx_t_10 = 0;
-      if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_9))) {
-        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_9);
+      if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_11))) {
+        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_11);
         if (likely(__pyx_t_6)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
           __Pyx_INCREF(__pyx_t_6);
           __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_9, function);
+          __Pyx_DECREF_SET(__pyx_t_11, function);
           __pyx_t_10 = 1;
         }
       }
       #if CYTHON_FAST_PYCALL
-      if (PyFunction_Check(__pyx_t_9)) {
+      if (PyFunction_Check(__pyx_t_11)) {
         PyObject *__pyx_temp[3] = {__pyx_t_6, __pyx_kp_u_1, __pyx_v_binary_hits};
-        __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_9, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
+        __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_11, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
         __Pyx_GOTREF(__pyx_t_3);
       } else
       #endif
       #if CYTHON_FAST_PYCCALL
-      if (__Pyx_PyFastCFunction_Check(__pyx_t_9)) {
+      if (__Pyx_PyFastCFunction_Check(__pyx_t_11)) {
         PyObject *__pyx_temp[3] = {__pyx_t_6, __pyx_kp_u_1, __pyx_v_binary_hits};
-        __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_9, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
+        __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_11, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
         __Pyx_GOTREF(__pyx_t_3);
       } else
       #endif
       {
-        __pyx_t_11 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 271, __pyx_L20_error)
-        __Pyx_GOTREF(__pyx_t_11);
+        __pyx_t_9 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 271, __pyx_L20_error)
+        __Pyx_GOTREF(__pyx_t_9);
         if (__pyx_t_6) {
-          __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_t_6); __pyx_t_6 = NULL;
+          __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_6); __pyx_t_6 = NULL;
         }
         __Pyx_INCREF(__pyx_kp_u_1);
         __Pyx_GIVEREF(__pyx_kp_u_1);
-        PyTuple_SET_ITEM(__pyx_t_11, 0+__pyx_t_10, __pyx_kp_u_1);
+        PyTuple_SET_ITEM(__pyx_t_9, 0+__pyx_t_10, __pyx_kp_u_1);
         __Pyx_INCREF(__pyx_v_binary_hits);
         __Pyx_GIVEREF(__pyx_v_binary_hits);
-        PyTuple_SET_ITEM(__pyx_t_11, 1+__pyx_t_10, __pyx_v_binary_hits);
-        __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_t_11, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
+        PyTuple_SET_ITEM(__pyx_t_9, 1+__pyx_t_10, __pyx_v_binary_hits);
+        __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_11, __pyx_t_9, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
         __Pyx_GOTREF(__pyx_t_3);
-        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+        __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       }
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       if (likely(PyList_CheckExact(__pyx_t_3)) || PyTuple_CheckExact(__pyx_t_3)) {
-        __pyx_t_9 = __pyx_t_3; __Pyx_INCREF(__pyx_t_9); __pyx_t_4 = 0;
+        __pyx_t_11 = __pyx_t_3; __Pyx_INCREF(__pyx_t_11); __pyx_t_4 = 0;
         __pyx_t_5 = NULL;
       } else {
-        __pyx_t_4 = -1; __pyx_t_9 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 271, __pyx_L20_error)
-        __Pyx_GOTREF(__pyx_t_9);
-        __pyx_t_5 = Py_TYPE(__pyx_t_9)->tp_iternext; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 271, __pyx_L20_error)
+        __pyx_t_4 = -1; __pyx_t_11 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 271, __pyx_L20_error)
+        __Pyx_GOTREF(__pyx_t_11);
+        __pyx_t_5 = Py_TYPE(__pyx_t_11)->tp_iternext; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 271, __pyx_L20_error)
       }
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       for (;;) {
         if (likely(!__pyx_t_5)) {
-          if (likely(PyList_CheckExact(__pyx_t_9))) {
-            if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_9)) break;
+          if (likely(PyList_CheckExact(__pyx_t_11))) {
+            if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_11)) break;
             #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-            __pyx_t_3 = PyList_GET_ITEM(__pyx_t_9, __pyx_t_4); __Pyx_INCREF(__pyx_t_3); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 271, __pyx_L20_error)
+            __pyx_t_3 = PyList_GET_ITEM(__pyx_t_11, __pyx_t_4); __Pyx_INCREF(__pyx_t_3); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 271, __pyx_L20_error)
             #else
-            __pyx_t_3 = PySequence_ITEM(__pyx_t_9, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
+            __pyx_t_3 = PySequence_ITEM(__pyx_t_11, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
             __Pyx_GOTREF(__pyx_t_3);
             #endif
           } else {
-            if (__pyx_t_4 >= PyTuple_GET_SIZE(__pyx_t_9)) break;
+            if (__pyx_t_4 >= PyTuple_GET_SIZE(__pyx_t_11)) break;
             #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-            __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_9, __pyx_t_4); __Pyx_INCREF(__pyx_t_3); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 271, __pyx_L20_error)
+            __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_11, __pyx_t_4); __Pyx_INCREF(__pyx_t_3); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 271, __pyx_L20_error)
             #else
-            __pyx_t_3 = PySequence_ITEM(__pyx_t_9, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
+            __pyx_t_3 = PySequence_ITEM(__pyx_t_11, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
             __Pyx_GOTREF(__pyx_t_3);
             #endif
           }
         } else {
-          __pyx_t_3 = __pyx_t_5(__pyx_t_9);
+          __pyx_t_3 = __pyx_t_5(__pyx_t_11);
           if (unlikely(!__pyx_t_3)) {
             PyObject* exc_type = PyErr_Occurred();
             if (exc_type) {
@@ -5534,27 +5538,27 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
         }
         __Pyx_XDECREF_SET(__pyx_8genexpr1__pyx_v_idx, __pyx_t_3);
         __pyx_t_3 = 0;
-        __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_8genexpr1__pyx_v_idx, __pyx_n_s_start); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 271, __pyx_L20_error)
-        __Pyx_GOTREF(__pyx_t_11);
+        __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_8genexpr1__pyx_v_idx, __pyx_n_s_start); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 271, __pyx_L20_error)
+        __Pyx_GOTREF(__pyx_t_9);
         __pyx_t_6 = NULL;
-        if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_11))) {
-          __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_11);
+        if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_9))) {
+          __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_9);
           if (likely(__pyx_t_6)) {
-            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
             __Pyx_INCREF(__pyx_t_6);
             __Pyx_INCREF(function);
-            __Pyx_DECREF_SET(__pyx_t_11, function);
+            __Pyx_DECREF_SET(__pyx_t_9, function);
           }
         }
-        __pyx_t_3 = (__pyx_t_6) ? __Pyx_PyObject_CallOneArg(__pyx_t_11, __pyx_t_6) : __Pyx_PyObject_CallNoArg(__pyx_t_11);
+        __pyx_t_3 = (__pyx_t_6) ? __Pyx_PyObject_CallOneArg(__pyx_t_9, __pyx_t_6) : __Pyx_PyObject_CallNoArg(__pyx_t_9);
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
         if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L20_error)
         __Pyx_GOTREF(__pyx_t_3);
-        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+        __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 271, __pyx_L20_error)
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       }
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __Pyx_XDECREF(__pyx_8genexpr1__pyx_v_idx); __pyx_8genexpr1__pyx_v_idx = 0;
       goto __pyx_L23_exit_scope;
       __pyx_L20_error:;
@@ -5562,14 +5566,14 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
       goto __pyx_L1_error;
       __pyx_L23_exit_scope:;
     } /* exit inner scope */
-    __pyx_t_9 = __pyx_t_1; __Pyx_INCREF(__pyx_t_9); __pyx_t_4 = 0;
+    __pyx_t_11 = __pyx_t_1; __Pyx_INCREF(__pyx_t_11); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     for (;;) {
-      if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_9)) break;
+      if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_11)) break;
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_1 = PyList_GET_ITEM(__pyx_t_9, __pyx_t_4); __Pyx_INCREF(__pyx_t_1); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 271, __pyx_L1_error)
+      __pyx_t_1 = PyList_GET_ITEM(__pyx_t_11, __pyx_t_4); __Pyx_INCREF(__pyx_t_1); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 271, __pyx_L1_error)
       #else
-      __pyx_t_1 = PySequence_ITEM(__pyx_t_9, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 271, __pyx_L1_error)
+      __pyx_t_1 = PySequence_ITEM(__pyx_t_11, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 271, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       #endif
       __Pyx_XDECREF_SET(__pyx_v_idx, __pyx_t_1);
@@ -5598,7 +5602,7 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  * 
  */
     }
-    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
     /* "kirschtorte.pyx":275
  * 
@@ -5607,8 +5611,8 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
  * 
  *         return self.solution
  */
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_solution); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 275, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_9);
+    __pyx_t_11 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_solution); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 275, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
     __pyx_t_3 = PyFloat_FromDouble(__pyx_v_score); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 275, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 275, __pyx_L1_error)
@@ -5622,8 +5626,8 @@ static PyObject *__pyx_pf_11kirschtorte_17KirschtorteCython_4track_e(struct __py
     __Pyx_GIVEREF(__pyx_v_names_hits);
     PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_v_names_hits);
     __pyx_t_3 = 0;
-    __pyx_t_25 = __Pyx_PyObject_Append(__pyx_t_9, __pyx_t_1); if (unlikely(__pyx_t_25 == ((int)-1))) __PYX_ERR(0, 275, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __pyx_t_25 = __Pyx_PyObject_Append(__pyx_t_11, __pyx_t_1); if (unlikely(__pyx_t_25 == ((int)-1))) __PYX_ERR(0, 275, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
     /* "kirschtorte.pyx":258
@@ -6468,7 +6472,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_N_A, __pyx_k_N_A, sizeof(__pyx_k_N_A), 0, 1, 0, 0},
   {&__pyx_kp_u_No_such_cas_variant_as, __pyx_k_No_such_cas_variant_as, sizeof(__pyx_k_No_such_cas_variant_as), 0, 1, 0, 0},
   {&__pyx_kp_u_None, __pyx_k_None, sizeof(__pyx_k_None), 0, 1, 0, 0},
-  {&__pyx_n_s_NotImplementedError, __pyx_k_NotImplementedError, sizeof(__pyx_k_NotImplementedError), 0, 0, 1, 1},
   {&__pyx_n_s_RED, __pyx_k_RED, sizeof(__pyx_k_RED), 0, 0, 1, 1},
   {&__pyx_n_s_RESET, __pyx_k_RESET, sizeof(__pyx_k_RESET), 0, 0, 1, 1},
   {&__pyx_kp_u_Reading_species_input_file_from, __pyx_k_Reading_species_input_file_from, sizeof(__pyx_k_Reading_species_input_file_from), 0, 1, 0, 0},
@@ -6543,7 +6546,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_reduce, __pyx_k_reduce, sizeof(__pyx_k_reduce), 0, 0, 1, 1},
   {&__pyx_n_s_reduce_cython, __pyx_k_reduce_cython, sizeof(__pyx_k_reduce_cython), 0, 0, 1, 1},
   {&__pyx_n_s_reduce_ex, __pyx_k_reduce_ex, sizeof(__pyx_k_reduce_ex), 0, 0, 1, 1},
-  {&__pyx_n_s_save_guides_to_disk, __pyx_k_save_guides_to_disk, sizeof(__pyx_k_save_guides_to_disk), 0, 0, 1, 1},
   {&__pyx_n_s_score, __pyx_k_score, sizeof(__pyx_k_score), 0, 0, 1, 1},
   {&__pyx_n_s_scorer, __pyx_k_scorer, sizeof(__pyx_k_scorer), 0, 0, 1, 1},
   {&__pyx_n_s_scorer_name, __pyx_k_scorer_name, sizeof(__pyx_k_scorer_name), 0, 0, 1, 1},
@@ -6572,8 +6574,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_print = __Pyx_GetBuiltinName(__pyx_n_s_print); if (!__pyx_builtin_print) __PYX_ERR(0, 81, __pyx_L1_error)
-  __pyx_builtin_NotImplementedError = __Pyx_GetBuiltinName(__pyx_n_s_NotImplementedError); if (!__pyx_builtin_NotImplementedError) __PYX_ERR(0, 154, __pyx_L1_error)
+  __pyx_builtin_print = __Pyx_GetBuiltinName(__pyx_n_s_print); if (!__pyx_builtin_print) __PYX_ERR(0, 83, __pyx_L1_error)
   __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(1, 2, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
@@ -6669,12 +6670,12 @@ static int __Pyx_modinit_type_init_code(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__Pyx_modinit_type_init_code", 0);
   /*--- Type init code ---*/
-  if (PyType_Ready(&__pyx_type_11kirschtorte_KirschtorteCython) < 0) __PYX_ERR(0, 59, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_11kirschtorte_KirschtorteCython) < 0) __PYX_ERR(0, 61, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
   __pyx_type_11kirschtorte_KirschtorteCython.tp_print = 0;
   #endif
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_KirschtorteCython, (PyObject *)&__pyx_type_11kirschtorte_KirschtorteCython) < 0) __PYX_ERR(0, 59, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_11kirschtorte_KirschtorteCython) < 0) __PYX_ERR(0, 59, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_KirschtorteCython, (PyObject *)&__pyx_type_11kirschtorte_KirschtorteCython) < 0) __PYX_ERR(0, 61, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_11kirschtorte_KirschtorteCython) < 0) __PYX_ERR(0, 61, __pyx_L1_error)
   __pyx_ptype_11kirschtorte_KirschtorteCython = &__pyx_type_11kirschtorte_KirschtorteCython;
   __Pyx_RefNannyFinishContext();
   return 0;
@@ -6958,8 +6959,8 @@ if (!__Pyx_RefNanny) {
 
   /* "kirschtorte.pyx":9
  * # ALLEGRO CYTHON CUSTOM LIBS.
- * # C++ function setup_and_solve() returns type vector[tuple[string, int, string]].
- * import kirschtorte  # Cythonized custom C++ lib, AKA kirschtorte.so.             # <<<<<<<<<<<<<<
+ * # Cythonized custom C++ lib, AKA kirschtorte.so.
+ * import kirschtorte  # type: ignore             # <<<<<<<<<<<<<<
  * from libcpp.string cimport string
  * from libcpp.vector cimport vector
  */
@@ -7111,7 +7112,7 @@ if (!__Pyx_RefNanny) {
  * import utils.records_count_finder as records_count_finder
  * from utils.shell_colors import bcolors             # <<<<<<<<<<<<<<
  * 
- * # Declare a C++ class with cdef.
+ * 
  */
   __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -8373,165 +8374,6 @@ static PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject* key) {
 }
 #endif
 
-/* RaiseException */
-#if PY_MAJOR_VERSION < 3
-static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb,
-                        CYTHON_UNUSED PyObject *cause) {
-    __Pyx_PyThreadState_declare
-    Py_XINCREF(type);
-    if (!value || value == Py_None)
-        value = NULL;
-    else
-        Py_INCREF(value);
-    if (!tb || tb == Py_None)
-        tb = NULL;
-    else {
-        Py_INCREF(tb);
-        if (!PyTraceBack_Check(tb)) {
-            PyErr_SetString(PyExc_TypeError,
-                "raise: arg 3 must be a traceback or None");
-            goto raise_error;
-        }
-    }
-    if (PyType_Check(type)) {
-#if CYTHON_COMPILING_IN_PYPY
-        if (!value) {
-            Py_INCREF(Py_None);
-            value = Py_None;
-        }
-#endif
-        PyErr_NormalizeException(&type, &value, &tb);
-    } else {
-        if (value) {
-            PyErr_SetString(PyExc_TypeError,
-                "instance exception may not have a separate value");
-            goto raise_error;
-        }
-        value = type;
-        type = (PyObject*) Py_TYPE(type);
-        Py_INCREF(type);
-        if (!PyType_IsSubtype((PyTypeObject *)type, (PyTypeObject *)PyExc_BaseException)) {
-            PyErr_SetString(PyExc_TypeError,
-                "raise: exception class must be a subclass of BaseException");
-            goto raise_error;
-        }
-    }
-    __Pyx_PyThreadState_assign
-    __Pyx_ErrRestore(type, value, tb);
-    return;
-raise_error:
-    Py_XDECREF(value);
-    Py_XDECREF(type);
-    Py_XDECREF(tb);
-    return;
-}
-#else
-static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause) {
-    PyObject* owned_instance = NULL;
-    if (tb == Py_None) {
-        tb = 0;
-    } else if (tb && !PyTraceBack_Check(tb)) {
-        PyErr_SetString(PyExc_TypeError,
-            "raise: arg 3 must be a traceback or None");
-        goto bad;
-    }
-    if (value == Py_None)
-        value = 0;
-    if (PyExceptionInstance_Check(type)) {
-        if (value) {
-            PyErr_SetString(PyExc_TypeError,
-                "instance exception may not have a separate value");
-            goto bad;
-        }
-        value = type;
-        type = (PyObject*) Py_TYPE(value);
-    } else if (PyExceptionClass_Check(type)) {
-        PyObject *instance_class = NULL;
-        if (value && PyExceptionInstance_Check(value)) {
-            instance_class = (PyObject*) Py_TYPE(value);
-            if (instance_class != type) {
-                int is_subclass = PyObject_IsSubclass(instance_class, type);
-                if (!is_subclass) {
-                    instance_class = NULL;
-                } else if (unlikely(is_subclass == -1)) {
-                    goto bad;
-                } else {
-                    type = instance_class;
-                }
-            }
-        }
-        if (!instance_class) {
-            PyObject *args;
-            if (!value)
-                args = PyTuple_New(0);
-            else if (PyTuple_Check(value)) {
-                Py_INCREF(value);
-                args = value;
-            } else
-                args = PyTuple_Pack(1, value);
-            if (!args)
-                goto bad;
-            owned_instance = PyObject_Call(type, args, NULL);
-            Py_DECREF(args);
-            if (!owned_instance)
-                goto bad;
-            value = owned_instance;
-            if (!PyExceptionInstance_Check(value)) {
-                PyErr_Format(PyExc_TypeError,
-                             "calling %R should have returned an instance of "
-                             "BaseException, not %R",
-                             type, Py_TYPE(value));
-                goto bad;
-            }
-        }
-    } else {
-        PyErr_SetString(PyExc_TypeError,
-            "raise: exception class must be a subclass of BaseException");
-        goto bad;
-    }
-    if (cause) {
-        PyObject *fixed_cause;
-        if (cause == Py_None) {
-            fixed_cause = NULL;
-        } else if (PyExceptionClass_Check(cause)) {
-            fixed_cause = PyObject_CallObject(cause, NULL);
-            if (fixed_cause == NULL)
-                goto bad;
-        } else if (PyExceptionInstance_Check(cause)) {
-            fixed_cause = cause;
-            Py_INCREF(fixed_cause);
-        } else {
-            PyErr_SetString(PyExc_TypeError,
-                            "exception causes must derive from "
-                            "BaseException");
-            goto bad;
-        }
-        PyException_SetCause(value, fixed_cause);
-    }
-    PyErr_SetObject(type, value);
-    if (tb) {
-#if CYTHON_COMPILING_IN_PYPY
-        PyObject *tmp_type, *tmp_value, *tmp_tb;
-        PyErr_Fetch(&tmp_type, &tmp_value, &tmp_tb);
-        Py_INCREF(tb);
-        PyErr_Restore(tmp_type, tmp_value, tb);
-        Py_XDECREF(tmp_tb);
-#else
-        PyThreadState *tstate = __Pyx_PyThreadState_Current;
-        PyObject* tmp_tb = tstate->curexc_traceback;
-        if (tb != tmp_tb) {
-            Py_INCREF(tb);
-            tstate->curexc_traceback = tb;
-            Py_XDECREF(tmp_tb);
-        }
-#endif
-    }
-bad:
-    Py_XDECREF(owned_instance);
-    return;
-}
-#endif
-
 /* PyIntBinop */
 #if !CYTHON_COMPILING_IN_PYPY
 static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, int inplace, int zerodivision_check) {
@@ -8804,6 +8646,165 @@ static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key) {
     }
     Py_INCREF(value);
     return value;
+}
+#endif
+
+/* RaiseException */
+#if PY_MAJOR_VERSION < 3
+static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb,
+                        CYTHON_UNUSED PyObject *cause) {
+    __Pyx_PyThreadState_declare
+    Py_XINCREF(type);
+    if (!value || value == Py_None)
+        value = NULL;
+    else
+        Py_INCREF(value);
+    if (!tb || tb == Py_None)
+        tb = NULL;
+    else {
+        Py_INCREF(tb);
+        if (!PyTraceBack_Check(tb)) {
+            PyErr_SetString(PyExc_TypeError,
+                "raise: arg 3 must be a traceback or None");
+            goto raise_error;
+        }
+    }
+    if (PyType_Check(type)) {
+#if CYTHON_COMPILING_IN_PYPY
+        if (!value) {
+            Py_INCREF(Py_None);
+            value = Py_None;
+        }
+#endif
+        PyErr_NormalizeException(&type, &value, &tb);
+    } else {
+        if (value) {
+            PyErr_SetString(PyExc_TypeError,
+                "instance exception may not have a separate value");
+            goto raise_error;
+        }
+        value = type;
+        type = (PyObject*) Py_TYPE(type);
+        Py_INCREF(type);
+        if (!PyType_IsSubtype((PyTypeObject *)type, (PyTypeObject *)PyExc_BaseException)) {
+            PyErr_SetString(PyExc_TypeError,
+                "raise: exception class must be a subclass of BaseException");
+            goto raise_error;
+        }
+    }
+    __Pyx_PyThreadState_assign
+    __Pyx_ErrRestore(type, value, tb);
+    return;
+raise_error:
+    Py_XDECREF(value);
+    Py_XDECREF(type);
+    Py_XDECREF(tb);
+    return;
+}
+#else
+static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause) {
+    PyObject* owned_instance = NULL;
+    if (tb == Py_None) {
+        tb = 0;
+    } else if (tb && !PyTraceBack_Check(tb)) {
+        PyErr_SetString(PyExc_TypeError,
+            "raise: arg 3 must be a traceback or None");
+        goto bad;
+    }
+    if (value == Py_None)
+        value = 0;
+    if (PyExceptionInstance_Check(type)) {
+        if (value) {
+            PyErr_SetString(PyExc_TypeError,
+                "instance exception may not have a separate value");
+            goto bad;
+        }
+        value = type;
+        type = (PyObject*) Py_TYPE(value);
+    } else if (PyExceptionClass_Check(type)) {
+        PyObject *instance_class = NULL;
+        if (value && PyExceptionInstance_Check(value)) {
+            instance_class = (PyObject*) Py_TYPE(value);
+            if (instance_class != type) {
+                int is_subclass = PyObject_IsSubclass(instance_class, type);
+                if (!is_subclass) {
+                    instance_class = NULL;
+                } else if (unlikely(is_subclass == -1)) {
+                    goto bad;
+                } else {
+                    type = instance_class;
+                }
+            }
+        }
+        if (!instance_class) {
+            PyObject *args;
+            if (!value)
+                args = PyTuple_New(0);
+            else if (PyTuple_Check(value)) {
+                Py_INCREF(value);
+                args = value;
+            } else
+                args = PyTuple_Pack(1, value);
+            if (!args)
+                goto bad;
+            owned_instance = PyObject_Call(type, args, NULL);
+            Py_DECREF(args);
+            if (!owned_instance)
+                goto bad;
+            value = owned_instance;
+            if (!PyExceptionInstance_Check(value)) {
+                PyErr_Format(PyExc_TypeError,
+                             "calling %R should have returned an instance of "
+                             "BaseException, not %R",
+                             type, Py_TYPE(value));
+                goto bad;
+            }
+        }
+    } else {
+        PyErr_SetString(PyExc_TypeError,
+            "raise: exception class must be a subclass of BaseException");
+        goto bad;
+    }
+    if (cause) {
+        PyObject *fixed_cause;
+        if (cause == Py_None) {
+            fixed_cause = NULL;
+        } else if (PyExceptionClass_Check(cause)) {
+            fixed_cause = PyObject_CallObject(cause, NULL);
+            if (fixed_cause == NULL)
+                goto bad;
+        } else if (PyExceptionInstance_Check(cause)) {
+            fixed_cause = cause;
+            Py_INCREF(fixed_cause);
+        } else {
+            PyErr_SetString(PyExc_TypeError,
+                            "exception causes must derive from "
+                            "BaseException");
+            goto bad;
+        }
+        PyException_SetCause(value, fixed_cause);
+    }
+    PyErr_SetObject(type, value);
+    if (tb) {
+#if CYTHON_COMPILING_IN_PYPY
+        PyObject *tmp_type, *tmp_value, *tmp_tb;
+        PyErr_Fetch(&tmp_type, &tmp_value, &tmp_tb);
+        Py_INCREF(tb);
+        PyErr_Restore(tmp_type, tmp_value, tb);
+        Py_XDECREF(tmp_tb);
+#else
+        PyThreadState *tstate = __Pyx_PyThreadState_Current;
+        PyObject* tmp_tb = tstate->curexc_traceback;
+        if (tb != tmp_tb) {
+            Py_INCREF(tb);
+            tstate->curexc_traceback = tb;
+            Py_XDECREF(tmp_tb);
+        }
+#endif
+    }
+bad:
+    Py_XDECREF(owned_instance);
+    return;
 }
 #endif
 

@@ -26,9 +26,4 @@ class Scorer(ABC):
             * The fourth list[int] shows the locations of each guides in `guide_container.sequence`.
             * The fifth list[float] indicates the efficiency scores of each guide.
         '''
-
-    @abstractmethod
-    def save_guides_to_disk(self) -> None:
-        '''
-        if self.use_secondary_memory == True, saves scored guides to data/cache/saved_guides.pickle
-        '''
+        

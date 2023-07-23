@@ -123,8 +123,6 @@ cdef class KirschtorteCython:
         elif track == 'track_e':
             self.track_e()
 
-        self.scorer.save_guides_to_disk()
-
 
     def track_a(self) -> list[tuple[str, float, list[str]]]:
         # Make an object for each species

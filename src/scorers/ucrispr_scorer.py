@@ -6,7 +6,6 @@ import scipy.stats
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
 from utils.guide_finder import GuideFinder
-from utils.shell_colors import bcolors
 
 
 class uCRISPR_scorer(Scorer):
@@ -19,16 +18,13 @@ class uCRISPR_scorer(Scorer):
         self.context_toward_three_prime: int = settings['context_toward_three_prime']
 
         self.guide_finder: GuideFinder = GuideFinder()
-        self.saved_guides: dict[str, float] = dict()
+
+        self.cpp_program_path = 'src/scorers/uCRISPR/uCRISPR_scorer'  # Relative path from root to 
+                                                                      # uCRISPR C++ program executable.
 
         if self.use_secondary_memory == True:
             if not os.path.exists('data/cache/'):
                 os.mkdir('data/cache/')
-
-            elif os.path.exists('data/cache/saved_guides.pickle'):
-                with open('data/cache/saved_guides.pickle', 'rb') as f:
-                    self.saved_guides = pickle.load(f)
-                    print(f'{bcolors.BLUE}>{bcolors.RESET} Loaded cached guide scores.')
 
 
     def score_sequence(
@@ -54,43 +50,46 @@ class uCRISPR_scorer(Scorer):
         )
 
         scores: list = list()
+        saved_guides: dict[str, float] = dict()
         indices_of_uncached_guides: list[int] = list()
+
+        if self.use_secondary_memory == True:
+            if os.path.exists(f'data/cache/{guide_container.species_name}.pickle'):
+                with open(f'data/cache/{guide_container.species_name}.pickle', 'rb') as f:
+                    saved_guides = pickle.load(f)
 
         # If there are guides which we do not have the scores for, save their indices.
         # Score them with the C++ uCRISPR after this block.
         for idx, guide in enumerate(guides_context_list):
-            score = self.saved_guides.get(guide)
+            score = saved_guides.get(guide)
             scores.append(score)
             
             if score == None:
                 indices_of_uncached_guides.append(idx)
 
         if len(indices_of_uncached_guides) > 0:
-            cpp_program_path = 'src/scorers/uCRISPR/uCRISPR_scorer'  # Relative path from root to 
-                                                                     # uCRISPR C++ program executable.
-            process = subprocess.Popen(cpp_program_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
             
-            for i in indices_of_uncached_guides:
-                process.stdin.write(guides_context_list[i].encode() + b'\n')  # Send each encoded binary string from 
-                                                                              # the list to the standard input of the C++ program.
-            
-            process.stdin.close()  # Close the standard input of the C++ program.
+            for i in range(0, len(indices_of_uncached_guides), 1000):
+                payload = b''
+                for j in indices_of_uncached_guides[i:i+1000]:
+                    payload += guides_context_list[j].encode() + b'\n'
 
-            output = process.stdout.read().decode()  # Read the output strings from the C++ program.
-            output = output.strip().split('\n')      # Split the output into a list of strings.
+                process = subprocess.Popen(self.cpp_program_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
-            # Caclulation method taken from CHOPCHOP's code.
-            uncached_scores = [scipy.stats.norm.cdf(float(s.split(' ')[1]), loc=11.92658, scale=0.2803797) * 100 for s in output]
+                output, stderr = process.communicate(payload)
+                output = output.decode().strip().split('\n')      # Split the output into a list of strings.
 
-            # Update the saved guides cache. Call save to disk later when done with all scorings.
-            for idx, s in enumerate(uncached_scores):
-                scores[indices_of_uncached_guides[idx]] = s
-                self.saved_guides[guides_context_list[indices_of_uncached_guides[idx]]] = s
+                # Calculation method taken from CHOPCHOP's code.
+                uncached_scores = [scipy.stats.norm.cdf(float(s), loc=11.92658, scale=0.2803797) * 100 for s in output]
+
+                # Update the saved guides cache. Call save to disk later when done with all scorings.
+                for idx, s in enumerate(uncached_scores):
+                    scores[indices_of_uncached_guides[idx+i]] = s
+                    saved_guides[guides_context_list[indices_of_uncached_guides[idx+i]]] = s
+
+            if self.use_secondary_memory == True:
+                with open(f'data/cache/{guide_container.species_name}.pickle', 'wb') as f:
+                    pickle.dump(saved_guides, f)
 
         return guides_list, guides_context_list, strands_list, locations_list, scores
     
-
-    def save_guides_to_disk(self) -> None:
-        if self.use_secondary_memory == True:
-            with open('data/cache/saved_guides.pickle', 'wb') as f:
-                pickle.dump(self.saved_guides, f)

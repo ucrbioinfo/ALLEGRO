@@ -13,6 +13,8 @@
 // g++ -std=c++17 main.cpp uCRISPR_scorer.cpp RNAstructure/RNA_class/*.o RNAstructure/src/*.o -o uCRISPR_scorer
 //
 #include <cmath>
+#include <mutex>
+#include <thread>
 #include <stdlib.h>
 #include <iostream>
 #include <filesystem>
@@ -20,14 +22,16 @@
 #include "include/uCRISPR_scorer.h"
 #include "RNAstructure/RNA_class/RNA.h"
 
+std::mutex mtx; // Mutex to protect shared data.
+
 namespace uCRISPR_scorer
 {
     uCRISPR_scorer::uCRISPR_scorer()
     {
         this->ReadParameters();
 
+        // Set RNAstructure data tables environment path.
         std::filesystem::path current_dir = std::filesystem::current_path();
-
         std::string env_path = current_dir.string() + "/src/scorers/uCRISPR/RNAstructure/data_tables/";
         setenv("DATAPATH", env_path.c_str(), 1);
     }
@@ -472,7 +476,7 @@ namespace uCRISPR_scorer
         this->parameters_on.insert(std::pair<std::string, double>("wdG", 0.00116983));
     }
 
-    double uCRISPR_scorer::GetSgRNAEnergy(std::string sequence)
+    double uCRISPR_scorer::GetSgRNAEnergy(const std::string &sequence)
     {
         std::string sline = "NNNNNNNNNNNNNNNNNNNNGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCU";
         std::string sgRNA = sline.substr(20);
@@ -493,7 +497,7 @@ namespace uCRISPR_scorer
         return energy;
     }
 
-    double uCRISPR_scorer::score_guide(std::string sequence)
+    double uCRISPR_scorer::score_guide(const std::string &sequence)
     {
         std::string dna = "";
         std::string rna = "";
@@ -571,15 +575,49 @@ namespace uCRISPR_scorer
         return std::exp(E_C + EsgRNA) * Epam;
     }
 
-    std::vector<double> uCRISPR_scorer::score_guides(std::vector<std::string> sequences)
+    // Thread function to calculate scores for a range of sequences.
+    void uCRISPR_scorer::threaded_scorer(const std::vector<std::string> &sequences, std::vector<double> &scores, size_t start, size_t end)
     {
-        std::vector<double> scores;
-
-        for (const std::string &sequence : sequences)
+        for (size_t i = start; i < end; ++i)
         {
-            scores.push_back(score_guide(sequence));
+            double score = this->score_guide(sequences[i]);
+
+            std::lock_guard<std::mutex> lock(mtx); // Lock the mutex to protect shared data.
+            scores[i] = score;                     // Store the score in the corresponding index.
+        }
+    }
+
+    void uCRISPR_scorer::score_guides(const std::vector<std::string> &sequences)
+    {
+        std::vector<double> scores(sequences.size());
+
+        // Get the available number of threads to use.
+        size_t num_threads = std::thread::hardware_concurrency();
+
+        std::vector<std::thread> threads;
+        threads.reserve(num_threads);
+
+        // Calculate chunk size for each thread.
+        size_t chunk_size = sequences.size() / num_threads;
+
+        // Distribute the work among threads.
+        for (size_t i = 0; i < num_threads; ++i)
+        {
+            size_t start = i * chunk_size;
+            size_t end = (i == num_threads - 1) ? sequences.size() : start + chunk_size;
+
+            threads.emplace_back(&uCRISPR_scorer::threaded_scorer, this, std::ref(sequences), std::ref(scores), start, end);
         }
 
-        return scores;
+        for (auto &thread : threads)
+        {
+            thread.join();
+        }
+
+        // Print scores.
+        for (size_t i = 0; i < sequences.size(); ++i)
+        {
+            std::cout << scores[i] << std::endl;
+        }
     }
 }

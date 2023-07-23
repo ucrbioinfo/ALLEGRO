@@ -36,7 +36,3 @@ class DummyScorer(Scorer):
         scores = [1.0] * len(guides_list)
         
         return guides_list, guides_context_list, strands_list, locations_list, scores
-
-
-    def save_guides_to_disk(self) -> None:
-        return
