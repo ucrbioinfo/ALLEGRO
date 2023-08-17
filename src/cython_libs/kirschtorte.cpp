@@ -255,7 +255,8 @@ namespace Kirschtorte
         if (result_status != operations_research::MPSolver::OPTIMAL)
         {
             std::cout << RED << "> Status: " << result_status << RESET << std::endl;
-            LOG(FATAL) << "The problem does not have an optimal solution!";
+            // LOG(FATAL) << "The problem does not have an optimal solution!";
+            std::cout << RED << "> The problem does not have an optimal solution!" << RESET << std::endl;
             this->log_buffer << "The problem does not have an optimal solution!" << std::endl;
             return std::vector<GuideStruct>();
         }

@@ -169,6 +169,9 @@ cdef class KirschtorteCython:
         # Interface with the C++ functions.
         guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
 
+        if guide_struct_vector.size() == 0:
+            sys.exit(0)
+
         self.solution: list[tuple[str, float, list[str]]] = list()
         for guide_struct in guide_struct_vector:
             seq = guide_struct.sequence
@@ -253,6 +256,9 @@ cdef class KirschtorteCython:
 
         # Interface with the C++ functions.
         guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
+
+        if guide_struct_vector.size() == 0:
+            sys.exit(0)
 
         self.solution: list[tuple[str, float, list[str]]] = list()
         for guide_struct in guide_struct_vector:
