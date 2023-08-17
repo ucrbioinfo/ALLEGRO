@@ -1,12 +1,13 @@
 import sys
 
-import utils.configurator as configurator
+from utils.configurator import Configurator
 import utils.postprocessing as postprocessing
 import utils.write_solution_to_file as write_solution
 from cython_libs.kirschtorte import KirschtorteCython as coverset  # type: ignore
 
 
 def main() -> int:
+    configurator = Configurator()
     configurator.begruessung()  # Guten Tag!
     
     # Read command line arguments and config.yaml.
@@ -14,13 +15,13 @@ def main() -> int:
     # Arguments specified on the command line have priority over and will replace those in config.yaml.
     args = configurator.parse_configurations()
 
-    # This is the only function that changes the arguments in args.
+    # This is the only function that changes the arguments in the config file.
     # Warnings and info to help with user error. Also hard-codes some paths and arguments.
-    args, scorer_settings = configurator.check_and_fix_configurations(args)
+    args, scorer_settings = configurator.check_and_fix_configurations()
     
     # Write the current configuration to a log file in the output folder.
-    configurator.log_args(args)
-    
+    configurator.log_args()
+
     coversets_obj = coverset(
         beta=args.beta,
         cut_multiplicity=args.multiplicity,
@@ -55,6 +56,8 @@ def main() -> int:
             output_path,
             args.seed_region_is_n_from_pam,
             args.mismatches_allowed_after_seed_region)
+        
+    configurator.log_time()
 
     return 0
 
