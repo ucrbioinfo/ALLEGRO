@@ -147,7 +147,7 @@ cdef class KirschtorteCython:
                 if len(guide_objects_list) == 0:
                     print(f'{bcolors.RED}> Warning{bcolors.RESET}: Species', row.species_name, 'contains no cas9 guides, or ' +
                     'all of its cas9 guides have been marked as repetitive and thus removed in ' +
-                    'a preprocessing step. Set the include_repetitive option to False in config.yaml ' +
+                    'a preprocessing step. Set the filter_repetitive option to False in config.yaml ' +
                     'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
