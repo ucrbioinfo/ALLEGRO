@@ -103,7 +103,7 @@ def write_solution_to_file(
     return output_csv_path
 
 
-# ATRIFACT CODE BELOW
+# ARTIFACT CODE BELOW
 
 # def graph_size_dist(
 #     beta: int,
