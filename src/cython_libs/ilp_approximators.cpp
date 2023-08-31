@@ -26,7 +26,7 @@ std::vector<GuideStruct> randomized_rounding(
     }
 
     std::set<std::string> winners;
-    std::size_t len_winners = INT_MAX; // Inifinity, initially
+    std::size_t len_winners = INT_MAX; // Infinity, initially
     std::size_t trial_with_smallest_size = 0;
 
     // On each invocation, dist(rng) returns a random floating-point value
