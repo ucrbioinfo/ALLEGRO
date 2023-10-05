@@ -66,7 +66,7 @@ namespace Kirschtorte
             // Set the appropriate bit to indicate that this new container is hit by this guide.
             this->coversets[encoded_bitset].second.set(container_id);
 
-            // todo: Update the average score of this guide
+            // TODO: Update the average score of this guide
             // need to keep track of how many times this guide has been seen: n
             // new_average = old_average + (new_item - old_average) / (n + 1)
         }
@@ -303,7 +303,8 @@ namespace Kirschtorte
                 this->coversets,
                 cut_multiplicity,
                 this->num_trials,
-                this->log_buffer);
+                this->log_buffer,
+                this->output_directory);
         }
         else
         {

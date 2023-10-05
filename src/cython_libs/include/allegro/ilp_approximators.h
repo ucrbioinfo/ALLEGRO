@@ -20,6 +20,7 @@ std::vector<GuideStruct> randomized_rounding(
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
     std::size_t multiplicity,
     std::size_t num_trials,
-    std::ostringstream &log_buffer);
+    std::ostringstream &log_buffer,
+    std::string output_directory);
 
 #endif

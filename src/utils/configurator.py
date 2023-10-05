@@ -11,7 +11,7 @@ from utils.shell_colors import bcolors
 
 class Configurator:
     def __init__(self) -> None:
-        self.start_time = time.time()
+        self.start_time = time.process_time()
 
 
     def begruessung(self) -> None:
@@ -19,7 +19,7 @@ class Configurator:
         print(f'{bcolors.BLUE}>{bcolors.RESET} All unspecified command-line arguments default to the values in config.yaml.')
 
 
-    # TO use CHOPCHOP, ALLEGRO needs a conda environment called 'chopchop' with all the appropriate
+    # To use CHOPCHOP, ALLEGRO needs a conda environment called 'chopchop' with all the appropriate
     # CHOPCHOP dependencies and python 2.7. If not found, an error is printed out.
     def conda_env_exists(self, env_name: str) -> bool:
         if os.system(f'conda env list | grep {env_name} > /dev/null') == 0:
@@ -153,7 +153,7 @@ class Configurator:
         parser.add_argument(
             '--mismatches_allowed_after_seed_region',
             type=int,
-            default=4,
+            default=2,
             help=help,
         )
 
@@ -218,7 +218,7 @@ class Configurator:
         )
 
         help = '''
-        - Only used in chopchop is selected as the scorer. Which chopchop scoring model to use?
+        - Only used when chopchop is selected as the scorer. Which chopchop scoring model to use?
         '''
         parser.add_argument(
             '--chopchop_scoring_method',
@@ -368,14 +368,14 @@ class Configurator:
         with open(output_txt_path, 'w') as f:
             f.write(f'Config used for experiment {self.args.experiment_name}\n')
             for key, value in vars(self.args).items():
-                f.writelines(key + ': ' + str(value) + '\n')
+                f.writelines(f'{key}: {value}\n')
 
         self.output_txt_path = output_txt_path
         return output_txt_path
 
 
     def log_time(self):
-        end_time = time.time()
+        end_time = time.process_time()
 
         # Calculate the elapsed time in seconds
         elapsed_seconds = end_time - self.start_time
@@ -402,12 +402,12 @@ class Configurator:
             # If it exists, append a number to the directory name
             i = 1
 
-            while os.path.exists(dir_name + '_' + str(i)):
+            while os.path.exists(f'{dir_name}_{i}'):
                 i += 1
 
-            dir_name = dir_name + '_' + str(i)
+            dir_name = f'{dir_name}_{i}'
 
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Creating directory', dir_name)
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Creating directory {dir_name}')
         os.makedirs(dir_name)
 
         return dir_name
@@ -416,7 +416,7 @@ class Configurator:
     def configure_scorer_settings(self) -> dict:
         scorer_settings = dict()
 
-        match self.args.scorer:
+        match str(self.args.scorer).lower():
                 case 'chopchop':
                     scorer_settings = {
                         'experiment_name': self.args.experiment_name,
@@ -436,7 +436,7 @@ class Configurator:
                         'context_toward_three_prime': 0,
                     }
 
-                case 'uCRISPR' | 'ucrispr':
+                case 'ucrispr':
                     scorer_settings = {
                         'pam': 'NGG',
                         'use_secondary_memory': self.args.use_secondary_memory,

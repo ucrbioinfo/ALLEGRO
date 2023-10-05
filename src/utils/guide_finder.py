@@ -139,9 +139,8 @@ class GuideFinder:
                     strands_list.append(strand)
                     locations_list.append(position)
 
-        find_matches(seq=sequence, strand='F')  # F means forward strand
-
         sequence_rev_comp = str(Seq(sequence).reverse_complement())
+        find_matches(seq=sequence, strand='F')  # F means forward strand
         find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
 
         return guides_list, guides_context_list, strands_list, locations_list
@@ -153,7 +152,7 @@ class GuideFinder:
         sequence: str,
         file_path: str,
         to_upper: bool=True
-        ) -> list[tuple[str, str, int, int, str]]:
+        ) -> list[tuple[str, str, int, int, str, str]]:
         '''
         ## Args:
             * sequence: A guide RNA nucleotide sequence.
@@ -171,7 +170,7 @@ class GuideFinder:
             * 5. (str) Misc info about the guide and its location.
         '''
 
-        chrom_strand_start_end: list[tuple[str, str, int, int, str]] = list()
+        chrom_strand_start_end_misc: list[tuple[str, str, int, int, str, str]] = list()
 
 
         def find_matches(seq: str, strand: str):
@@ -184,23 +183,30 @@ class GuideFinder:
                 elif strand == 'RC':
                     dna = str(Seq(record.seq).reverse_complement()).upper() if to_upper else str(Seq(record.seq).reverse_complement())
 
+                ortho_to = 'N/A'
                 misc_list: list[str] = list()
-                match = re.search(r'\[gene=(.*?)\]', record.description)
-                if match: misc_list.append('Gene: ' + match.group(1))
+                match = re.search(r'\[Gene=(.*?)\]', record.description)
+                if match:
+                    misc_list.append('Gene: ' + match.group(1))
+
+                match = re.search(r'\[orthologous_to_gene=(.*?)\]', record.description)
+                if match:
+                    ortho_to = match.group(1)
 
                 match = re.search(r'\[protein_id=(.*?)\]', record.description)
-                if match: misc_list.append('Protein: ' + match.group(1))
+                if match:
+                    misc_list.append('Protein: ' + match.group(1))
 
                 misc = ', '.join(misc_list)
 
                 seq_and_pam = re.compile(seq + self.pam_dict[pam])
                 for match in re.finditer(seq_and_pam, dna):
-                    chrom_strand_start_end.append((record.id, strand, match.start(), match.end(), misc))
+                    chrom_strand_start_end_misc.append((record.id, strand, match.start(), match.end(), ortho_to, misc))
 
         find_matches(seq=sequence, strand='F')  # F means forward strand
         find_matches(seq=sequence, strand='RC')  # RC is the reverse complement strand
 
-        return chrom_strand_start_end
+        return chrom_strand_start_end_misc
 
 
 # UNUSED IN RELEASE CODE
@@ -216,10 +222,10 @@ class GuideFinderDebug:
         self.seq_ids: list[str] = list()
         self.location: list[str] = list()
         self.seq_length: list[int] = list()
-        self.proportion_of_total_length: list[float] = list()
         self.is_non_standard: list[int] = list()
         self.contains_fourmers: list[int] = list()
         self.contains_fivemers: list[int] = list()
+        self.proportion_of_total_length: list[float] = list()
         self.contains_five_or_more_rep_twomers: list[int] = list()
 
 

@@ -1,2 +1,2 @@
-species_name,genome_file_name,cds_file_name
-saccharomyces_cerevisiae,saccharomyces_cerevisiae_genomic.fna,NP_013406.1_seq.fasta
+species_name,cds_file_name
+my_genes,my_genes.fna

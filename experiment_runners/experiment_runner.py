@@ -84,14 +84,11 @@ mismatches_allowed_after_seed_region: 4
 import os
 import pandas as pd
 import numpy as np
-import subprocess
 
 input_csv = 'data/input/final_ncbi_concat_1k_input_species.csv'
 
 df = pd.read_csv(input_csv)
 dfs = np.array_split(df, len(df) // 50)  # split input into smaller dataframes of at most 50 rows each
-
-processes: list = list()
 
 for i, d in enumerate(dfs):
     new_exp_name = 'no_filter_ncbi_split_' + str(i)
@@ -110,58 +107,4 @@ for i, d in enumerate(dfs):
     with open(config_name, 'w') as f:
         f.write(config_text.format(**context))
 
-    # cmd = 'python src/main.py --config ' + config_name
-
-    # process = subprocess.Popen(cmd, shell=True)
-    # processes.append(process)
-
     os.system('python src/main.py --config ' + config_name)
-
-# for process in processes:
-#     process.wait()
-
-
-# for i, d in enumerate(dfs):
-#     new_exp_name = 'filter_ncbi_split_' + str(i)
-#     new_path = 'data/input/' + new_exp_name + '.csv'
-#     d.to_csv(new_path, index=False)  # type: ignore
-
-#     context = {
-#         'experiment_name': new_exp_name,
-#         'input_species_path': new_path,
-#         'mode': 'from_genome',
-#         'include_repetitive': False,
-#         'mp_threshold': 4
-#     }
-
-#     config_name = 'filter_temp_config_' + str(i) + '.yaml'
-#     with open(config_name, 'w') as f:
-#         f.write(config_text.format(**context))
-
-#     os.system('python src/main.py --config ' + config_name)
-
-#     cmd = 'python src/main.py --config ' + config_name
-
-#     process = subprocess.Popen(cmd, shell=True)
-#     processes.append(process)
-
-#     # os.system('python src/main.py --config ' + config_name)
-
-# for process in processes:
-#     process.wait()
-
-
-# # ALL CDS
-# context = {
-#         'experiment_name': 'all_ncbi_cds',
-#         'mode': 'from_cds',
-#         'input_species_path': 'data/input/final_standard_ncbi_input_species.csv',
-#         'include_repetitive': False,
-#         'mp_threshold': 4
-#         }
-
-# config_name = 'all_cds_ncbi_temp_config.yaml'
-# with open(config_name, 'w') as f:
-#     f.write(config_text.format(**context))
-
-# os.system('python src/main.py --config ' + config_name)

@@ -97,8 +97,9 @@ cdef class KirschtorteCython:
         self.file_column_name = file_column_name
 
         # Set how many clusters we need.
-        # If track_a is selected, we have the same number of clusters as species.
-        # If track_e is selected, count the total number of fasta records in all species input files (uses multithreading).
+        # If track_a is selected, we have the same number of clusters as species. This is the same number for "Number of constraints" in solver_log.txt 
+        # If track_e is selected, count the total number of fasta records in all species input files (uses multithreading). 
+        #   This is the same number for "Number of constraints" in solver_log.txt aka total number of genes/chromosomes.
         clusters = self.species_df.shape[0] if track == 'track_a' else records_count_finder.count_records(self.input_directory)
 
         # Instantiate a C++ class. The linear programming part of ALLEGRO is done there.
@@ -217,19 +218,19 @@ cdef class KirschtorteCython:
                 if len(guide_containers_list) == 0:
                     print(f'{bcolors.RED}> Warning{bcolors.RESET}: Species', row.species_name, 'contains no cas9 guides, or ' +
                     'all of its cas9 guides have been marked as repetitive and thus removed in ' +
-                    'a preprocessing step. Set the include_repetitive option to False in config.yaml ' +
+                    'a preprocessing step. Set the filter_repetitive option to False in config.yaml ' +
                     'to include them. Excluding', row.species_name, 'from further consideration.')
             else:
                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
                 sys.exit(1)
 
             for guide_container in guide_containers_list:
-                guide_attributes = guide_container.get_attributes_dict()
+                # guide_attributes = guide_container.get_attributes_dict()
 
-                record_ortho_to = guide_attributes['record_orthologous_to']
-                record_string_id = guide_attributes['record_string_id']
+                # record_ortho_to = guide_attributes['record_orthologous_to']
+                # record_string_id = guide_attributes['record_string_id']
 
-                container_target_name = record_ortho_to if record_ortho_to != 'N/A' else record_string_id
+                # container_target_name = record_ortho_to if record_ortho_to != 'N/A' else record_string_id
 
                 guide_objects_list: list[Guide] = guide_container.get_cas9_guides()
                 for guide_object in guide_objects_list:
@@ -243,7 +244,7 @@ cdef class KirschtorteCython:
                         )
 
                     if status == 0:
-                        self.guide_origin[container_idx] = row.species_name + ', ' + container_target_name
+                        self.guide_origin[container_idx] = row.species_name # + ', ' + container_target_name
                 
                 container_idx += 1
                 

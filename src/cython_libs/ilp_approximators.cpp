@@ -1,3 +1,7 @@
+#include <fstream>
+#include <iostream>
+#include <filesystem>
+
 #include "allegro/definitions.h"
 #include "allegro/decode_bitset.h"
 #include "allegro/ilp_approximators.h"
@@ -8,8 +12,18 @@ std::vector<GuideStruct> randomized_rounding(
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
     std::size_t multiplicity,
     std::size_t num_trials,
-    std::ostringstream &log_buffer)
+    std::ostringstream &log_buffer,
+    std::string output_directory
+    )
 {
+
+    std::filesystem::path dirpath(output_directory);
+    std::filesystem::path filepath = dirpath / "trial_sizes.csv";
+
+    std::ofstream log_file(filepath);
+
+    log_file << "trial,library_size" << std::endl;
+
     std::cout << BLUE << "> " << RESET << "Using randomized rounding with " << num_trials << " trials." << std::endl;
     log_buffer << "Using randomized rounding with " << num_trials << " trials." << std::endl;
 
@@ -94,6 +108,10 @@ std::vector<GuideStruct> randomized_rounding(
 
         std::size_t len_winners_this_trial = winners_this_trial.size();
 
+
+        // Log the size of the library for this trial
+        log_file << trial << "," << len_winners_this_trial << std::endl;
+
         if (len_winners_this_trial <= len_winners)
         {
             winners = winners_this_trial;
@@ -135,6 +153,8 @@ std::vector<GuideStruct> randomized_rounding(
         std::cout << BLUE << "> " << RESET << decoded_bitset << std::endl;
         log_buffer << decoded_bitset << std::endl;
     }
+
+    log_file.close();
 
     return decoded_winners;
 }

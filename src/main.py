@@ -55,7 +55,8 @@ def main() -> int:
         num_clusters = postprocessing.cluster_solution(
             output_path,
             args.seed_region_is_n_from_pam,
-            args.mismatches_allowed_after_seed_region)
+            args.mismatches_allowed_after_seed_region
+        )
         
     configurator.log_time()
 

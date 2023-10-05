@@ -46,6 +46,7 @@ def write_solution_to_file(
     end_positions: list[int] = list()
     start_positions: list[int] = list()
     chromosomes_or_genes: list[str] = list()
+    ortho_list: list[str] = list()
 
     guide_finder = GuideFinder()
     input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
@@ -55,14 +56,14 @@ def write_solution_to_file(
         score = tup[1]
         hit_species = tup[2]
 
-        for species_gene_tupe in hit_species:
-            species_gene_tupe = species_gene_tupe.split(', ')
+        for species in hit_species:
+            # species_gene_tupe = species_gene_tupe.split(', ')
 
-            record_name = ''
-            if len(species_gene_tupe) > 1:
-                record_name = ', ' + species_gene_tupe[1]
+            # record_name = ''
+            # if len(species_gene_tupe) > 1:
+            #     record_name = ', ' + species_gene_tupe[1]
 
-            df_file_path = input_df[input_df[species_names_csv_column_name] == species_gene_tupe[0]][paths_csv_column_name].values[0]
+            df_file_path = input_df[input_df[species_names_csv_column_name] == species][paths_csv_column_name].values[0]
             full_path = os.path.join(input_directory, df_file_path)
 
             list_of_tuples = guide_finder.locate_guides_in_sequence(pam=pam, sequence=seq, file_path=full_path, to_upper=True)
@@ -72,7 +73,8 @@ def write_solution_to_file(
                 strand = tupe[1]
                 start_pos = tupe[2]
                 end_pos = tupe[3]
-                misc = tupe[4]
+                ortho_to = tupe[4]
+                misc = tupe[5]
 
                 sequences.append(seq)
                 paths.append(df_file_path)
@@ -80,8 +82,9 @@ def write_solution_to_file(
                 strands.append(strand)
                 start_positions.append(start_pos)
                 end_positions.append(end_pos)
-                chromosomes_or_genes.append(container + record_name)
-                species_list.append(species_gene_tupe[0])
+                chromosomes_or_genes.append(container)
+                species_list.append(species)
+                ortho_list.append(ortho_to)
                 misc_list.append(misc)
             
     
@@ -93,11 +96,12 @@ def write_solution_to_file(
         strands,
         start_positions,
         end_positions,
+        ortho_list,
         misc_list,
         paths,
         )),
     columns=['sequence', 'target', 'score', 'chromosome_or_gene',
-    'strand', 'start_position', 'end_position', 'misc', 'path']).to_csv(output_csv_path, index=False)
+    'strand', 'start_position', 'end_position', 'orthologous_to', 'misc', 'path']).to_csv(output_csv_path, index=False)
     
     print(f'{bcolors.BLUE}>{bcolors.RESET} Done. Check {output_csv_path} for the output.')
     return output_csv_path
