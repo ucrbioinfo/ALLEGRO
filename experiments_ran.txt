@@ -1,0 +1,1 @@
+- Trials selection with fixed input species

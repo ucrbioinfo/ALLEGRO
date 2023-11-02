@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------
 # General settings
 # --------------------------------------------------------------------
-experiment_name: 'e1_ns_to_drive'
+experiment_name: 'a7b1300test'
 # ---
 
 # --------------------------------------------------------------------
@@ -15,17 +15,17 @@ input_species_path_column: 'cds_file_name'
 # track_a: any of the containers can be targeted.
 # There will be multiplicity targets per container.
 # track_e: each container has to be targeted at least multiplicity times,
-track: 'track_e'
+track: 'track_a'
 # ---
 
 # Integer value, default: 1
 # In track_a, every species needs to be targeted at least this many times anywhere.
 # In track_e, each gene needs to be targeted at least this many times in that gene.
-multiplicity: 1
+multiplicity: 7
 # ---
 
 # Integer value, default: 0
-beta: 0  # The final size of the guides set must be <= than this. Think of it as your budget.
+beta: 1300  # The final size of the guides set must be <= than this. Think of it as your budget.
           # Set to 0 to disable: this causes ALLEGRO to find the smallest gRNA set IGNORING scores
           # (treats all of the guides as equals).
           # If set to the number of input species, the final size of the set may be up to
@@ -39,7 +39,7 @@ beta: 0  # The final size of the guides set must be <= than this. Think of it as
 # For example, scorer: "chopchop_doench_2016"
 # scorer: 'ucrispr' uses a faster implementation of 'chopchop_zhang_2019'
 # dummy assigns a score of 1.0 to all guides
-scorer: 'dummy'
+scorer: 'ucrispr'
 # ---
 
 # (Affects running time and memory performance) Default: True

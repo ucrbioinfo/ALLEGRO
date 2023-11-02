@@ -117,29 +117,29 @@ def threaded_split(args):
     train_index, test_index, split, run_range = args
     train, test = df.iloc[train_index], df.iloc[test_index]
 
-    train_new_path = f'data/input/train_a7_cv_split_{split}.csv'
+    train_new_path = f'data/input/train_e1_cv_split_{split}.csv'
     train.to_csv(train_new_path, index=False)
 
-    test_new_path = f'data/input/test_a7_cv_split_{split}.csv'
+    test_new_path = f'data/input/test_e1_cv_split_{split}.csv'
     test.to_csv(test_new_path, index=False)
 
     for run in run_range:
-        new_exp_name = f'a7_cv_split_{split}_run_{run}'
+        new_exp_name = f'e1_cv_split_{split}_run_{run}'
         
         context = {
             'experiment_name': new_exp_name,
             'input_species_path': train_new_path,
             'input_species_path_column': 'cds_file_name',
             'input_directory': 'data/input/cds/orthogroups/',
-            'track': 'track_a',
+            'track': 'track_e',
             'scorer': 'dummy',
             'beta': 0,
-            'mult': '7',
+            'mult': '1',
             'filter_repetitive': True,
             'mp_threshold': 0
         }
 
-        config_name = f'temp_config_a7_cv_{split}_{run}.yaml'
+        config_name = f'temp_config_e1_cv_{split}_{run}.yaml'
         with open(config_name, 'w') as f:
             f.write(config.format(**context))
 
@@ -150,7 +150,7 @@ def threaded_split(args):
 
         library = split_out.sequence.unique()
 
-        test_df = pd.read_csv(f'data/input/test_a7_cv_split_{split}.csv')[['species_name', 'cds_file_name']]
+        test_df = pd.read_csv(f'data/input/test_e1_cv_split_{split}.csv')[['species_name', 'cds_file_name']]
 
         df_species_name_list = list()
         df_covered_list = list()
@@ -170,6 +170,7 @@ def threaded_split(args):
             species_name = row['species_name']
 
             species_is_covered_n_times = 0
+            gene_is_covered_n_times = 0
             exact_matching_guides = list()
 
             records_path = base_path + row['cds_file_name']
@@ -192,62 +193,64 @@ def threaded_split(args):
 
                 # Attempt to find an exact match.
                 matches = find_all_matches(library, guides_list)
-                for match in matches:
+
+                # No exact matches found for this gene.
+                if len(matches) == 0:
+
+                    # Try partial matches for this genes.
+                    mm_allowed = 2
+                    req_match_len = 10
+
+                    for idx, test_guide in enumerate(guides_list):
+                        for lib_guide in library:
+
+                            distance_after_seed = hamming_distance(lib_guide, test_guide, req_match_len)
+                            
+                            if lib_guide[req_match_len:] == test_guide[req_match_len:] and distance_after_seed <= mm_allowed and distance_after_seed > 0:
+                                df_species_name_list.append(species_name)
+                                df_covered_list.append(test_guide)
+                                df_locations.append(locations_list[idx])
+                                df_strands.append(strands_list[idx])
+                                df_gene_names.append(gene_name)
+                                df_protein_ids.append(protein_id)
+                                df_ortho_prot_ids.append(ortho_prot_id)
+                                df_ortho_gene_names.append(ortho_gene_name)
+                                df_mismatch.append(distance_after_seed)
+                                df_lib_partial_match.append(lib_guide)
+                                gene_is_covered_n_times += 1
+                                species_is_covered_n_times += 1
+
+                else:
+                    for match in matches:
+                        df_species_name_list.append(species_name)
+                        df_covered_list.append(guides_list[match])
+                        df_locations.append(locations_list[match])
+                        df_strands.append(strands_list[match])
+                        df_gene_names.append(gene_name)
+                        df_protein_ids.append(protein_id)
+                        df_ortho_prot_ids.append(ortho_prot_id)
+                        df_ortho_gene_names.append(ortho_gene_name)
+                        df_lib_partial_match.append('N/A')
+                        df_mismatch.append('N/A')
+                        gene_is_covered_n_times += 1
+                        species_is_covered_n_times += 1
+                        exact_matching_guides.append(match)
+
+                # Did all we could. Gene is still uncovered:
+                if gene_is_covered_n_times == 0:
                     df_species_name_list.append(species_name)
-                    df_covered_list.append(guides_list[match])
-                    df_locations.append(locations_list[match])
-                    df_strands.append(strands_list[match])
+                    df_covered_list.append('N/A')
+                    df_locations.append('N/A')
+                    df_strands.append('N/A')
                     df_gene_names.append(gene_name)
                     df_protein_ids.append(protein_id)
                     df_ortho_prot_ids.append(ortho_prot_id)
                     df_ortho_gene_names.append(ortho_gene_name)
                     df_lib_partial_match.append('N/A')
                     df_mismatch.append('N/A')
-                    species_is_covered_n_times += 1
-                    exact_matching_guides.append(match)
             
-            # Attempt to find partial matches.
-            mm_allowed = 2
-            req_match_len = 10
 
-            for record in records:
-                gene_name, protein_id, ortho_prot_id, ortho_gene_name = get_record_metadata(record)
-
-                (guides_list,
-                _guides_context_list,
-                strands_list,
-                locations_list) = gf.identify_guides_and_indicate_strand(
-                    pam='NGG',
-                    sequence=str(record.seq).upper(),
-                    protospacer_length=20,
-                    context_toward_five_prime=0,
-                    context_toward_three_prime=0,
-                    filter_repetitive=False
-                )
-
-                for idx, test_guide in enumerate(guides_list):
-                    for lib_guide in library:
-
-                        # do not allow double-counting exact matching guides from before.
-                        if lib_guide in exact_matching_guides:
-                            continue
-
-                        distance_after_seed = hamming_distance(lib_guide, test_guide, req_match_len)
-                        
-                        if lib_guide[req_match_len:] == test_guide[req_match_len:] and distance_after_seed <= mm_allowed and distance_after_seed > 0:
-                            df_species_name_list.append(species_name)
-                            df_covered_list.append(test_guide)
-                            df_locations.append(locations_list[idx])
-                            df_strands.append(strands_list[idx])
-                            df_gene_names.append(gene_name)
-                            df_protein_ids.append(protein_id)
-                            df_ortho_prot_ids.append(ortho_prot_id)
-                            df_ortho_gene_names.append(ortho_gene_name)
-                            df_mismatch.append(distance_after_seed)
-                            df_lib_partial_match.append(lib_guide)
-                            species_is_covered_n_times += 1
-
-            # No match.
+            # No exact or partial matches anywhere at all in this species.
             if species_is_covered_n_times == 0:
                 df_species_name_list.append(species_name)
                 df_covered_list.append('Not covered')
@@ -280,6 +283,7 @@ def threaded_split(args):
 
 split = 1
 args_list = list()
+
 runs = [[i for i in range(33 * n - 33, 33 * n)] for n in range(1, 4)]
 runs[2].append(99)
 

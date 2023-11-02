@@ -231,7 +231,7 @@ def threaded_split(args):
                             
                             distance_after_seed = hamming_distance(lib_guide, test_guide, req_match_len)
                             
-                            if lib_guide[req_match_len:] == test_guide[req_match_len:] and distance_after_seed < mm_allowed and distance_after_seed < smallest_mm:
+                            if lib_guide[req_match_len:] == test_guide[req_match_len:] and distance_after_seed <= mm_allowed and distance_after_seed < smallest_mm:
                                 
                                 best_record = record
                                 best_lib_guide = lib_guide
@@ -292,4 +292,3 @@ for train_index, test_index in kfold.split(df):
 
 with multiprocessing.Pool(processes=10) as pool:
     pool.map(threaded_split, args_list)
-    split += 1
