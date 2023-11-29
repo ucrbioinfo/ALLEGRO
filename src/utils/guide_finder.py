@@ -3,9 +3,12 @@
 # and check for guides in your custom sequence by calling identify_guides_and_indicate_strand(...).
 import re
 import gc
+import os
 import pandas
 from Bio import SeqIO
 from Bio.Seq import Seq
+
+from utils.shell_colors import bcolors
 
 
 def count_kmers(sequence, k):
@@ -18,10 +21,29 @@ def count_kmers(sequence, k):
 
 
 class GuideFinder:
+    _self = None
+    pam_dict = None
+    exclusion_list = None
+
+    def __new__(self):
+        if self._self is None:
+            self._self = super().__new__(self)
+        return self._self
+    
+    
     def __init__(self) -> None:
-        self.pam_dict = {
-            'NGG': r'(?=([ACTG]GG))',
-        }
+        if self.pam_dict is None:
+            self.pam_dict = {
+                'NGG': r'(?=([ACTG]GG))',
+            }
+
+        if self.exclusion_list is None:
+            # Whether there are guides to exclude
+            if os.path.exists('data/input/_the_blacklist_.txt'):
+                with open('data/input/_the_blacklist_.txt', 'r') as file:
+                    self.exclusion_list = file.read().splitlines()
+                    if len(self.exclusion_list) != 0:
+                        print(f'{bcolors.BLUE}>{bcolors.RESET} Excluding the gRNA(s) in data/input/_the_blacklist_.csv')
 
 
     def identify_guides_and_indicate_strand(
@@ -91,6 +113,9 @@ class GuideFinder:
                     if any(c not in ['A', 'C', 'G', 'T'] for c in guide):
                         continue
 
+                    if guide in self.exclusion_list:
+                        continue
+
                     if filter_repetitive == True:
                         # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
                         # 7 times or GA is repeated 6 times.
@@ -117,22 +142,8 @@ class GuideFinder:
                     if position-protospacer_length-context_toward_five_prime >= 0 and position+len(pam)+context_toward_three_prime < len(seq) + 1:
                         guide_with_context = seq[position-protospacer_length-context_toward_five_prime:position+len(pam)+context_toward_three_prime]
                     
-                    # Commented below out. Partial-contexted sequences would not work with the uCRISPR scorer.
-                    # --------
-                    # # There is not enough context on the right side -- extract as many chars as possible
-                    # elif position-protospacer_length-context_toward_five_prime >= 0:
-                    #     guide_with_context = seq[position-protospacer_length-context_toward_five_prime:]
-                    
-                    # # There is not enough context on the left side
-                    # #  extract from the start of the string to the specified context on the right side
-                    # elif position+len(pam)+context_toward_three_prime < len(seq) + 1:
-                    #     guide_with_context = seq[:position+len(pam)+context_toward_three_prime]
-                    
-                    # There is not enough context on either side
-                    # --------
                     else:
                         continue
-                        # guide_with_context = seq
 
                     guides_list.append(guide)
                     guides_context_list.append(guide_with_context)
@@ -140,8 +151,8 @@ class GuideFinder:
                     locations_list.append(position)
 
         sequence_rev_comp = str(Seq(sequence).reverse_complement())
-        find_matches(seq=sequence, strand='F')  # F means forward strand
-        find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
+        find_matches(seq=sequence, strand='+')  # F means forward strand
+        find_matches(seq=sequence_rev_comp, strand='-')  # RC is the reverse complement strand
 
         return guides_list, guides_context_list, strands_list, locations_list
 
@@ -178,33 +189,35 @@ class GuideFinder:
 
                 dna: str = ''
 
-                if strand == 'F':
+                if strand == '+':
                     dna = str(record.seq).upper() if to_upper else str(record.seq)
-                elif strand == 'RC':
-                    dna = str(Seq(record.seq).reverse_complement()).upper() if to_upper else str(Seq(record.seq).reverse_complement())
+                elif strand == '-':
+                    dna = str(record.seq.reverse_complement()).upper() if to_upper else str(record.seq.reverse_complement())
 
                 ortho_to = 'N/A'
                 misc_list: list[str] = list()
-                match = re.search(r'\[Gene=(.*?)\]', record.description)
-                if match:
-                    misc_list.append('Gene: ' + match.group(1))
+                # match = re.search(r'\[Gene=(.*?)\]', record.description)
+                # if match:
+                #     misc_list.append(f'Gene: {match.group(1)}')
 
                 match = re.search(r'\[orthologous_to_gene=(.*?)\]', record.description)
                 if match:
                     ortho_to = match.group(1)
 
-                match = re.search(r'\[protein_id=(.*?)\]', record.description)
-                if match:
-                    misc_list.append('Protein: ' + match.group(1))
+                # match = re.search(r'\[protein_id=(.*?)\]', record.description)
+                # if match:
+                #     misc_list.append(f'Protein: {match.group(1)}')
 
-                misc = ', '.join(misc_list)
+                misc_list.append(record.description.split(" ")[1])
+
+                misc = ';'.join(misc_list)
 
                 seq_and_pam = re.compile(seq + self.pam_dict[pam])
                 for match in re.finditer(seq_and_pam, dna):
                     chrom_strand_start_end_misc.append((record.id, strand, match.start(), match.end(), ortho_to, misc))
 
-        find_matches(seq=sequence, strand='F')  # F means forward strand
-        find_matches(seq=sequence, strand='RC')  # RC is the reverse complement strand
+        find_matches(seq=sequence, strand='+')  # F means forward strand
+        find_matches(seq=sequence, strand='-')  # RC is the reverse complement strand
 
         return chrom_strand_start_end_misc
 
@@ -348,10 +361,10 @@ class GuideFinderDebug:
                     strands_list.append(strand)
                     locations_list.append(position)
 
-        find_matches(seq=sequence, strand='F')  # F means forward strand
+        find_matches(seq=sequence, strand='+')  # F means forward strand
 
         sequence_rev_comp = str(Seq(sequence).reverse_complement())
-        find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
+        find_matches(seq=sequence_rev_comp, strand='-')  # RC is the reverse complement strand
 
         return guides_list, guides_context_list, strands_list, locations_list
 
@@ -383,10 +396,10 @@ class GuideFinderDebug:
                 for match in re.finditer(seq, dna):
                     container_strand_start_end.append((record.id, strand, match.start(), match.end()))
 
-        find_matches(seq=sequence, strand='F')  # F means forward strand
+        find_matches(seq=sequence, strand='+')  # F means forward strand
         
         sequence_rev_comp = str(Seq(sequence).reverse_complement())
-        find_matches(seq=sequence_rev_comp, strand='RC')  # RC is the reverse complement strand
+        find_matches(seq=sequence_rev_comp, strand='-')  # RC is the reverse complement strand
 
         return container_strand_start_end
 

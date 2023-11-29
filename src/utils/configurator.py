@@ -170,16 +170,15 @@ class Configurator:
         )
 
         help = '''
-        - (Affects performance) Default: True
-        - True decreases subsequent running time but increases memory consumption.
-        - If True, saves guides and their scores to data/cache/saved_guides.pickle for future lookups.
-        - If False, each guide has to be scored again every time ALLEGRO is run.
+        - Multithreading. Default: 20. 0 disables multithreading.
+        - Any other number uses that many threads.
         '''
         parser.add_argument(
-            '--use_secondary_memory',
-            type=bool,
-            default=True,
-            help=help
+            '-t',
+            '--max_threads',
+            type=int,
+            default=1,
+            help=help,
         )
 
         help = '''
@@ -213,34 +212,6 @@ class Configurator:
         '''
         parser.add_argument(
             '--input_directory',
-            type=str,
-            help=help,
-        )
-
-        help = '''
-        - Only used when chopchop is selected as the scorer. Which chopchop scoring model to use?
-        '''
-        parser.add_argument(
-            '--chopchop_scoring_method',
-            type=str,
-            help=help,
-        )
-
-        help = '''
-        - Point to the directory where chopchop is located.
-        - Download chopchop from here https://bitbucket.org/valenlab/chopchop/src/master/"
-        '''
-        parser.add_argument(
-            '--absolute_path_to_chopchop',
-            type=str,
-            help=help,
-        )
-
-        help = '''
-        - Points to the directory where all species' genomes are placed.
-        '''
-        parser.add_argument(
-            '--absolute_path_to_genomes_directory',
             type=str,
             help=help,
         )
@@ -285,6 +256,9 @@ class Configurator:
 
 
     def check_and_fix_configurations(self) -> tuple[argparse.Namespace, dict]:
+        if self.args.max_threads < 1:
+            self.args.max_threads = 1
+
         # If CHOPCHOP is the selected scorer, set the chopchop scoring method.
         if 'chopchop' in self.args.scorer or 'CHOPCHOP' in self.args.scorer:
             # Set paths for CHOPCHOP

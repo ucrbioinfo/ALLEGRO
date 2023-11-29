@@ -1,10 +1,11 @@
 import os
 import re
-import pandas as pd
 import numpy as np
+import pandas as pd
 from Bio import SeqIO
 import multiprocessing
 from sklearn.model_selection import KFold
+
 from src.utils.guide_finder import GuideFinder
 
 
@@ -170,13 +171,14 @@ def threaded_split(args):
             species_name = row['species_name']
 
             species_is_covered_n_times = 0
-            gene_is_covered_n_times = 0
             exact_matching_guides = list()
 
             records_path = base_path + row['cds_file_name']
             records = list(SeqIO.parse(open(records_path), 'fasta'))
 
             for record in records:
+                gene_is_covered_n_times = 0
+
                 gene_name, protein_id, ortho_prot_id, ortho_gene_name = get_record_metadata(record)
 
                 (guides_list,
@@ -206,7 +208,9 @@ def threaded_split(args):
 
                             distance_after_seed = hamming_distance(lib_guide, test_guide, req_match_len)
                             
-                            if lib_guide[req_match_len:] == test_guide[req_match_len:] and distance_after_seed <= mm_allowed and distance_after_seed > 0:
+                            if (lib_guide[req_match_len:] == test_guide[req_match_len:]) and \
+                                (distance_after_seed <= mm_allowed) and \
+                                    (distance_after_seed > 0):
                                 df_species_name_list.append(species_name)
                                 df_covered_list.append(test_guide)
                                 df_locations.append(locations_list[idx])
@@ -239,9 +243,9 @@ def threaded_split(args):
                 # Did all we could. Gene is still uncovered:
                 if gene_is_covered_n_times == 0:
                     df_species_name_list.append(species_name)
-                    df_covered_list.append('N/A')
-                    df_locations.append('N/A')
-                    df_strands.append('N/A')
+                    df_covered_list.append('Uncovered gene')
+                    df_locations.append('Uncovered gene')
+                    df_strands.append('Uncovered gene')
                     df_gene_names.append(gene_name)
                     df_protein_ids.append(protein_id)
                     df_ortho_prot_ids.append(ortho_prot_id)
@@ -284,14 +288,17 @@ def threaded_split(args):
 split = 1
 args_list = list()
 
-runs = [[i for i in range(33 * n - 33, 33 * n)] for n in range(1, 4)]
-runs[2].append(99)
+runs = [[i for i in range(1 * n - 1, 1 * n)] for n in range(1, 101)]
 
-for train_index, test_index in kfold.split(df):
-    for r in runs:
-        args_list.append((train_index, test_index, split, r))
-    split += 1
+with multiprocessing.Pool(processes=80) as pool:
+    for train_index, test_index in kfold.split(df):
 
+        for r in runs:
+            payload = (train_index, test_index, split, r)
+            pool.apply_async(threaded_split, args=(payload,))
 
-with multiprocessing.Pool(processes=30) as pool:
-    pool.map(threaded_split, args_list)
+        split += 1
+
+    # Close the pool and wait for all the processes to finish
+    pool.close()
+    pool.join()

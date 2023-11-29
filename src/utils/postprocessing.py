@@ -1,7 +1,8 @@
 # Functions imported by ALLEGRO. No need to run it manually.
+import os
 import pandas
-from collections import Counter
 
+from utils.offtarget_finder import OfftargetFinder
 from utils.shell_colors import bcolors
 
 
@@ -138,3 +139,35 @@ def cluster_solution(solution_path: str, req_match_len: int, mm_allowed: int) ->
     print(f'{bcolors.BLUE}>{bcolors.RESET} The output guide RNA set contains {len(clusters)} clusters.')
 
     return len(clusters)
+
+
+def report_offtargets(solution_path: str, experiment_name: str, seed_region_is_n_from_pam: int, num_mismatches: int):
+    otf = OfftargetFinder()
+    df = pandas.read_csv(solution_path)
+    seqs = df.sequence.unique().tolist()
+    final_df = pandas.DataFrame()
+    
+    otf.write_guides_as_reads(f'{experiment_name}_output_lib', seqs)
+
+    for target_species in df['target'].unique():
+        otf.run_bowtie_build(target_species, 'data/input/cds/cds/' + df[df['target'] == target_species]['path'].values[0])
+
+        targets_df_this_species = otf.run_bowtie_against_other(f'{experiment_name}_output_lib', target_species, seqs, seed_region_is_n_from_pam, num_mismatches)
+        targets_df_this_species['on_off_target'] = 'Off-Target'
+
+        # TODO this is broken for negative strand -- bowtie reports a different mapping positions than I do with start position
+        merged_df = pandas.merge(df[df['target'] == target_species],
+                                 targets_df_this_species, 
+                                 left_on=['misc', 'strand', 'start_position'],
+                                 right_on=['reference_name', 'strand', 'mapping_position'])
+
+        merged_df['on_off_target'] = 'On-Target'
+
+        updated_rows = merged_df[targets_df_this_species.columns]
+        targets_df_this_species.update(updated_rows)
+        targets_df_this_species['target'] = target_species
+
+        final_df = pandas.concat([final_df, targets_df_this_species], ignore_index=True)
+
+    final_df.to_csv('lib_guides_targets.csv', index=False)
+

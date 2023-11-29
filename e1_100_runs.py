@@ -71,13 +71,15 @@ def threaded_split(run_range):
         # Call ALLEGRO
         os.system('python src/main.py --config ' + config_name)
 
+        os.remove(config_name)
+
 
 args_list = list()
-runs = [[i for i in range(10 * n - 10, 10 * n)] for n in range(1, 11)]
+runs = [[i for i in range(1 * n - 1, 1 * n)] for n in range(1, 101)]
 
-with multiprocessing.Pool(processes=10) as pool:
+with multiprocessing.Pool(processes=70) as pool:
     for r in runs:
-        pool.apply_async(threaded_split, args=(r))
+        pool.apply_async(threaded_split, args=(r,))
 
     # Close the pool and wait for all the processes to finish
     pool.close()

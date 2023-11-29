@@ -57,12 +57,6 @@ def write_solution_to_file(
         hit_species = tup[2]
 
         for species in hit_species:
-            # species_gene_tupe = species_gene_tupe.split(', ')
-
-            # record_name = ''
-            # if len(species_gene_tupe) > 1:
-            #     record_name = ', ' + species_gene_tupe[1]
-
             df_file_path = input_df[input_df[species_names_csv_column_name] == species][paths_csv_column_name].values[0]
             full_path = os.path.join(input_directory, df_file_path)
 

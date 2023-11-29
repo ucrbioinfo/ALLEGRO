@@ -1,14 +1,15 @@
-# --------------------------------------------------------------------
-# General settings
-# --------------------------------------------------------------------
-experiment_name: 'a7b1300test'
+#================================================================
+# General Settings
+#================================================================
+experiment_name: 'test'
 # ---
 
-# --------------------------------------------------------------------
+# ---------------------------------------------------------------
 # Path Settings
-# --------------------------------------------------------------------
+# ---------------------------------------------------------------
 input_directory: 'data/input/cds/orthogroups/'
-input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
+input_species_path: "data/input/one.csv"
+# input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
 input_species_path_column: 'cds_file_name'
 # ---
 
@@ -21,16 +22,16 @@ track: 'track_a'
 # Integer value, default: 1
 # In track_a, every species needs to be targeted at least this many times anywhere.
 # In track_e, each gene needs to be targeted at least this many times in that gene.
-multiplicity: 7
+multiplicity: 1
 # ---
 
 # Integer value, default: 0
-beta: 1300  # The final size of the guides set must be <= than this. Think of it as your budget.
+beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as your budget.
           # Set to 0 to disable: this causes ALLEGRO to find the smallest gRNA set IGNORING scores
-          # (treats all of the guides as equals).
+          # (treats all of the gRNAs as equals).
           # If set to the number of input species, the final size of the set may be up to
-          # the number of species you have (worst case, one guide per species).
-          # If set to a number HIGHER than the number of species, finds the best #beta guides
+          # the number of species you have (worst case, one gRNA per species).
+          # If set to a number HIGHER than the number of species, finds the best #beta gRNAs
           # and ensures each species is hit at least once.
 # ---
 
@@ -38,40 +39,61 @@ beta: 1300  # The final size of the guides set must be <= than this. Think of it
 # Choices for METHOD: "XU_2015", "DOENCH_2014", "DOENCH_2016", "MORENO_MATEOS_2015", "CHARI_2015", "G_20", "KIM_2018", "ALKAN_2018", "ZHANG_2019", "ALL"
 # For example, scorer: "chopchop_doench_2016"
 # scorer: 'ucrispr' uses a faster implementation of 'chopchop_zhang_2019'
-# dummy assigns a score of 1.0 to all guides
-scorer: 'ucrispr'
+# dummy assigns a score of 1.0 to all gRNAs
+scorer: 'dummy'
 # ---
 
 # (Affects running time and memory performance) Default: True
 # True reduces running time and reduces memory consumption.
-# If True, discards guides with 5 or more repeated 2-mers.
-# For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC
+# If True, discards gRNAs with 5 or more repeated 2-mers.
+# For example, this cas9 gRNA will not be in the output: ACCACCACCACCACCACCAC
 # since it contains 7 'AC' 2-mers.
-# Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT.
-# Best when used with mode: from_genome, as CDS tend not to have these repeats.
+# Also discards gRNAs containing repeating 4- or 5-mers such as AAAAA or TTTT.
+# Best when used with mode: from_genome, as CDS tend not to have many of these repeats.
 filter_repetitive: True
+# ---
+
+#================================================================
+# Advanced Settings
+# ===============================================================
+
+# (Affects running time) output_offtargets Default: False
+# True discards gRNA with off-targets anywhere in their seed region upstream from the NGG PAM.
+# Also discard gRNA with fewer >= N mismatches after the seed region.
+output_offtargets: True
+seed_region_is_n_from_pam: 10
+discard_fewer_than_n_mismatches: 0
+# todo -- offtarget_threshold_total_percent: 20
+# The column in the input csv file with the name of the 
+# background fasta to check offtargets against
+input_species_offtarget_dir: 'data/input/cds/cds'
+input_species_offtarget_column: 'cds_file_name'  
+# ---
+
+# Multithreading. Default: 16. 0 disables multithreading.
+# Any other number uses that many threads.
+max_threads: 100
 # ---
 
 # (Affects running time and memory performance) Default: 4
 # A higher number decreases running time and reduces memory consumption,
-# especially when you have millions of guides.
-# Pre-select guides that hit only up to this number of species to act as representatives
-# for these species. Set to 0 to disable and save all guides to memory (memory inefficient).
+# especially when you have millions of gRNAs.
+# Pre-select gRNAs that hit only up to this number of species to act as representatives
+# for these species. Set to 0 to disable and save all gRNAs to memory (memory inefficient).
 mp_threshold: 0
 # ---
 
 # (Affects running time performance) Number of randomized rounding trials
-# Default: 2000
+# Default: 10000
 # A higher number increases running time but attempts to find a smaller cover set.
-# Integer value: Only used if the number of feasible guides is above the exhaustive_threshold.
+# Integer value: Only used if the number of feasible gRNAs is above the exhaustive_threshold.
 # How many times to run the randomized rounding algorithm? Any value under 1 disables trials.
-num_trials: 10000
+num_trials: 100
 # ---
 
-# (Affects running time performance) Post-processing. Default: True, 10, 2
-# Compresses the output guide set by clustering similar guides.
+# (Affects running time performance) Post-processing. Default: True, 2
+# Compresses the output gRNA set by clustering similar gRNAs.
 # Adds a new column 'cluster' to output.csv
-cluster_guides: True
-seed_region_is_n_from_pam: 10
+cluster_guides: False
 mismatches_allowed_after_seed_region: 2
 # ---

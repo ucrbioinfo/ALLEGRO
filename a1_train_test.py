@@ -8,11 +8,14 @@ from sklearn.model_selection import KFold
 from src.utils.guide_finder import GuideFinder
 
 
-def find_first_match(list1, list2):
+def find_all_matches(list1, list2):
+    matches = list()
+
     for index, item in enumerate(list2):
         if item in list1:
-            return index
-    return -1  # If no match found.
+            matches.append(index)
+        
+    return matches
 
 
 def hamming_distance(str1: str, str2: str, length: int) -> int:
@@ -98,21 +101,8 @@ mismatches_allowed_after_seed_region: 2
 # ---
 '''
 
-df = pd.read_csv('data/input/fourdbs_hi_input_species.csv')
-
-# Set the random seed for reproducibility.
-seed = 42
-np.random.seed(seed)
-
-# Shuffle the data.
-df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
-
-# Initialize the KFold cross-validator.
-kfold = KFold(n_splits=10)
-
-
 def threaded_split(args):
-    train_index, test_index, split = args
+    train_index, test_index, split, run_range = args
     train, test = df.iloc[train_index], df.iloc[test_index]
 
     train_new_path = f'data/input/train_a1_cv_split_{split}.csv'
@@ -121,9 +111,12 @@ def threaded_split(args):
     test_new_path = f'data/input/test_a1_cv_split_{split}.csv'
     test.to_csv(test_new_path, index=False)
 
-    for run in range(100):
+    for run in run_range:
         new_exp_name = f'a1_cv_split_{split}_run_{run}'
 
+        if os.path.exists(f'data/output/test_{new_exp_name}_results.csv'):
+            return
+        
         context = {
             'experiment_name': new_exp_name,
             'input_species_path': train_new_path,
@@ -150,6 +143,7 @@ def threaded_split(args):
 
         test_df = pd.read_csv(f'data/input/test_a1_cv_split_{split}.csv')[['species_name', 'cds_file_name']]
 
+        df_species_name_list = list()
         df_covered_list = list()
         df_strands = list()
         df_mismatch = list()
@@ -164,11 +158,16 @@ def threaded_split(args):
         base_path = context['input_directory']
 
         for label, row in test_df.iterrows():
-            species_is_covered = False
+            species_name = row['species_name']
+
+            species_is_covered_n_times = 0
+            
             records_path = base_path + row['cds_file_name']
             records = list(SeqIO.parse(open(records_path), 'fasta'))
 
             for record in records:
+                gene_name, protein_id, ortho_prot_id, ortho_gene_name = get_record_metadata(record)
+
                 (guides_list,
                 _guides_context_list,
                 strands_list,
@@ -182,10 +181,9 @@ def threaded_split(args):
                 )
 
                 # Attempt to find an exact match.
-                match = find_first_match(library, guides_list)
-                if match != -1:
-                    gene_name, protein_id, ortho_prot_id, ortho_gene_name = get_record_metadata(record)
-
+                matches = find_all_matches(library, guides_list)
+                for match in matches:
+                    df_species_name_list.append(species_name)
                     df_covered_list.append(guides_list[match])
                     df_locations.append(locations_list[match])
                     df_strands.append(strands_list[match])
@@ -195,100 +193,104 @@ def threaded_split(args):
                     df_ortho_gene_names.append(ortho_gene_name)
                     df_lib_partial_match.append('N/A')
                     df_mismatch.append('N/A')
-
-                    species_is_covered = True
-                    break  # This species has been covered.
+                    species_is_covered_n_times += 1
             
-            if species_is_covered == False:
-                partial_matches = list()
+            # Attempt to find partial matches.
+            mm_allowed = 2
+            req_match_len = 10
 
-                # Attempt to find partial matches.
-                mm_allowed = 2
-                req_match_len = 10
-                
-                best_record = None
-                smallest_mm = mm_allowed + 1
-                best_lib_guide = ''
-                best_test_guide = ''
-                best_test_guide_loc = 0
-                best_test_guide_strand = ''
+            for record in records:
+                gene_name, protein_id, ortho_prot_id, ortho_gene_name = get_record_metadata(record)
 
-                for record in records:
-                    (guides_list,
-                    _guides_context_list,
-                    strands_list,
-                    locations_list) = gf.identify_guides_and_indicate_strand(
-                        pam='NGG',
-                        sequence=str(record.seq).upper(),
-                        protospacer_length=20,
-                        context_toward_five_prime=0,
-                        context_toward_three_prime=0,
-                        filter_repetitive=False
-                    )
+                (guides_list,
+                _guides_context_list,
+                strands_list,
+                locations_list) = gf.identify_guides_and_indicate_strand(
+                    pam='NGG',
+                    sequence=str(record.seq).upper(),
+                    protospacer_length=20,
+                    context_toward_five_prime=0,
+                    context_toward_three_prime=0,
+                    filter_repetitive=False
+                )
 
-                    for idx, test_guide in enumerate(guides_list):
-                        for lib_guide in library:
-                            
-                            distance_after_seed = hamming_distance(lib_guide, test_guide, req_match_len)
-                            
-                            if lib_guide[req_match_len:] == test_guide[req_match_len:] and distance_after_seed <= mm_allowed and distance_after_seed < smallest_mm:
-                                
-                                best_record = record
-                                best_lib_guide = lib_guide
-                                best_test_guide = test_guide
-                                smallest_mm = distance_after_seed
-                                best_test_guide_loc = locations_list[idx]
-                                best_test_guide_strand = strands_list[idx]
+                for idx, test_guide in enumerate(guides_list):
+                    for lib_guide in library:
 
-                                species_is_covered = True
+                        distance_after_seed = hamming_distance(lib_guide, test_guide, req_match_len)
+                        
+                        if (lib_guide[req_match_len:] == test_guide[req_match_len:]) and \
+                            (distance_after_seed <= mm_allowed) and \
+                                (distance_after_seed > 0):
 
-                if species_is_covered:
-                    gene_name, protein_id, ortho_prot_id, ortho_gene_name = get_record_metadata(best_record)
+                            df_species_name_list.append(species_name)
+                            df_covered_list.append(test_guide)
+                            df_locations.append(locations_list[idx])
+                            df_strands.append(strands_list[idx])
+                            df_gene_names.append(gene_name)
+                            df_protein_ids.append(protein_id)
+                            df_ortho_prot_ids.append(ortho_prot_id)
+                            df_ortho_gene_names.append(ortho_gene_name)
+                            df_mismatch.append(distance_after_seed)
+                            df_lib_partial_match.append(lib_guide)
+                            species_is_covered_n_times += 1
 
-                    df_covered_list.append(best_test_guide)
-                    df_locations.append(best_test_guide_loc)
-                    df_strands.append(best_test_guide_strand)
-                    df_gene_names.append(gene_name)
-                    df_protein_ids.append(protein_id)
-                    df_ortho_prot_ids.append(ortho_prot_id)
-                    df_ortho_gene_names.append(ortho_gene_name)
-                    df_mismatch.append(smallest_mm)
-                    df_lib_partial_match.append(best_lib_guide)
-                    
+            # No match.
+            if species_is_covered_n_times == 0:
+                df_species_name_list.append(species_name)
+                df_covered_list.append('Not covered')
+                df_strands.append('Not covered')
+                df_locations.append('Not covered')
+                df_gene_names.append('Not covered')
+                df_protein_ids.append('Not covered')
+                df_ortho_prot_ids.append('Not covered')
+                df_ortho_gene_names.append('Not covered')
+                df_mismatch.append('Not covered')
+                df_lib_partial_match.append('Not covered')
 
-                # No match.
-                elif species_is_covered == False:
-                    df_covered_list.append('Not covered')
-                    df_strands.append('Not covered')
-                    df_locations.append('Not covered')
-                    df_gene_names.append('Not covered')
-                    df_protein_ids.append('Not covered')
-                    df_ortho_prot_ids.append('Not covered')
-                    df_ortho_gene_names.append('Not covered')
-                    df_mismatch.append('Not covered')
-                    df_lib_partial_match.append('Not covered')
-                
-        test_df['covered_by'] = df_covered_list
-        test_df['partial_match_in_library'] = df_lib_partial_match
-        test_df['mismatch'] = df_mismatch
-        test_df['strand'] = df_strands
-        test_df['location'] = df_locations
-        test_df['gene_name'] = df_gene_names
-        test_df['protein_id'] = df_protein_ids
-        test_df['ortho_prot_id'] = df_ortho_prot_ids
-        test_df['ortho_gene_name'] = df_ortho_gene_names
+        test_df = pd.DataFrame.from_dict({
+            'species': df_species_name_list,
+            'covered_by': df_covered_list,
+            'partial_match_in_library': df_lib_partial_match,
+            'mismatch': df_mismatch,
+            'strand': df_strands,
+            'location': df_locations,
+            'gene_name': df_gene_names,
+            'protein_id': df_protein_ids,
+            'ortho_prot_id': df_ortho_prot_ids,
+            'ortho_gene_name': df_ortho_gene_names,
+        })
 
         test_df.to_csv(f'data/output/test_{new_exp_name}_results.csv', index=False)
 
         os.remove(config_name)
 
 
+df = pd.read_csv('data/input/fourdbs_hi_input_species.csv')
+
+# Set the random seed for reproducibility.
+seed = 42
+np.random.seed(seed)
+
+# Shuffle the data.
+df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
+
+# Initialize the KFold cross-validator.
+kfold = KFold(n_splits=10)
+
 split = 1
 args_list = list()
-for train_index, test_index in kfold.split(df):
-    args_list.append((train_index, test_index, split))
-    split += 1
+runs = [[i for i in range(1 * n - 1, 1 * n)] for n in range(1, 101)]
 
+with multiprocessing.Pool(processes=80) as pool:
+    for train_index, test_index in kfold.split(df):
 
-with multiprocessing.Pool(processes=10) as pool:
-    pool.map(threaded_split, args_list)
+        for r in runs:
+            payload = (train_index, test_index, split, r)
+            pool.apply_async(threaded_split, args=(payload,))
+
+        split += 1
+
+    # Close the pool and wait for all the processes to finish
+    pool.close()
+    pool.join()

@@ -101,18 +101,6 @@ mismatches_allowed_after_seed_region: 2
 # ---
 '''
 
-df = pd.read_csv('data/input/fourdbs_hi_input_species.csv')
-
-# Set the random seed for reproducibility.
-seed = 42
-np.random.seed(seed)
-
-# Shuffle the data.
-df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
-
-# Initialize the KFold cross-validator.
-kfold = KFold(n_splits=10)
-
 def threaded_split(args):
     train_index, test_index, split, run_range = args
     train, test = df.iloc[train_index], df.iloc[test_index]
@@ -170,8 +158,7 @@ def threaded_split(args):
             species_name = row['species_name']
 
             species_is_covered_n_times = 0
-            exact_matching_guides = list()
-
+            
             records_path = base_path + row['cds_file_name']
             records = list(SeqIO.parse(open(records_path), 'fasta'))
 
@@ -204,7 +191,6 @@ def threaded_split(args):
                     df_lib_partial_match.append('N/A')
                     df_mismatch.append('N/A')
                     species_is_covered_n_times += 1
-                    exact_matching_guides.append(match)
             
             # Attempt to find partial matches.
             mm_allowed = 2
@@ -228,13 +214,12 @@ def threaded_split(args):
                 for idx, test_guide in enumerate(guides_list):
                     for lib_guide in library:
 
-                        # do not allow double-counting exact matching guides from before.
-                        if lib_guide in exact_matching_guides:
-                            continue
-
                         distance_after_seed = hamming_distance(lib_guide, test_guide, req_match_len)
                         
-                        if lib_guide[req_match_len:] == test_guide[req_match_len:] and distance_after_seed <= mm_allowed and distance_after_seed > 0:
+                        if (lib_guide[req_match_len:] == test_guide[req_match_len:]) and \
+                            (distance_after_seed <= mm_allowed) and \
+                                (distance_after_seed > 0):
+
                             df_species_name_list.append(species_name)
                             df_covered_list.append(test_guide)
                             df_locations.append(locations_list[idx])
@@ -278,16 +263,31 @@ def threaded_split(args):
         os.remove(config_name)
 
 
+df = pd.read_csv('data/input/fourdbs_hi_input_species.csv')
+
+# Set the random seed for reproducibility.
+seed = 42
+np.random.seed(seed)
+
+# Shuffle the data.
+df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
+
+# Initialize the KFold cross-validator.
+kfold = KFold(n_splits=10)
+
 split = 1
 args_list = list()
-runs = [[i for i in range(33 * n - 33, 33 * n)] for n in range(1, 4)]
-runs[2].append(99)
+runs = [[i for i in range(1 * n - 1, 1 * n)] for n in range(1, 101)]
 
-for train_index, test_index in kfold.split(df):
-    for r in runs:
-        args_list.append((train_index, test_index, split, r))
-    split += 1
+with multiprocessing.Pool(processes=80) as pool:
+    for train_index, test_index in kfold.split(df):
 
+        for r in runs:
+            payload = (train_index, test_index, split, r)
+            pool.apply_async(threaded_split, args=(payload,))
 
-with multiprocessing.Pool(processes=30) as pool:
-    pool.map(threaded_split, args_list)
+        split += 1
+
+    # Close the pool and wait for all the processes to finish
+    pool.close()
+    pool.join()

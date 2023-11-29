@@ -1,2 +1,2 @@
-species_name,cds_file_name
-my_genes,my_genes.fna
+species_name,genome_file_name,cds_file_name,original_name,cds_url,genome_url,proteome_url,source
+yarrowia_lipolytica,yarrowia_lipolytica_genomic.fna,yarrowia_lipolytica_cds.fna,yarrowia_lipolytica,"curl -H ""Accept: application/zip"" ""https://api.ncbi.nlm.nih.gov/datasets/v2alpha/genome/accession/GCF_000002525.2/download?include_annotation_type=CDS_FASTA"" --output yarrowia_lipolytica_cds_download.zip","curl -H ""Accept: application/zip"" ""https://api.ncbi.nlm.nih.gov/datasets/v2alpha/genome/accession/GCF_000002525.2/download?include_annotation_type=GENOME_FASTA"" --output yarrowia_lipolytica_genome_download.zip","curl -H ""Accept: application/zip"" ""https://api.ncbi.nlm.nih.gov/datasets/v2alpha/genome/accession/GCF_000002525.2/download?include_annotation_type=PROT_FASTA"" --output yarrowia_lipolytica_prot_download.zip",NCBI

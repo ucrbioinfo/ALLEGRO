@@ -28,12 +28,18 @@ def main() -> int:
         monophonic_threshold=args.mp_threshold,
         track=args.track,
         num_trials=args.num_trials,
+        max_threads=args.max_threads,
         cas_variant='cas9',
         guide_length=20,
         scorer_name=args.scorer,
         scorer_settings=scorer_settings,
+        output_offtargets=args.output_offtargets,
         output_directory=args.output_directory,
         input_directory=args.input_directory,
+        input_species_offtarget_dir=args.input_species_offtarget_dir,
+        input_species_offtarget_column=args.input_species_offtarget_column,
+        discard_fewer_than_n_mismatches=args.discard_fewer_than_n_mismatches,
+        seed_region_is_n_from_pam=args.seed_region_is_n_from_pam,
         file_column_name=args.input_species_path_column,
         input_species_csv_file_path=args.input_species_path,
     )
@@ -57,6 +63,12 @@ def main() -> int:
             args.seed_region_is_n_from_pam,
             args.mismatches_allowed_after_seed_region
         )
+
+    if args.output_offtargets:
+        postprocessing.report_offtargets(output_path, 
+                                        args.experiment_name,
+                                        args.seed_region_is_n_from_pam,
+                                        args.discard_fewer_than_n_mismatches)
         
     configurator.log_time()
 

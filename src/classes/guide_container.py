@@ -63,8 +63,6 @@ class GuideContainer:
         locations_list,
         scores_list) = self.guide_scorer.score_sequence(self)
 
-        # TODO remove Guide obj. just return sequence and score.
-
         for i in range(len(guides_list)):
             cas9_guide_objects.append(Guide(
                 score=scores_list[i],
