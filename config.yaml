@@ -8,7 +8,7 @@ experiment_name: 'test'
 # Path Settings
 # ---------------------------------------------------------------
 input_directory: 'data/input/cds/orthogroups/'
-input_species_path: "data/input/one.csv"
+input_species_path: "data/input/three.csv"
 # input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
 input_species_path_column: 'cds_file_name'
 # ---
@@ -62,7 +62,7 @@ filter_repetitive: True
 # Also discard gRNA with fewer >= N mismatches after the seed region.
 output_offtargets: True
 seed_region_is_n_from_pam: 10
-discard_fewer_than_n_mismatches: 1
+discard_fewer_than_n_mismatches: 2
 # todo -- offtarget_threshold_total_percent: 20
 # The column in the input csv file with the name of the 
 # background fasta to check offtargets against

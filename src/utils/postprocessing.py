@@ -153,6 +153,7 @@ def report_offtargets(input_species_path: str,
         # Get all hits
         all_targets = OTF.run_bowtie_against_other(f'{experiment_name}_output_lib', target_species, background_source, seqs, seed_region_is_n_from_pam, num_mismatches)
         
+        all_targets['target_species'] = target_species
         all_targets['on_off_target'] = 'Off-Target'  # initially, all hits are offtargets until proven otherwise
 
         # These are on-targets -- everything else is off-target
@@ -161,7 +162,10 @@ def report_offtargets(input_species_path: str,
                                  left_on=['sequence', 'misc', 'strand', 'start_position'],
                                  right_on=['sequence', 'reference_name', 'strand', 'start_position'])
         
-        on_targets = on_targets[all_targets.columns]  # Only retain certain columns
+        cols = ['on_off_target', 'sequence', 'guide_w_pam', 'num_mutations', 'mismatch', 'aligned_seq',
+                'target_species', 'strand', 'reference_name', 'orthologous_to', 'start_position']
+        
+        on_targets = on_targets[cols]  # Only retain certain columns
         on_targets['on_off_target'] = 'On-Target'
 
         # Merging all_targets with on_targets on columns 'sequence', 'reference_name', 'strand', 'start_position'
@@ -171,8 +175,11 @@ def report_offtargets(input_species_path: str,
                                     how='left', suffixes=('', '_new'))
 
         # Updating column 'on_off_target' in all_targets where there's a match
+        all_targets['orthologous_to'] = 'N/A'
         all_targets['on_off_target'] = merged_df['on_off_target_new'].combine_first(all_targets['on_off_target'])
-
+        all_targets['orthologous_to'] = merged_df['orthologous_to'].combine_first(all_targets['orthologous_to'])
+        all_targets = all_targets[cols]
+        
         final_df = pandas.concat([final_df, all_targets], ignore_index=True)
 
     final_df.to_csv(f'{output_dir}/targets.csv', index=False)

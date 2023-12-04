@@ -39,11 +39,11 @@ class GuideFinder:
 
         if self.exclusion_list is None:
             # Whether there are guides to exclude
-            if os.path.exists('data/input/_the_blacklist_.txt'):
-                with open('data/input/_the_blacklist_.txt', 'r') as file:
+            if os.path.exists('data/input/_the_blocklist_.txt'):
+                with open('data/input/_the_blocklist_.txt', 'r') as file:
                     self.exclusion_list = file.read().splitlines()
                     if len(self.exclusion_list) != 0:
-                        print(f'{bcolors.BLUE}>{bcolors.RESET} Excluding the gRNA(s) in data/input/{bcolors.BLACK}_the_blacklist_.csv{bcolors.RESET}')
+                        print(f'{bcolors.BLUE}>{bcolors.RESET} Excluding the gRNA(s) in data/input/{bcolors.BLACK}_the_blocklist_.csv{bcolors.RESET}')
 
 
     def identify_guides_and_indicate_strand(
