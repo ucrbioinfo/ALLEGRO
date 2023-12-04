@@ -1,2 +1,0 @@
-query_name,strand,reference_name,mapping_position,aligned_seq,mismatch,guide_w_pam,guide,num_mutations,on_off_target,target
-READ_3,-,lcl|NC_006068.1_cds_XP_500977.1_1341,310,CCATCATTGGAACTATGTTGTTT,Exact Match,AAACAACATAGTTCCAATGATGG,AAACAACATAGTTCCAATGA,0,Off-Target,yarrowia_lipolytica

@@ -88,16 +88,6 @@ cdef class KirschtorteCython:
         seed_region_is_n_from_pam: int,
         ) -> None:
 
-        try:
-            print(f'{bcolors.BLUE}>{bcolors.RESET} Reading species input file from {input_species_csv_file_path}')
-            self.species_df = pandas.read_csv(input_species_csv_file_path)
-        except pandas.errors.EmptyDataError:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: File {input_species_csv_file_path} is empty. Exiting.')
-            sys.exit(1)
-        except FileNotFoundError:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: Cannot find file {input_species_csv_file_path}. Did you spell the path/file name correctly? Exiting.')
-            sys.exit(1)
-
         self.beta = beta
         self.cas_variant = cas_variant
         self.input_directory = input_directory
@@ -110,6 +100,7 @@ cdef class KirschtorteCython:
         self.seed_region_is_n_from_pam = seed_region_is_n_from_pam
         self.output_offtargets = output_offtargets
         self.offtarget_finder = OfftargetFinder()
+        self.species_df = pandas.read_csv(input_species_csv_file_path)
 
         self.lock = Lock()
         self.semaphore = Semaphore(max_threads)
@@ -379,7 +370,6 @@ cdef class KirschtorteCython:
 
     def __dealloc__(self):
         del self.kirschtorte
-
 
 
     def track_a(self) -> list[tuple[str, float, list[str]]]:

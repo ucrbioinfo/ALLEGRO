@@ -16,27 +16,6 @@ def hamming_distance(str1: str, str2: str, length: int) -> int:
     return sum(ch1 != ch2 for ch1, ch2 in zip(str1[:length], str2[:length]))
 
 
-# def hamming_distance_full_length(s1: str, s2: str) -> int:
-#     """Compute the Hamming distance between two strings."""
-#     return sum(ch1 != ch2 for ch1, ch2 in zip(s1, s2))
-
-
-# def average_distance_to_others(strings: list[str], idx: int) -> float:
-#     """Compute the average Hamming distance of a string to all other strings."""
-#     total_distance = sum(hamming_distance_full_length(strings[idx], s) for i, s in enumerate(strings) if i != idx)
-#     return total_distance / (len(strings) - 1)
-
-
-# def construct_representative(strings: list[str]) -> str:
-#     """Construct a representative string by choosing the most common character at each position."""
-#     representative = []
-#     for i in range(len(strings[0])):
-#         chars = [s[i] for s in strings]
-#         most_common_char = Counter(chars).most_common(1)[0][0]
-#         representative.append(most_common_char)
-#     return ''.join(representative)
-
-
 def cluster_strings(strings: list[str], req_match_len: int, mm_allowed: int) -> list[list[str]]:
     """
     Clusters a list of strings based on a mismatch in the first `mm_allowed` letters.
@@ -141,33 +120,59 @@ def cluster_solution(solution_path: str, req_match_len: int, mm_allowed: int) ->
     return len(clusters)
 
 
-def report_offtargets(solution_path: str, experiment_name: str, seed_region_is_n_from_pam: int, num_mismatches: int):
-    otf = OfftargetFinder()
-    df = pandas.read_csv(solution_path)
-    seqs = df.sequence.unique().tolist()
+def report_offtargets(input_species_path: str,
+                      solution_path: str,
+                      output_dir: str,
+                      input_species_offtarget_dir: str,
+                      input_species_offtarget_column: str,
+                      experiment_name: str,
+                      seed_region_is_n_from_pam: int,
+                      num_mismatches: int,
+                      pam_length: int = 3):
+    
+    background_source = 'genome' if 'genome' in input_species_offtarget_column else 'genes'
+    
+    OTF = OfftargetFinder()
+    species_df = pandas.read_csv(input_species_path)
+    output_library = pandas.read_csv(solution_path)
+
+    # Pull back the start position of guides on negative strand
+    # by PAM length -- to comply with bowtie hits and consider the PAM
+    output_library.loc[output_library['strand'] == '-', 'start_position'] -= pam_length 
+    seqs = output_library.sequence.unique().tolist()
     final_df = pandas.DataFrame()
     
-    otf.write_guides_as_reads(f'{experiment_name}_output_lib', seqs)
+    # Create reads out of guide sequences for Bowtie alignment
+    OTF.write_guides_as_reads(f'{experiment_name}_output_lib', seqs)
 
-    for target_species in df['target'].unique():
-        otf.run_bowtie_build(target_species, 'data/input/cds/cds/' + df[df['target'] == target_species]['path'].values[0])
+    for target_species in output_library['target'].unique():
+        target_species_offtarget_dir = os.path.join(input_species_offtarget_dir, species_df[species_df['species_name'] == target_species][input_species_offtarget_column].values[0])
 
-        targets_df_this_species = otf.run_bowtie_against_other(f'{experiment_name}_output_lib', target_species, seqs, seed_region_is_n_from_pam, num_mismatches)
-        targets_df_this_species['on_off_target'] = 'Off-Target'
+        OTF.run_bowtie_build(target_species, target_species_offtarget_dir, background_source)
 
-        # TODO this is broken for negative strand -- bowtie reports a different mapping positions than I do with start position
-        merged_df = pandas.merge(df[df['target'] == target_species],
-                                 targets_df_this_species, 
-                                 left_on=['misc', 'strand', 'start_position'],
-                                 right_on=['reference_name', 'strand', 'mapping_position'])
+        # Get all hits
+        all_targets = OTF.run_bowtie_against_other(f'{experiment_name}_output_lib', target_species, background_source, seqs, seed_region_is_n_from_pam, num_mismatches)
+        
+        all_targets['on_off_target'] = 'Off-Target'  # initially, all hits are offtargets until proven otherwise
 
-        merged_df['on_off_target'] = 'On-Target'
+        # These are on-targets -- everything else is off-target
+        on_targets = pandas.merge(output_library[output_library['target'] == target_species],
+                                 all_targets,
+                                 left_on=['sequence', 'misc', 'strand', 'start_position'],
+                                 right_on=['sequence', 'reference_name', 'strand', 'start_position'])
+        
+        on_targets = on_targets[all_targets.columns]  # Only retain certain columns
+        on_targets['on_off_target'] = 'On-Target'
 
-        updated_rows = merged_df[targets_df_this_species.columns]
-        targets_df_this_species.update(updated_rows)
-        targets_df_this_species['target'] = target_species
+        # Merging all_targets with on_targets on columns 'sequence', 'reference_name', 'strand', 'start_position'
+        #  to identify matching rows
+        merged_df = all_targets.merge(on_targets,
+                                    on=['sequence', 'reference_name', 'strand', 'start_position'],
+                                    how='left', suffixes=('', '_new'))
 
-        final_df = pandas.concat([final_df, targets_df_this_species], ignore_index=True)
+        # Updating column 'on_off_target' in all_targets where there's a match
+        all_targets['on_off_target'] = merged_df['on_off_target_new'].combine_first(all_targets['on_off_target'])
 
-    final_df.to_csv('lib_guides_targets.csv', index=False)
+        final_df = pandas.concat([final_df, all_targets], ignore_index=True)
 
+    final_df.to_csv(f'{output_dir}/targets.csv', index=False)

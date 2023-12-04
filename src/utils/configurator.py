@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import yaml
+import pandas
 import argparse
 from datetime import timedelta
 
@@ -256,6 +257,26 @@ class Configurator:
 
 
     def check_and_fix_configurations(self) -> tuple[argparse.Namespace, dict]:
+        try:
+            species_df = pandas.read_csv(self.args.input_species_path)
+        except pandas.errors.EmptyDataError:
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: File {self.args.input_species_path} is empty. Exiting.')
+            sys.exit(1)
+        except FileNotFoundError:
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find file {self.args.input_species_path}. Did you spell the path/file name (input_species_path) correctly? Exiting.')
+            sys.exit(1)
+        try:
+            species_df[self.args.input_species_path_column]
+        except KeyError:
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "{self.args.input_species_path_column}" in {self.args.input_species_path}. Did you spell the column name (input_species_path_column) correctly? Exiting.')
+            sys.exit(1)
+        try:
+            species_df["species_name"]
+        except KeyError:
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "species_name" in {self.args.input_species_path}. Did you format the CSV file correctly? Exiting.')
+            sys.exit(1)
+        
+
         if self.args.max_threads < 1:
             self.args.max_threads = 1
 
@@ -266,9 +287,9 @@ class Configurator:
             self.args.absolute_path_to_genomes_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'data/input/genomes/'))
             
             if self.conda_env_exists('chopchop') == False:
-                print(f'{bcolors.RED}> Warning{bcolors.RESET}: You have selected CHOPCHOP as the guide RNA scorer. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will attempt to run CHOPCHOP with a conda environment called "chopchop" that must include python 2.7 and all the other python libraries for running CHOPCHOP.\n')
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: You have selected CHOPCHOP as the guide RNA scorer. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will attempt to run CHOPCHOP with a conda environment called "chopchop" that must include python 2.7 and all the other python libraries for running CHOPCHOP.\n')
                 print(f'{bcolors.BLUE}>{bcolors.RESET} For more info, see here https://bitbucket.org/valenlab/chopchop/src/master/\n')
-                print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} ships with CHOPCHOP and Bowtie so you do not need to download the repository or set any paths manually. You only need to create a conda environment called "chopchop" with python 2.7, and install any required scorer libraries in it such as scikit-learn, keras, theano, and etc.\n')
+                print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} ships with CHOPCHOP so you do not need to download the repository or set any paths manually. You only need to create a conda environment called "chopchop" with python 2.7, and install any required scorer libraries in it such as scikit-learn, keras, theano, and etc.\n')
                 print(f'{bcolors.BLUE}>{bcolors.RESET} When CHOPCHOP is selected as the scorer, you need to place the genome fasta files of every input species in data/input/genomes/ to be used with Bowtie.')
                 sys.exit(1)
 
@@ -276,14 +297,14 @@ class Configurator:
             join = '_'.join(split[1:])
 
             if join == '':
-                print(f'{bcolors.RED}> Warning{bcolors.RESET}: Please select a scorer for CHOPCHOP in config.yaml. Exiting.')
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Please select a scorer for CHOPCHOP in config.yaml (for example, scorer: "chopchop_doench_2016"). Exiting.')
                 sys.exit(1)
 
             self.args.chopchop_scoring_method = join.upper()
             self.args.scorer = 'chopchop'
 
         if self.args.track not in ['track_a', 'track_e']:
-            print(f'Unknown track {self.args.track} selected in config.yaml. Exiting.')
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown track "{self.args.track}" selected in config.yaml. Exiting.')
             sys.exit(1)
 
         if self.args.multiplicity < 1:
@@ -325,7 +346,7 @@ class Configurator:
             print(f'{bcolors.BLUE}>{bcolors.RESET} filter_repetitive is set to True. Filtering guides with repetitive sequences.')
 
         if self.args.num_trials <= 0:
-            print(f'{bcolors.BLUE}>{bcolors.RESET} num_trials is <= 0. Auto adjusting to 1 and running randomized rounding only once. ALLEGRO may potentially be able to find a smaller sized solution with larger trial count.')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} num_trials is {self.args.num_trials} <= 0. Auto adjusting to 1 and running randomized rounding only once. ALLEGRO may potentially be able to find a smaller sized solution with larger trial count.')
             self.args.num_trials = 1
 
         scorer_settings = self.configure_scorer_settings()
@@ -422,7 +443,7 @@ class Configurator:
                     }
 
                 case _:
-                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Unknown scorer {self.args.scorer} selected in config.yaml. Exiting.')
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown scorer "{self.args.scorer}" selected in config.yaml. Exiting.')
                     sys.exit(1)
         
         return scorer_settings

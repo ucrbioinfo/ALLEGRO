@@ -44,7 +44,7 @@ def main() -> int:
         input_species_csv_file_path=args.input_species_path,
     )
 
-    output_path = write_solution.write_solution_to_file(
+    output_csv_path = write_solution.write_solution_to_file(
         pam='NGG',
         species_names=coversets_obj.species_names,
         solution=coversets_obj.solution,
@@ -56,19 +56,25 @@ def main() -> int:
         output_directory=args.output_directory
     )
 
-    num_clusters = 0
     if args.cluster_guides:
-        num_clusters = postprocessing.cluster_solution(
-            output_path,
-            args.seed_region_is_n_from_pam,
-            args.mismatches_allowed_after_seed_region
+        postprocessing.cluster_solution(
+            solution_path=output_csv_path,
+            req_match_len=args.seed_region_is_n_from_pam,
+            mm_allowed=args.mismatches_allowed_after_seed_region
         )
 
     if args.output_offtargets:
-        postprocessing.report_offtargets(output_path, 
-                                        args.experiment_name,
-                                        args.seed_region_is_n_from_pam,
-                                        args.discard_fewer_than_n_mismatches)
+        postprocessing.report_offtargets(
+            input_species_path=args.input_species_path,
+            solution_path=output_csv_path,
+            output_dir=args.output_directory,
+            input_species_offtarget_dir=args.input_species_offtarget_dir,
+            input_species_offtarget_column=args.input_species_offtarget_column,
+            experiment_name=args.experiment_name,
+            seed_region_is_n_from_pam=args.seed_region_is_n_from_pam,
+            num_mismatches=args.discard_fewer_than_n_mismatches,
+            pam_length=3
+        )
         
     configurator.log_time()
 

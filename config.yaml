@@ -16,13 +16,13 @@ input_species_path_column: 'cds_file_name'
 # track_a: any of the containers can be targeted.
 # There will be multiplicity targets per container.
 # track_e: each container has to be targeted at least multiplicity times,
-track: 'track_a'
+track: 'track_e'
 # ---
 
 # Integer value, default: 1
 # In track_a, every species needs to be targeted at least this many times anywhere.
 # In track_e, each gene needs to be targeted at least this many times in that gene.
-multiplicity: 1
+multiplicity: 10
 # ---
 
 # Integer value, default: 0
@@ -62,12 +62,14 @@ filter_repetitive: True
 # Also discard gRNA with fewer >= N mismatches after the seed region.
 output_offtargets: True
 seed_region_is_n_from_pam: 10
-discard_fewer_than_n_mismatches: 0
+discard_fewer_than_n_mismatches: 1
 # todo -- offtarget_threshold_total_percent: 20
 # The column in the input csv file with the name of the 
 # background fasta to check offtargets against
 input_species_offtarget_dir: 'data/input/cds/cds'
-input_species_offtarget_column: 'cds_file_name'  
+input_species_offtarget_column: 'cds_file_name'
+# input_species_offtarget_dir: 'data/input/genomes'
+# input_species_offtarget_column: 'genome_file_name'
 # ---
 
 # Multithreading. Default: 16. 0 disables multithreading.

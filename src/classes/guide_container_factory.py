@@ -26,7 +26,7 @@ class GuideContainerFactory:
         try:
             records = list(SeqIO.parse(open(records_path), 'fasta'))
         except FileNotFoundError:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: Cannot find the fasta file {records_path} specified in the input csv for this species. Is the genome file for this species available? Exiting.')
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find the fasta file {records_path} specified in the input csv for this species. Is the specified genome/CDS file for this species available? Exiting.')
             sys.exit(1)
 
         gene_regex = r'\[gene=(.*?)\]'
