@@ -24,24 +24,24 @@ def main() -> int:
 
     coversets_obj = coverset(
         beta=args.beta,
-        cut_multiplicity=args.multiplicity,
-        monophonic_threshold=args.mp_threshold,
         track=args.track,
         num_trials=args.num_trials,
         max_threads=args.max_threads,
+        scorer_name=args.scorer,
         cas_variant='cas9',
         guide_length=20,
-        scorer_name=args.scorer,
         scorer_settings=scorer_settings,
-        output_offtargets=args.output_offtargets,
-        output_directory=args.output_directory,
         input_directory=args.input_directory,
-        input_species_offtarget_dir=args.input_species_offtarget_dir,
-        input_species_offtarget_column=args.input_species_offtarget_column,
-        discard_fewer_than_n_mismatches=args.discard_fewer_than_n_mismatches,
-        seed_region_is_n_from_pam=args.seed_region_is_n_from_pam,
-        file_column_name=args.input_species_path_column,
+        output_directory=args.output_directory,
         input_species_csv_file_path=args.input_species_path,
+        file_column_name=args.input_species_path_column,
+        cut_multiplicity=args.multiplicity,
+        monophonic_threshold=args.mp_threshold,
+        # output_offtargets=args.output_offtargets,
+        # input_species_offtarget_dir=args.input_species_offtarget_dir,
+        # input_species_offtarget_column=args.input_species_offtarget_column,
+        # report_up_to_n_mismatches=args.report_up_to_n_mismatches,
+        # seed_region_is_n_from_pam=args.seed_region_is_n_upstream_of_pam,
     )
 
     output_csv_path = write_solution.write_solution_to_file(
@@ -59,7 +59,7 @@ def main() -> int:
     if args.cluster_guides:
         postprocessing.cluster_solution(
             solution_path=output_csv_path,
-            req_match_len=args.seed_region_is_n_from_pam,
+            req_match_len=args.seed_region_is_n_upstream_of_pam,
             mm_allowed=args.mismatches_allowed_after_seed_region
         )
 
@@ -71,8 +71,9 @@ def main() -> int:
             input_species_offtarget_dir=args.input_species_offtarget_dir,
             input_species_offtarget_column=args.input_species_offtarget_column,
             experiment_name=args.experiment_name,
-            seed_region_is_n_from_pam=args.seed_region_is_n_from_pam,
-            num_mismatches=args.discard_fewer_than_n_mismatches,
+            num_mismatches=args.report_up_to_n_mismatches,
+            seed_region_is_n_upstream_of_pam=args.seed_region_is_n_upstream_of_pam,
+            max_threads=args.max_threads,
             pam_length=3
         )
         
