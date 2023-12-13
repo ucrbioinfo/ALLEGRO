@@ -1,10 +1,9 @@
 import os
-import re
 import pandas as pd
 
 from utils.shell_colors import bcolors
 
-def rc(string):
+def reverse_complement(string):
     s = ''
     for c in string:
         if c == 'A': s += 'T'
@@ -69,26 +68,9 @@ class OfftargetFinder:
             print(f'{bcolors.BLUE}>{bcolors.RESET} Creating Bowtie index for {species_name}')
             os.system(f'bowtie-build -q {self._base_path}/{path_to_background_fasta} {self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx')
 
-    def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, background_source: str, guide_seq_list: list[str], seed_region_is_n_from_pam: int, num_of_mismatches: int) -> None:
+
+    def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, background_source: str, guide_seq_list: list[str], num_of_mismatches: int) -> None:
         print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
-
-        # def extract_complete_digits(s):
-        #     return [int(num) for num in re.findall(r'\d+', s)]
-
-        # def find_indices_of_string(target, string_list):
-        #     return [index for index, string in enumerate(string_list) if string == target]
-        
-        # def determine_ot_in_nonseed(strand, digits):
-        #     if strand == '+':
-        #         return any(digit >= 23 - seed_region_is_n_from_pam for digit in digits)
-        #     elif strand == '-':
-        #         return any(23 - digit - 1 >= 23 - seed_region_is_n_from_pam for digit in digits)
-        #     else:
-        #         return False
-
-
-        genome_offtargets = [0] * len(guide_seq_list)
-        mm_allowed = [0] if (num_of_mismatches == 0) else [0, num_of_mismatches]
 
         for v in [num_of_mismatches]:
             os.system(f'bowtie -v {v} -a --quiet {self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx {self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq {self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
@@ -103,63 +85,20 @@ class OfftargetFinder:
 
             for _, row in df_mm_genomic.iterrows():
                 if row['strand'] == '-':
-                    guide_w_pam.append(rc(row['aligned_seq']))
+                    guide_w_pam.append(reverse_complement(row['aligned_seq']))
                 else:
                     guide_w_pam.append(row['aligned_seq'])
 
-            df_mm_genomic['guide_w_pam'] = guide_w_pam
-            df_mm_genomic['sequence'] = df_mm_genomic['guide_w_pam'].str[:-3]
-
-            # Create a new column called mismatch_position and extract the mismatch position digits from
-            # the mismatch column. Then fill NaN values with 0 because NaN means no mismatch.
-            # Then drop rows where the mismatch occurs after the 10th base.
+            df_mm_genomic['pam'] = [s[-3:] for s in guide_w_pam]
+            df_mm_genomic['sequence'] = [s[:-3] for s in guide_w_pam]
+            
+            # Remove mismatches occuring at the N base of the NGG PAM
             df_mm_genomic['mismatch'] = df_mm_genomic['mismatch'].astype(str)
-            df_mm_genomic['mismatch'].replace('nan', 'Exact Match', inplace=True)
+            df_mm_genomic['mismatch'].replace('nan', 'N/A', inplace=True)
             df_mm_genomic = df_mm_genomic[~df_mm_genomic['mismatch'].str.contains('20:')]
-            df_mm_genomic['num_mutations'] = df_mm_genomic['mismatch'].apply(lambda x: len(x.split(',')))
-            df_mm_genomic.loc[df_mm_genomic['mismatch'] == 'Exact Match', 'num_mutations'] = 0
 
-            df_mm_genomic['num_mutations'] = df_mm_genomic['num_mutations'].astype(int)
+            # df_mm_genomic['num_mutations'] = df_mm_genomic['num_mutations'].astype(int)
             df_mm_genomic.drop(columns=['idk', 'mapping_quality'], inplace=True)
 
             return df_mm_genomic.reset_index(drop=True)
         
-            # Removed code below. Let user decide which hits are off-targets whether the mutations
-            # are in the seed region or not.
-        
-            # if num_of_mismatches == 0:
-                # duplicates = df_mm_genomic.duplicated(subset='guide', keep='first')
-
-                # # To see if there are any duplicates
-                # if duplicates.any():
-                #     for _, row in df_mm_genomic[duplicates].iterrows():
-                #         idxs = find_indices_of_string(row['guide'], guide_seq_list)
-                #         for idx in idxs:
-                #             genome_offtargets[idx] += 1
-
-            # if num_of_mismatches > 0:
-            #     df_mm_genomic = df_mm_genomic[df_mm_genomic.duplicated(subset='guide', keep=False)]
-
-            #     # remove rows with nan in mismatch. these should be caught in the previous step
-            #     df_mm_genomic = df_mm_genomic[df_mm_genomic['mismatch'] != 'Exact Match']
-
-            #     # make a list out of the mismatch locations
-            #     df_mm_genomic['digits'] = df_mm_genomic['mismatch'].apply(extract_complete_digits)
-
-            #     # if positive strand and if any of the elements in the list are mm loc >= 23 - seed region, not an offtarget
-            #     # if negative strand and if any of the elements in the list are 23 - mismatch location - 1 >= 23 - the seed region, not an offtarget
-            #     df_mm_genomic['ot_in_seed'] = df_mm_genomic.apply(lambda row: determine_ot_in_nonseed(row['strand'], row['digits']), axis=1)
-
-            #     # False are bad news. False in ot_in_seed means offtarget.
-            #     if not all(df_mm_genomic['ot_in_seed']):
-            #         for _, row in df_mm_genomic.iterrows():
-            #             if row['ot_in_seed'] == False:
-            #                 idxs = find_indices_of_string(row['guide'], guide_seq_list)
-            #                 for idx in idxs:
-            #                     genome_offtargets[idx] += 1
-
-            # Clean up
-            # os.remove(f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
-        
-        # return genome_offtargets
-
