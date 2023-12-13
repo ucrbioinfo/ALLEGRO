@@ -1,18 +1,19 @@
 #================================================================
 # General Settings
 #================================================================
-experiment_name: 'test'
+experiment_name: 'e1_w_gff_ot'
 # ---
 
 # ---------------------------------------------------------------
 # Path Settings
 # ---------------------------------------------------------------
 input_directory: 'data/input/cds/orthogroups/'
-input_species_path: "data/input/three.csv"
-# input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
+# input_species_path: 'data/input/one.csv'
+input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
 input_species_path_column: 'cds_file_name'
 # ---
 
+# default: 'track_e'
 # track_a: any of the containers can be targeted.
 # There will be multiplicity targets per container.
 # track_e: each container has to be targeted at least multiplicity times,
@@ -22,7 +23,7 @@ track: 'track_e'
 # Integer value, default: 1
 # In track_a, every species needs to be targeted at least this many times anywhere.
 # In track_e, each gene needs to be targeted at least this many times in that gene.
-multiplicity: 10
+multiplicity: 1
 # ---
 
 # Integer value, default: 0
@@ -33,6 +34,27 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
           # the number of species you have (worst case, one gRNA per species).
           # If set to a number HIGHER than the number of species, finds the best #beta gRNAs
           # and ensures each species is hit at least once.
+# ---
+
+#================================================================
+# Advanced Settings
+# ===============================================================
+
+# (Significantly affects running time) output_offtargets default: False
+# True reports gRNA with off-targets.
+# Also report gRNA with fewer <= N mismatches after the seed region.
+output_offtargets: True
+report_up_to_n_mismatches: 3  # This may be 0, 1, 2, or 3
+seed_region_is_n_upstream_of_pam: 12
+
+# The column in the input csv file with the name of the 
+# background fasta to check off-targets against
+input_species_offtarget_dir: 'data/input/cds/cds'
+input_species_offtarget_column: 'cds_file_name'
+
+# Multithreading for offtarget analysis. Default: 16.
+# 0 disables multithreading. Any other number uses that many threads.
+max_threads: 128
 # ---
 
 # Choices: 'dummy' (default), 'ucrispr', 'chopchop_METHOD'
@@ -53,30 +75,6 @@ scorer: 'dummy'
 filter_repetitive: True
 # ---
 
-#================================================================
-# Advanced Settings
-# ===============================================================
-
-# (Affects running time) output_offtargets Default: False
-# True discards gRNA with off-targets anywhere in their seed region upstream from the NGG PAM.
-# Also discard gRNA with fewer >= N mismatches after the seed region.
-output_offtargets: True
-seed_region_is_n_from_pam: 10
-discard_fewer_than_n_mismatches: 2
-# todo -- offtarget_threshold_total_percent: 20
-# The column in the input csv file with the name of the 
-# background fasta to check offtargets against
-input_species_offtarget_dir: 'data/input/cds/cds'
-input_species_offtarget_column: 'cds_file_name'
-# input_species_offtarget_dir: 'data/input/genomes'
-# input_species_offtarget_column: 'genome_file_name'
-# ---
-
-# Multithreading. Default: 16. 0 disables multithreading.
-# Any other number uses that many threads.
-max_threads: 100
-# ---
-
 # (Affects running time and memory performance) Default: 4
 # A higher number decreases running time and reduces memory consumption,
 # especially when you have millions of gRNAs.
@@ -90,7 +88,7 @@ mp_threshold: 0
 # A higher number increases running time but attempts to find a smaller cover set.
 # Integer value: Only used if the number of feasible gRNAs is above the exhaustive_threshold.
 # How many times to run the randomized rounding algorithm? Any value under 1 disables trials.
-num_trials: 100
+num_trials: 10000
 # ---
 
 # (Affects running time performance) Post-processing. Default: True, 2
