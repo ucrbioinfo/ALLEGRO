@@ -30,11 +30,9 @@ class Configurator:
         
 
     def parse_configurations(self) -> argparse.Namespace:
-        config_parser = argparse.ArgumentParser(add_help=False)
+        config_parser = argparse.ArgumentParser(add_help=False, formatter_class=argparse.RawTextHelpFormatter)
 
-        help = '''
-        - The config file to use. Must be placed in the root folder.
-        '''
+        help = "- The config file to use. Must be placed in the root folder."
         config_parser.add_argument(
             '-c',
             '--config',
@@ -54,11 +52,10 @@ class Configurator:
             description='Find the smallest set of guide RNAs that cut through all species.',
             epilog="For more info, visit https://github.com/AmirUCR/allegro",
             parents=[config_parser],
+            formatter_class=argparse.RawTextHelpFormatter
         )
 
-        help = '''
-        - Name of the experiment. Output directory and file will be labeled with this.
-        '''
+        help = "- Name of the experiment. Output directory and file will be labeled with this."
         parser.add_argument(
             '-n',
             '--experiment_name',
@@ -66,10 +63,8 @@ class Configurator:
             help=help
         )
 
-        help = '''
-        - Which scoring method to use? Default: 'dummy'
-        - Options are 'chopchop', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides.
-        '''
+        help = "- Which scoring method to use? Default: 'dummy'\n" + \
+        "- Options are 'chopchop', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
         parser.add_argument(
             '--scorer',
             type=str,
@@ -77,25 +72,21 @@ class Configurator:
             help=help,
         )
 
-        help = '''
-        - Which track to use?
-        - Options are 'track_e', 'track_a'
-        - track_a: any of the genes in container_names can be targeted. There will be multiplicity targets per guide container (species or genes).
-        - track_e: each species/gene has to be targeted at least multiplicity times,
-        '''
+        help = "- Which track to use?\n" + \
+        "- Options are 'track_e', 'track_a'\n" + \
+        "- track_a: any of the genes in container_names can be targeted. There will be multiplicity targets per guide container (species or genes).\n" + \
+        "- track_e: each species/gene has to be targeted at least multiplicity times."
         parser.add_argument(
             '--track',
             type=str,
             help=help,
         )
 
-        help = '''
-        - (Affects performance) Default: True
-        - True reduces running time and reduces memory consumption.
-        - If True, discards guides with 5 or more repeated 2-mers.
-        - For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC since it contains 7 'AC' 2-mers.
-        - Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT.
-        '''
+        help = "- (Affects performance) Default: True\n" + \
+        "- True reduces running time and reduces memory consumption.\n" + \
+        "- If True, discards guides with 5 or more repeated 2-mers.\n" + \
+        "- For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC since it contains 7 'AC' 2-mers.\n" + \
+        "- Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT."
         parser.add_argument(
             '--filter_repetitive',
             type=bool,
@@ -113,9 +104,7 @@ class Configurator:
         #     help=help,
         # )
 
-        help = '''
-        - Ensures to cut each species/gene at least this many times. Default: 1
-        '''
+        help = "- Ensures to cut each species/gene at least this many times. Default: 1"
         parser.add_argument(
             '--multiplicity',
             type=int,
@@ -123,34 +112,18 @@ class Configurator:
             help=help,
         )
 
-        help = '''
-        - (Affects performance) Post-processing. Default: True
-        - Compresses the output guide set by clustering similar guides; adds a new column to output.csv
-        '''
+        help = "- (Affects performance) Post-processing. Default: False\n" + \
+        "Compresses the output guide set by clustering similar guides; adds a new column to output.csv"
         parser.add_argument(
             '--cluster_guides',
             type=bool,
-            default=True,
-            help=help,
-        )
-        
-        help = '''
-        - Only used when cluster_guides is True. Default: 10
-        - Choose how many nucleotides toward the 5' is considered seeds region.
-        - For example, when set to 10 for 5'- AAACTGGTACTGACTGACCGNGG -3', TGACTGACCG is considered the seed region.
-        '''
-        parser.add_argument(
-            '--seed_region_is_n_from_pam',
-            type=int,
-            default=10,
+            default=False,
             help=help,
         )
 
-        help = '''
-        - Only used when cluster_guides is True. Default: 5
-        - Choose how many mismatches after the seed region is allowed for placing guides with an identical seed region in the same cluster.
-        - For example, guides AAACTGGTACTGACTGACCG and AAACCCCTACTGACTGACCG are placed in the same cluster when this number is 3 or higher.
-        '''
+        help = "- Only used when cluster_guides is True. Default: 5\n" + \
+        "- Choose how many mismatches after the seed region is allowed for placing guides with an identical seed region in the same cluster.\n" + \
+        "- For example, guides AAACTGGTACTGACTGACCG and AAACCCCTACTGACTGACCG are placed in the same cluster when this number is 3 or higher."
         parser.add_argument(
             '--mismatches_allowed_after_seed_region',
             type=int,
@@ -158,12 +131,9 @@ class Configurator:
             help=help,
         )
 
-        help = '''
-        - Beta represents a loose budge or threshold for the maximum number of guides you would like in the final covering set.
-        - This is *not* a guaranteed maximum due to the hardness of the problem. See the topic on Integrality Gap.
-        '''
+        help = "- Beta represents a loose budge or threshold for the maximum number of guides you would like in the final covering set.\n" + \
+        "- This is *not* a guaranteed maximum due to the hardness of the problem. See the topic on Integrality Gap."
         parser.add_argument(
-            '-b',
             '--beta',
             type=int,
             default=0,
@@ -175,27 +145,22 @@ class Configurator:
         - Any other number uses that many threads.
         '''
         parser.add_argument(
-            '-t',
             '--max_threads',
             type=int,
             default=1,
             help=help,
         )
 
-        help = '''
-        - The .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.
-        - Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds.
-        '''
+        help = "- The .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
+        "- Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds."
         parser.add_argument(
             '--input_species_path',
             type=str,
             help=help,
         )
 
-        help = '''
-        - The desired column name of the .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.
-        - Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds.
-        '''
+        help = "- The desired column name of the .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
+        "- Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds."
         parser.add_argument(
             '--input_species_path_column',
             type=str,
@@ -208,9 +173,7 @@ class Configurator:
             default="data/output/"
         )
 
-        help = '''
-        - Files in this directory must end with .fna.
-        '''
+        help = "- Files in this directory must end with .fna."
         parser.add_argument(
             '--input_directory',
             type=str,
@@ -228,24 +191,48 @@ class Configurator:
         #     help=help,
         # )
 
-        help = '''
-        - Only used if the number of feasible guides is above the exhaustive_threshold.
-        - How many times to run the randomized rounding algorithm?
-        '''
+        help = "- Only used if the number of feasible guides is above the exhaustive_threshold.\n" + \
+        "- How many times to run the randomized rounding algorithm?"
         parser.add_argument(
             '--num_trials',
             type=int,
             help=help,
         )
 
-        help = '''
-        - A higher number increases running time while decreasing memory consumption.
-        - Pre-select guides that hit only up to this number of species/genes to act as representatives for them.
-        '''
+        help = "- A higher number increases running time while decreasing memory consumption.\n" + \
+        "- Pre-select guides that hit only up to this number of species/genes to act as representatives for them."
         parser.add_argument(
             '--mp_threshold',
             type=int,
             help=help,
+        )
+
+        help = "- Generate a report with gRNA with fewer <= N mismatches after the seed region.\n" + \
+        "- May be 0, 1, 2, or 3."
+        parser.add_argument(
+            '--report_up_to_n_mismatches',
+            type=int,
+            help=help
+        )
+
+        help = "- True/False boolean, significantly affects running time. True generates a report of gRNA with off-targets."
+        parser.add_argument(
+            '--output_offtargets',
+            type=bool,
+            help=help
+        )
+
+        help = "- Requires output_offtargets=True. In the generated report, discards gRNA with off-targets mismatching " + \
+        "in the seed region upstream of PAM. For example, the following will NOT be considered an off-target " + \
+        "when this value is set to 1:\n" + \
+        "- Target: ACTGACTGACTGACTGACTTAGG\n" + \
+        "- gRNA:   ACTGACTGACTGACTGACTGAGG\n" + \
+        "                             ^\n" + \
+        "- Since A and T mismatch in the seed region."
+        parser.add_argument(
+            '--seed_region_is_n_upstream_of_pam',
+            type=int,
+            help=help
         )
         
         parser.set_defaults(**config_arg_dict)
@@ -276,7 +263,10 @@ class Configurator:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "species_name" in {self.args.input_species_path}. Did you format the CSV file correctly? Exiting.')
             sys.exit(1)
         
+        if self.args.report_up_to_n_mismatches > 3 or self.args.report_up_to_n_mismatches < 0:
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: The value for report_up_to_n_mismatches may be 0, 1, 2, or 3. Exiting.')
 
+        
         if self.args.max_threads < 1:
             self.args.max_threads = 1
 
