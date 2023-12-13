@@ -2,9 +2,6 @@
 # These do not need to be run manually.
 import os
 import pandas
-# import numpy
-# import matplotlib.pyplot
-# matplotlib.pyplot.rcParams['figure.dpi'] = 300
 
 from utils.guide_finder import GuideFinder
 from utils.shell_colors import bcolors
