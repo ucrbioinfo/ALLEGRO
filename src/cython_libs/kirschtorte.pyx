@@ -79,13 +79,13 @@ cdef class KirschtorteCython:
         output_directory: str,
         file_column_name: str,
         cut_multiplicity: int,
-        output_offtargets: bool,
         monophonic_threshold: int,
+        # output_offtargets: bool,
         input_species_csv_file_path: str,
-        input_species_offtarget_dir: str,
-        input_species_offtarget_column: str,
-        discard_fewer_than_n_mismatches: int,
-        seed_region_is_n_from_pam: int,
+        # input_species_offtarget_dir: str,
+        # input_species_offtarget_column: str,
+        # report_up_to_n_mismatches: int,
+        # seed_region_is_n_from_pam: int,
         ) -> None:
 
         self.beta = beta
@@ -94,12 +94,12 @@ cdef class KirschtorteCython:
         self.file_column_name = file_column_name
         self.cut_multiplicity = cut_multiplicity
         self.monophonic_threshold = monophonic_threshold
-        self.input_species_offtarget_dir = input_species_offtarget_dir
-        self.input_species_offtarget_column = input_species_offtarget_column
-        self.discard_fewer_than_n_mismatches = discard_fewer_than_n_mismatches
-        self.seed_region_is_n_from_pam = seed_region_is_n_from_pam
-        self.output_offtargets = output_offtargets
-        self.offtarget_finder = OfftargetFinder()
+        # self.input_species_offtarget_dir = input_species_offtarget_dir
+        # self.input_species_offtarget_column = input_species_offtarget_column
+        # self.report_up_to_n_mismatches = report_up_to_n_mismatches
+        # self.seed_region_is_n_from_pam = seed_region_is_n_from_pam
+        # self.output_offtargets = output_offtargets
+        # self.offtarget_finder = OfftargetFinder()
         self.species_df = pandas.read_csv(input_species_csv_file_path)
 
         self.lock = Lock()
@@ -134,36 +134,36 @@ cdef class KirschtorteCython:
             self.track_e()
 
     
-    def create_and_init_species(self, row: pandas.Series, created_species_objects: list) -> None:
-        records_path = os.path.join(self.input_directory, row[self.file_column_name])
+    # def create_and_init_species(self, row: pandas.Series, created_species_objects: list) -> None:
+    #     records_path = os.path.join(self.input_directory, row[self.file_column_name])
 
-        offtarget_background_path = ''
-        if self.output_offtargets:
-            offtarget_background_path = os.path.join(self.input_species_offtarget_dir, row[self.input_species_offtarget_column]) 
+    #     offtarget_background_path = ''
+    #     if self.output_offtargets:
+    #         offtarget_background_path = os.path.join(self.input_species_offtarget_dir, row[self.input_species_offtarget_column]) 
         
-        with self.semaphore:
-            species_object = Species(
-                name=row.species_name,
-                records_path=records_path,
-                guide_scorer=self.scorer,
-                guide_container_factory=self.guide_container_factory,
-            )
+    #     with self.semaphore:
+    #         species_object = Species(
+    #             name=row.species_name,
+    #             records_path=records_path,
+    #             guide_scorer=self.scorer,
+    #             guide_container_factory=self.guide_container_factory,
+    #         )
 
-            if self.output_offtargets:
-                self.offtarget_finder.run_bowtie_build(species_name=species_object.name, path_to_background_fasta=offtarget_background_path)
+    #         if self.output_offtargets:
+    #             self.offtarget_finder.run_bowtie_build(species_name=species_object.name, path_to_background_fasta=offtarget_background_path)
 
-            with self.lock:
-                created_species_objects.append(species_object)
+    #         with self.lock:
+    #             created_species_objects.append(species_object)
 
 
-    def offtarget_finder_run_bowtie_against_other(self, this_species_name: str, that_species_name: str, guide_seq_list: list[str], guide_objects_list: list[Guide]) -> None:
-        with self.semaphore:
-            genome_offtargets_indices = self.offtarget_finder.run_bowtie_against_other(this_species_name, that_species_name, guide_seq_list, self.discard_fewer_than_n_mismatches, self.seed_region_is_n_from_pam)
+    # def offtarget_finder_run_bowtie_against_other(self, this_species_name: str, that_species_name: str, guide_seq_list: list[str], guide_objects_list: list[Guide]) -> None:
+    #     with self.semaphore:
+    #         genome_offtargets_indices = self.offtarget_finder.run_bowtie_against_other(this_species_name, that_species_name, guide_seq_list, self.report_up_to_n_mismatches, self.seed_region_is_n_from_pam)
 
-            for idx, val in enumerate(genome_offtargets_indices):
-                if val > 0:
-                    with self.lock:
-                        guide_objects_list[idx].has_offtargets = True
+    #         for idx, val in enumerate(genome_offtargets_indices):
+    #             if val > 0:
+    #                 with self.lock:
+    #                     guide_objects_list[idx].has_offtargets = True
 
 
     # def track_a(self) -> list[tuple[str, float, list[str]]]:
