@@ -34,14 +34,9 @@ def main() -> int:
         input_directory=args.input_directory,
         output_directory=args.output_directory,
         input_species_csv_file_path=args.input_species_path,
-        file_column_name=args.input_species_path_column,
+        input_species_path_column=args.input_species_path_column,
         cut_multiplicity=args.multiplicity,
-        monophonic_threshold=args.mp_threshold,
-        # output_offtargets=args.output_offtargets,
-        # input_species_offtarget_dir=args.input_species_offtarget_dir,
-        # input_species_offtarget_column=args.input_species_offtarget_column,
-        # report_up_to_n_mismatches=args.report_up_to_n_mismatches,
-        # seed_region_is_n_from_pam=args.seed_region_is_n_upstream_of_pam,
+        monophonic_threshold=args.mp_threshold
     )
 
     output_csv_path = write_solution.write_solution_to_file(

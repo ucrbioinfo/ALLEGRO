@@ -1,15 +1,22 @@
+
+# tmux sesh 1 is minorG with 1217 species
+# sesh 0 is 2434 species
+
+# ran 50, 100
+
 #================================================================
 # General Settings
 #================================================================
-experiment_name: 'e1_w_gff_ot'
+experiment_name: 'e1_gff_ns_not'
 # ---
 
 # ---------------------------------------------------------------
 # Path Settings
 # ---------------------------------------------------------------
-input_directory: 'data/input/cds/orthogroups/'
-# input_species_path: 'data/input/one.csv'
-input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
+input_directory: 'data/input/cds/cds_from_gff/'
+# input_species_path: 'data/input/cds/hundred_ortho.csv'
+# input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
+input_species_path: 'data/input/fourdbs_hi_gff_input_species.csv'
 input_species_path_column: 'cds_file_name'
 # ---
 
@@ -42,8 +49,8 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
 
 # (Significantly affects running time) output_offtargets default: False
 # True reports gRNA with off-targets.
-# Also report gRNA with fewer <= N mismatches after the seed region.
-output_offtargets: True
+# report_up_to_n_mismatches reports gRNA with fewer <= N mismatches after the seed region.
+output_offtargets: False
 report_up_to_n_mismatches: 3  # This may be 0, 1, 2, or 3
 seed_region_is_n_upstream_of_pam: 12
 

@@ -142,6 +142,7 @@ def report_offtargets(input_species_path: str,
             return any(digit + 1 + seed_region_is_n_upstream_of_pam > guide_len for digit in digits)
     
 
+    how_many_done = 0
     # Inner function to use with multithreading. Tasks inside are I/O bound (Bowtie)
     def find_targets(target_species: str, seed_region_is_n_upstream_of_pam: int) -> None:
         # Limit access to n concurrent threads (max_threads)
@@ -156,7 +157,7 @@ def report_offtargets(input_species_path: str,
             
             all_targets['target_species'] = target_species
             all_targets['is_off_target'] = '1'  # initially, all hits are off-targets until proven otherwise
-            all_targets['self_targets'] = '0'
+            all_targets['self_off_targets'] = '0'
 
             # These are on-targets -- everything else is off-target
             on_targets = pandas.merge(output_library[output_library['target'] == target_species],
@@ -164,7 +165,7 @@ def report_offtargets(input_species_path: str,
                                     left_on=['sequence', 'misc', 'strand', 'start_position'],
                                     right_on=['sequence', 'reference_name', 'strand', 'start_position'])
             
-            cols = ['is_off_target', 'self_targets', 'sequence', 'pam', 'mismatch', 'aligned_seq',
+            cols = ['is_off_target', 'self_off_targets', 'sequence', 'pam', 'mismatch', 'aligned_seq',
                     'target_species', 'strand', 'reference_name', 'orthologous_to', 'start_position']
             
             on_targets = on_targets[cols]  # Only retain certain columns
@@ -194,14 +195,20 @@ def report_offtargets(input_species_path: str,
             OT = all_targets[all_targets['is_off_target'] == '1']
             for seq in OT['sequence'].unique():
                 seq_off_target_species = set(OT[OT['sequence'] == seq]['target_species'])
+                print(seq_off_target_species)
+
                 all_target_species = set(all_targets[all_targets['sequence'] == seq]['target_species'])
+                print(all_target_species)
 
                 if len(seq_off_target_species.intersection(all_target_species)) != 0:
-                    all_targets.loc[all_targets['sequence'] == seq, 'self_targets'] = '1'
+                    all_targets.loc[all_targets['sequence'] == seq, 'self_off_targets'] = '1'
 
             # Limit shared list write access to one thread at a time
             with lock:
                 created_dfs.append(all_targets)
+                # global how_many_done
+                # how_many_done += 1
+                # print(f'Done checking library for off-targets against {target_species}. {len_species}/{how_many_done}...', end='\r')
     
 
     background_source = 'genome' if 'genome' in input_species_offtarget_column else 'genes'
@@ -215,6 +222,7 @@ def report_offtargets(input_species_path: str,
     created_dfs: list[pandas.DataFrame] = list()  # For threads to deposit their results
     species_df = pandas.read_csv(input_species_path)
     output_library = pandas.read_csv(solution_path)
+    len_species = len(output_library['target'].unique())
 
     # Pull back the start position of guides on negative strand
     # by PAM length -- to comply with bowtie hits and consider the PAM
@@ -235,6 +243,8 @@ def report_offtargets(input_species_path: str,
     # Wait for all threads
     for thread in threads:
         thread.join()
+
+    print()
 
     final_df = pandas.concat(created_dfs, ignore_index=True)
     final_df.to_csv(f'{output_dir}/targets.csv', index=False)
