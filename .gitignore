@@ -2,12 +2,12 @@ __pycache__
 .vscode/
 *.db
 *.so
-*.o
 *.d
 
 unused/
 .fna
 output/
+output_old/
 output_used_for_quals/
 339_output_ortho/
 339_output_genome/
@@ -20,3 +20,4 @@ datasets/
 test.txt
 txt.txt
 .pytest_cache/
+data/cache/
