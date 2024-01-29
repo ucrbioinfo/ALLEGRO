@@ -1,16 +1,17 @@
 # Utility functions imported by main.py.
 # These do not need to be run manually.
 import os
+import shutil
 import pandas
 
 from utils.guide_finder import GuideFinder
 from utils.shell_colors import bcolors
 
 
-def write_solution_to_file(
-    pam: str,
+def write_solution_to_file_bowtie(
+    pam: str,  # todo - useless
     species_names: list[str],
-    solution: list[tuple[str, float, str]],
+    solution: list[tuple[str, float, list[str]]],
     experiment_name: str,
     input_csv_path: str,
     input_directory: str,
@@ -20,7 +21,14 @@ def write_solution_to_file(
     ) -> str:
 
     output_txt_path = os.path.join(output_directory, experiment_name + '.txt')
+    output_library_path = os.path.join(output_directory, experiment_name + '_library.txt')
     output_csv_path = os.path.join(output_directory, experiment_name + '.csv')
+
+    output_bowtie_temp_dir = os.path.join(output_directory, 'temp')
+    output_align_temp_path = os.path.join(output_directory, 'temp', 'temp_library.txt')
+
+    if not os.path.exists(output_bowtie_temp_dir):
+        os.mkdir(output_bowtie_temp_dir)
 
     print(f'{bcolors.BLUE}>{bcolors.RESET} Writing to file: {output_txt_path}')
     with open(output_txt_path, 'w') as f:
@@ -31,16 +39,15 @@ def write_solution_to_file(
             hit_species = tup[2]
 
             f.write(f'Guide {seq} targets {len(hit_species)} genes/chromosomes.\n')
+
         f.write(f'We can cut the following {len(species_names)} species: {str(species_names)}.\n')
         f.write(f'Using the following {str(len(solution))} guides: {str(solution)}.\n')
 
     paths: list[str] = list()
-    misc_list: list[str] = list()
     species_list: list[str] = list()
     scores: list[float] = list()
     strands: list[str] = list()
     sequences: list[str] = list()
-    end_positions: list[int] = list()
     start_positions: list[int] = list()
     chromosomes_or_genes: list[str] = list()
     ortho_list: list[str] = list()
@@ -48,54 +55,163 @@ def write_solution_to_file(
     guide_finder = GuideFinder()
     input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
 
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Locating the solution guides in the input species to generate the final report...')
+    
+    solution_dict = dict()
+
     for tup in solution:
         seq = tup[0]
         score = tup[1]
         hit_species = tup[2]
 
-        for species in hit_species:
-            df_file_path = input_df[input_df[species_names_csv_column_name] == species][paths_csv_column_name].values[0]
-            full_path = os.path.join(input_directory, df_file_path)
+        if seq not in solution_dict:
+            solution_dict[seq] = (score, hit_species)
+        else:
+            print('Dev error in utils/write_solution_to_file. Not your fault. Just bad coding.')
 
-            list_of_tuples = guide_finder.locate_guides_in_sequence(pam=pam, sequence=seq, file_path=full_path, to_upper=True)
+    library = list(solution_dict.keys())
+    with open(output_align_temp_path, 'w') as f:
+        for g in library:
+            for n in ['AGG', 'CGG', 'TGG', 'GGG']:
+                f.write(f'>{g}{n}\n{g}{n}\n')
 
-            for tupe in list_of_tuples:
-                container = tupe[0]
-                strand = tupe[1]
-                start_pos = tupe[2]
-                end_pos = tupe[3]
-                ortho_to = tupe[4]
-                misc = tupe[5]
+    with open(output_library_path, 'w') as f:
+        for g in library:
+            f.write(f'{g}\n')
 
-                sequences.append(seq)
-                paths.append(df_file_path)
-                scores.append(score)
-                strands.append(strand)
-                start_positions.append(start_pos)
-                end_positions.append(end_pos)
-                chromosomes_or_genes.append(container)
-                species_list.append(species)
-                ortho_list.append(ortho_to)
-                misc_list.append(misc)
-            
-    
+    for _, row in input_df.iterrows():
+        name = row[species_names_csv_column_name]
+        df_file_path = row[paths_csv_column_name]
+        full_path = os.path.join(input_directory, df_file_path)
+
+        bowtie_sequences, bowtie_strands, reference_names, orthos, bowtie_start_positions = guide_finder.align_guides_to_seq_bowtie(
+            name=name,
+            output_align_temp_path=output_align_temp_path,
+            file_path=full_path,
+            output_directory=output_bowtie_temp_dir)
+        
+        bowtie_scores = [solution_dict[s[:-len(pam)]][0] for s in bowtie_sequences]
+
+        sequences.extend(bowtie_sequences)
+        paths.extend([df_file_path] * len(bowtie_sequences))
+        scores.extend(bowtie_scores)
+        strands.extend(bowtie_strands)
+        start_positions.extend(bowtie_start_positions)
+        chromosomes_or_genes.extend(reference_names)
+        species_list.extend([name] * len(bowtie_sequences))
+        ortho_list.extend(orthos)
+
     pandas.DataFrame(list(zip(
         sequences,
         species_list,
-        scores,
         chromosomes_or_genes,
+        ortho_list,
         strands,
         start_positions,
-        end_positions,
-        ortho_list,
-        misc_list,
+        scores,
         paths,
         )),
-    columns=['sequence', 'target', 'score', 'chromosome_or_gene',
-    'strand', 'start_position', 'end_position', 'orthologous_to', 'misc', 'path']).to_csv(output_csv_path, index=False)
+    columns=['sequence', 'target', 'reference_name', 'orthologous_to',
+    'strand', 'start_position', 'score', 'path']).to_csv(output_csv_path, index=False)
     
     print(f'{bcolors.BLUE}>{bcolors.RESET} Done. Check {output_csv_path} for the output.')
+
+    shutil.rmtree(output_bowtie_temp_dir)
+
     return output_csv_path
+
+# DEPRECATED
+# def write_solution_to_file(
+#     pam: str,
+#     species_names: list[str],
+#     solution: list[tuple[str, float, str]],
+#     experiment_name: str,
+#     input_csv_path: str,
+#     input_directory: str,
+#     paths_csv_column_name: str,
+#     species_names_csv_column_name: str,
+#     output_directory: str,
+#     ) -> str:
+
+#     output_txt_path = os.path.join(output_directory, experiment_name + '.txt')
+#     output_csv_path = os.path.join(output_directory, experiment_name + '.csv')
+
+#     print(f'{bcolors.BLUE}>{bcolors.RESET} Writing to file: {output_txt_path}')
+#     with open(output_txt_path, 'w') as f:
+
+#         for tup in solution:
+#             seq = tup[0]
+#             score = tup[1]
+#             hit_species = tup[2]
+
+#             f.write(f'Guide {seq} targets {len(hit_species)} genes/chromosomes.\n')
+#         f.write(f'We can cut the following {len(species_names)} species: {str(species_names)}.\n')
+#         f.write(f'Using the following {str(len(solution))} guides: {str(solution)}.\n')
+
+#     paths: list[str] = list()
+#     misc_list: list[str] = list()
+#     species_list: list[str] = list()
+#     scores: list[float] = list()
+#     strands: list[str] = list()
+#     sequences: list[str] = list()
+#     end_positions: list[int] = list()
+#     start_positions: list[int] = list()
+#     chromosomes_or_genes: list[str] = list()
+#     ortho_list: list[str] = list()
+
+#     guide_finder = GuideFinder()
+#     input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
+
+#     print(f'{bcolors.BLUE}>{bcolors.RESET} Locating the solution guides in the input species to generate the final report...')
+    
+#     for tup in solution:
+#         seq = tup[0]
+#         score = tup[1]
+#         hit_species = tup[2]
+
+#         for species in hit_species:
+#             df_file_path = input_df[input_df[species_names_csv_column_name] == species][paths_csv_column_name].values[0]
+#             full_path = os.path.join(input_directory, df_file_path)
+
+#             list_of_tuples = guide_finder.locate_guides_in_sequence(pam=pam, sequence=seq, file_path=full_path, to_upper=True)
+
+#             for tupe in list_of_tuples:
+#                 container = tupe[0]
+#                 strand = tupe[1]
+#                 start_pos = tupe[2]
+#                 end_pos = tupe[3]
+#                 ortho_to = tupe[4]
+#                 misc = tupe[5]
+
+#                 sequences.append(seq)
+#                 paths.append(df_file_path)
+#                 scores.append(score)
+#                 strands.append(strand)
+#                 start_positions.append(start_pos)
+#                 end_positions.append(end_pos)
+#                 chromosomes_or_genes.append(container)
+#                 species_list.append(species)
+#                 ortho_list.append(ortho_to)
+#                 misc_list.append(misc)
+            
+    
+#     pandas.DataFrame(list(zip(
+#         sequences,
+#         species_list,
+#         scores,
+#         chromosomes_or_genes,
+#         strands,
+#         start_positions,
+#         end_positions,
+#         ortho_list,
+#         misc_list,
+#         paths,
+#         )),
+#     columns=['sequence', 'target', 'score', 'chromosome_or_gene',
+#     'strand', 'start_position', 'end_position', 'orthologous_to', 'misc', 'path']).to_csv(output_csv_path, index=False)
+    
+#     print(f'{bcolors.BLUE}>{bcolors.RESET} Done. Check {output_csv_path} for the output.')
+#     return output_csv_path
 
 
 # ARTIFACT CODE BELOW
