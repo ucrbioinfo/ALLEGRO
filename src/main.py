@@ -25,8 +25,7 @@ def main() -> int:
     coversets_obj = coverset(
         beta=args.beta,
         track=args.track,
-        num_trials=args.num_trials,
-        max_threads=args.max_threads,
+        early_stopping_patience=args.early_stopping_patience,
         scorer_name=args.scorer,
         cas_variant='cas9',
         guide_length=20,
@@ -39,7 +38,8 @@ def main() -> int:
         monophonic_threshold=args.mp_threshold
     )
 
-    output_csv_path = write_solution.write_solution_to_file(
+    # TODO Use Bowtie to align these. Detect changes in last modified of the CDS files and rerun bowtie-build if file has been changed.
+    output_csv_path = write_solution.write_solution_to_file_bowtie(
         pam='NGG',
         species_names=coversets_obj.species_names,
         solution=coversets_obj.solution,
@@ -68,7 +68,6 @@ def main() -> int:
             experiment_name=args.experiment_name,
             num_mismatches=args.report_up_to_n_mismatches,
             seed_region_is_n_upstream_of_pam=args.seed_region_is_n_upstream_of_pam,
-            max_threads=args.max_threads,
             pam_length=3
         )
         
