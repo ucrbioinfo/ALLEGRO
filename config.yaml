@@ -1,22 +1,28 @@
+# use bowtie for the final output -- DONE!!!!!!!
+# implement callback for solver
+# check if solution is correct after reaching time limit and early termination...
+# check if track a works.
+# check if beta works.
+# check if multiplicity works.
 
-# tmux sesh 1 is minorG with 1217 species
-# sesh 0 is 2434 species
-
-# ran 50, 100
+# low prio:
+# fix max_threading arg
+# elapsed time at the end is incorrect. i think it uses all cpu times. all 128 cores. 
+# clean up files and code
 
 #================================================================
 # General Settings
 #================================================================
-experiment_name: 'e1_gff_ns_not'
+experiment_name: 'bigortho_bowtie_timelimit_sat'
 # ---
 
 # ---------------------------------------------------------------
 # Path Settings
 # ---------------------------------------------------------------
-input_directory: 'data/input/cds/cds_from_gff/'
+input_directory: 'data/input/cds/'
 # input_species_path: 'data/input/cds/hundred_ortho.csv'
 # input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
-input_species_path: 'data/input/fourdbs_hi_gff_input_species.csv'
+input_species_path: 'data/input/big_ortho.csv'
 input_species_path_column: 'cds_file_name'
 # ---
 
@@ -58,10 +64,6 @@ seed_region_is_n_upstream_of_pam: 12
 # background fasta to check off-targets against
 input_species_offtarget_dir: 'data/input/cds/cds'
 input_species_offtarget_column: 'cds_file_name'
-
-# Multithreading for offtarget analysis. Default: 16.
-# 0 disables multithreading. Any other number uses that many threads.
-max_threads: 128
 # ---
 
 # Choices: 'dummy' (default), 'ucrispr', 'chopchop_METHOD'
@@ -72,14 +74,18 @@ max_threads: 128
 scorer: 'dummy'
 # ---
 
-# (Affects running time and memory performance) Default: True
-# True reduces running time and reduces memory consumption.
+# (True improves running time and memory performance) Default: True
 # If True, discards gRNAs with 5 or more repeated 2-mers.
 # For example, this cas9 gRNA will not be in the output: ACCACCACCACCACCACCAC
 # since it contains 7 'AC' 2-mers.
 # Also discards gRNAs containing repeating 4- or 5-mers such as AAAAA or TTTT.
-# Best when used with mode: from_genome, as CDS tend not to have many of these repeats.
-filter_repetitive: True
+filter_repetitive: False
+
+# Remove guides with > gc_max and < gc_min from consideration?
+# gc_max and gc_min only work if filter_by_gc is True.
+filter_by_gc: True
+gc_max: 0.7
+gc_min: 0.3
 # ---
 
 # (Affects running time and memory performance) Default: 4
@@ -95,7 +101,8 @@ mp_threshold: 0
 # A higher number increases running time but attempts to find a smaller cover set.
 # Integer value: Only used if the number of feasible gRNAs is above the exhaustive_threshold.
 # How many times to run the randomized rounding algorithm? Any value under 1 disables trials.
-num_trials: 10000
+# num_trials: 1
+early_stopping_patience: 60
 # ---
 
 # (Affects running time performance) Post-processing. Default: True, 2
