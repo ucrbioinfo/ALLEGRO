@@ -46,7 +46,7 @@ def process_files(files):
 # directory: Path to the directory containing the FASTA files
 def count_records(directory: str, species_file_names: list[str]) -> int:
     # Get the list of files in the directory
-    files = [os.path.join(directory, file) for file in os.listdir(directory) if file.endswith('.fna') and file in species_file_names]
+    files = [os.path.join(directory, file) for file in os.listdir(directory) if file.endswith(('.fasta', '.fas', '.fa', '.fna', '.ffn', '.faa', '.mpfa', '.frn')) and file in species_file_names]
 
     # Set the number of processes
     num_processes = multiprocessing.cpu_count()
