@@ -4,7 +4,6 @@ import re
 import sys
 import pandas
 from queue import Queue
-from threading import Thread, Semaphore, Lock
 
 # ALLEGRO CYTHON CUSTOM LIBS.
 # Cythonized custom C++ lib, AKA kirschtorte.so.
@@ -39,7 +38,7 @@ cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
         Kirschtorte(
             size_t num_containers,
             size_t guide_length,
-            size_t num_trials,
+            size_t early_stopping_patience,
             string output_directory) except +
         
         # Google OR-Tools solver code
@@ -69,8 +68,7 @@ cdef class KirschtorteCython:
         self,
         beta: int,
         track: str,
-        num_trials: int,
-        max_threads: int,
+        early_stopping_patience: int,
         scorer_name: str,
         cas_variant: str,
         guide_length: int,
@@ -80,12 +78,7 @@ cdef class KirschtorteCython:
         input_species_path_column: str,
         cut_multiplicity: int,
         monophonic_threshold: int,
-        # output_offtargets: bool,
         input_species_csv_file_path: str,
-        # input_species_offtarget_dir: str,
-        # input_species_offtarget_column: str,
-        # report_up_to_n_mismatches: int,
-        # seed_region_is_n_from_pam: int,
         ) -> None:
 
         self.beta = beta
@@ -94,16 +87,7 @@ cdef class KirschtorteCython:
         self.input_species_path_column = input_species_path_column
         self.cut_multiplicity = cut_multiplicity
         self.monophonic_threshold = monophonic_threshold
-        # self.input_species_offtarget_dir = input_species_offtarget_dir
-        # self.input_species_offtarget_column = input_species_offtarget_column
-        # self.report_up_to_n_mismatches = report_up_to_n_mismatches
-        # self.seed_region_is_n_from_pam = seed_region_is_n_from_pam
-        # self.output_offtargets = output_offtargets
-        # self.offtarget_finder = OfftargetFinder()
         self.species_df = pandas.read_csv(input_species_csv_file_path)
-
-        self.lock = Lock()
-        self.semaphore = Semaphore(max_threads)
 
         # Set how many clusters we need.
         # If track_a is selected, we have the same number of clusters as species. This is the same number for "Number of constraints" in solver_log.txt 
@@ -112,7 +96,7 @@ cdef class KirschtorteCython:
         clusters = self.species_df.shape[0] if track == 'track_a' else records_count_finder.count_records(self.input_directory, self.species_df[self.input_species_path_column].tolist())
 
         # Instantiate a C++ class. The linear programming part of ALLEGRO is done there.
-        self.kirschtorte = new Kirschtorte(clusters, guide_length, num_trials, output_directory.encode('utf-8'))
+        self.kirschtorte = new Kirschtorte(clusters, guide_length, early_stopping_patience, output_directory.encode('utf-8'))
 
         # To translate indices back to legible names later.
         self.guide_origin: dict[int, str] = dict()
@@ -243,13 +227,6 @@ cdef class KirschtorteCython:
                 sys.exit(1)
 
             for guide_container in guide_containers_list:
-                # guide_attributes = guide_container.get_attributes_dict()
-
-                # record_ortho_to = guide_attributes['record_orthologous_to']
-                # record_string_id = guide_attributes['record_string_id']
-
-                # container_target_name = record_ortho_to if record_ortho_to != 'N/A' else record_string_id
-
                 guide_objects_list: list[Guide] = guide_container.get_cas9_guides()
                 for guide_object in guide_objects_list:
                     guide_sequence = guide_object.sequence

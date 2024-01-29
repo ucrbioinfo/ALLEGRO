@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = -DHAVE_CONFIG_H -DOR_TOOLS_AS_DYNAMIC_LIB -DUSE_BOP -DUSE_CBC -DUSE_CLP -DUSE_GLOP -DUSE_LP_PARSER -DUSE_PDLP -DUSE_SCIP -Dkirschtorte_EXPORTS
 
-CXX_INCLUDES = -I/home/amohs002/miniconda3/envs/allegro/include/python3.10 -I/home/amohs002/projects/research/ALLEGRO/src/cython_libs -I/home/amohs002/projects/research/ALLEGRO/src/utils/boost_1_81_0 -isystem /home/amohs002/projects/research/ALLEGRO/src/cython_libs/include -isystem /home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/coin -isystem /home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/eigen3
+CXX_INCLUDES = -I/home/amohs002/miniconda3/envs/allegro/include/python3.10 -I/data/home/amohs002/projects/research/ALLEGRO/src/cython_libs -I/data/home/amohs002/projects/research/ALLEGRO/src/utils/boost_1_81_0 -isystem /data/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include -isystem /data/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/coin -isystem /data/home/amohs002/projects/research/ALLEGRO/src/cython_libs/include/eigen3
 
 CXX_FLAGS = -std=c++17 -fPIC -fwrapv
 

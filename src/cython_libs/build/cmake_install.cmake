@@ -1,4 +1,4 @@
-# Install script for directory: /home/amohs002/projects/research/ALLEGRO/src/cython_libs
+# Install script for directory: /data/home/amohs002/projects/research/ALLEGRO/src/cython_libs
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/amohs002/projects/research/ALLEGRO/src/cython_libs/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/data/home/amohs002/projects/research/ALLEGRO/src/cython_libs/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -21,3 +21,4 @@ test.txt
 txt.txt
 .pytest_cache/
 data/cache/
+data/
