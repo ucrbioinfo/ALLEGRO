@@ -13,13 +13,14 @@ namespace Kirschtorte
     Kirschtorte::Kirschtorte(
         std::size_t num_containers,
         std::size_t guide_length,
-        std::size_t num_trials,
+        std::size_t early_stopping_patience_s,
         std::string output_directory)
     {
         this->num_containers = num_containers; // A container may be a gene, species, or chromosome.
         this->guide_length = guide_length;     // Twenty (20) for cas9.
-        this->num_trials = num_trials;         // The randomized rounding algorithm will restart this many times
-                                               // to find the smallest subset of the feasible solutions.
+        // this->num_trials = num_trials;         // The randomized rounding algorithm will restart this many times
+        //                                        // to find the smallest subset of the feasible solutions.
+        this->early_stopping_patience_s = early_stopping_patience_s;
         this->output_directory = output_directory;
         this->bits_required_to_store_seq = guide_length * 2; // Each nucleotide A/C/T/G in a guide
                                                              // can be represented by 2 bits.
@@ -61,7 +62,7 @@ namespace Kirschtorte
         boost::dynamic_bitset<> encoded_bitset = boost::dynamic_bitset<>(encoded_str);
 
         // If the sequence already exists in the memory
-        if (coversets.find(encoded_bitset) != coversets.end())
+        if (this->coversets.find(encoded_bitset) != this->coversets.end())
         {
             // Set the appropriate bit to indicate that this new container is hit by this guide.
             this->coversets[encoded_bitset].second.set(container_id);
@@ -94,10 +95,9 @@ namespace Kirschtorte
 
     std::vector<GuideStruct> Kirschtorte::setup_and_solve(
         std::size_t monophonic_threshold,
-        std::size_t cut_multiplicity,
+        std::size_t multiplicity,
         std::size_t beta)
     {
-        // Disable ORTOOLS warning
         ::google::InitGoogleLogging("ALLEGRO");
 
         // Create a linear solver with the GLOP backend.
@@ -111,7 +111,7 @@ namespace Kirschtorte
         {
             // Inside this function, guides deemed not needed have their scores set to 0.
             // These guides will be removed below where we have: if (score <= 0) {...}
-            decorate_with_monophonic(cut_multiplicity, monophonic_threshold, this->log_buffer, this->coversets);
+            decorate_with_monophonic(multiplicity, monophonic_threshold, this->log_buffer, this->coversets);
         }
 
         // --------------------------------------------------
@@ -172,7 +172,7 @@ namespace Kirschtorte
 
             std::string buffer;
             boost::to_string(guide_seq_bitset, buffer);
-            operations_research::MPVariable *const var = solver->MakeNumVar(0.0, 1, buffer);
+            operations_research::MPVariable *const var = solver->MakeNumVar(0.0, 1.0, buffer);
 
             map_seq_to_vars[guide_seq_bitset] = var;
 
@@ -206,8 +206,8 @@ namespace Kirschtorte
                 vars_for_this_container.push_back(map_seq_to_vars[j]);
             }
 
-            // All species/genes must be covered by at least cut_multiplicity guide(s)
-            operations_research::MPConstraint *const constraint = solver->MakeRowConstraint(cut_multiplicity, infinity);
+            // All species/genes must be covered by at least multiplicity guide(s)
+            operations_research::MPConstraint *const constraint = solver->MakeRowConstraint(multiplicity, infinity);
             for (auto k : vars_for_this_container)
             {
                 constraint->SetCoefficient(k, 1);
@@ -228,8 +228,8 @@ namespace Kirschtorte
         }
         // --------------------------------------------------
 
-        LOG(INFO) << "Cut multiplicity: " << cut_multiplicity << std::endl;
-        this->log_buffer << "Cut multiplicity: " << cut_multiplicity << std::endl;
+        LOG(INFO) << "Cut multiplicity: " << multiplicity << std::endl;
+        this->log_buffer << "Cut multiplicity: " << multiplicity << std::endl;
 
         // Set the appropriate objective.
         if (beta > 0)
@@ -255,9 +255,9 @@ namespace Kirschtorte
         if (result_status != operations_research::MPSolver::OPTIMAL)
         {
             std::cout << RED << "> Status: " << result_status << RESET << std::endl;
-            // LOG(FATAL) << "The problem does not have an optimal solution!";
-            std::cout << RED << "> The problem does not have an optimal solution!" << RESET << std::endl;
-            this->log_buffer << "The problem does not have an optimal solution!" << std::endl;
+            std::cout << RED << "> The LP does not have an optimal solution! Exiting." << RESET << std::endl;
+            this->log_buffer << "The LP does not have an optimal solution!" << std::endl;
+
             return std::vector<GuideStruct>();
         }
         else
@@ -269,6 +269,8 @@ namespace Kirschtorte
         // A feasible variable is any variable with a solution value greater than 0.
         // It has a chance to be in the final solution.
         std::vector<operations_research::MPVariable *> feasible_solutions;
+        std::size_t num_have_fractional_vars = 0;
+
         for (auto i : map_seq_to_vars)
         {
             boost::dynamic_bitset<> seq_bitset = i.first;
@@ -276,6 +278,11 @@ namespace Kirschtorte
 
             if (var->solution_value() > 0.0)
             {
+                if (var->solution_value() < 1.0)
+                {
+                    num_have_fractional_vars++;
+                }
+
                 // std::cout << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
                 this->log_buffer << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
 
@@ -289,7 +296,7 @@ namespace Kirschtorte
         std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << std::endl;
         this->log_buffer << "Number of feasible candidate guides: " << len_solutions << std::endl;
         // --------------------------------------------------
-        // -------------- RANDOMIZED ROUND ------------------
+        // ---------------------- ILP -----------------------
         // --------------------------------------------------
 
         // vector of guide structs [guide sequence, score, container bit vector that it cuts]
@@ -297,20 +304,63 @@ namespace Kirschtorte
 
         if (len_solutions > 0)
         {
-            solution_set = randomized_rounding(
-                feasible_solutions,
-                this->all_containers_bitset,
-                this->coversets,
-                cut_multiplicity,
-                this->num_trials,
-                this->log_buffer,
-                this->output_directory);
+            if (num_have_fractional_vars > 0)
+            {
+                std::cout << BLUE << "> " << RESET << "Switching to the ILP solver as " << num_have_fractional_vars << " residual guides remain." << std::endl;
+                // SAT solver with time limit
+                solution_set = sat_solver(
+                    feasible_solutions,
+                    this->all_containers_bitset,
+                    this->coversets,
+                    multiplicity,
+                    beta,
+                    this->early_stopping_patience_s,
+                    this->log_buffer);
+            }
+            else
+            {
+                this->log_buffer << "The final set consists of:" << std::endl;
+                for (auto var_ptr : feasible_solutions)
+                {
+                    boost::dynamic_bitset<> bitset(var_ptr->name());
+
+                    double score = this->coversets[bitset].first;
+                    boost::dynamic_bitset<> species_hit_by_this_guide = this->coversets[bitset].second;
+
+                    std::string buffer;
+                    boost::to_string(species_hit_by_this_guide, buffer);
+
+                    std::string decoded_bitset = decode_bitset(var_ptr->name());
+
+                    GuideStruct guide;
+                    guide.sequence = decoded_bitset;
+                    guide.score = score;
+                    guide.species_hit = buffer;
+
+                    solution_set.push_back(guide);
+
+                    log_buffer << decoded_bitset << std::endl;
+                }
+            }
         }
         else
         {
             std::cout << "No feasible solutions." << len_solutions << std::endl;
             this->log_buffer << "No feasible solutions." << len_solutions << std::endl;
         }
+
+        // randomized_rounding is deprecated. SAT solves this way better.
+        // if (len_solutions > 0)
+        // {
+        //     solution_set = randomized_rounding(
+        //         feasible_solutions,
+        //         this->all_containers_bitset,
+        //         this->coversets,
+        //         multiplicity,
+        //         this->num_trials,
+        //         this->log_buffer,
+        //         this->output_directory);
+        // }
 
         // Write all buffer messages to disk
         log_info(this->log_buffer, this->output_directory);
