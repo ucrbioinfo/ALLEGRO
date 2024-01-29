@@ -130,7 +130,6 @@ def report_offtargets(input_species_path: str,
                       experiment_name: str,
                       num_mismatches: int,
                       seed_region_is_n_upstream_of_pam: int,
-                      max_threads: int,
                       pam_length: int = 3):
 
 
@@ -215,7 +214,7 @@ def report_offtargets(input_species_path: str,
     
     lock = Lock()
     threads: list[Thread] = list()
-    semaphore = Semaphore(max_threads)
+    semaphore = Semaphore(os.cpu_count())
 
     OTF = OfftargetFinder()
     final_df = pandas.DataFrame()
