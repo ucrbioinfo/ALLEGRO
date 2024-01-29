@@ -59,22 +59,22 @@ import multiprocessing
 
 def threaded_split(run_range):
     for run in run_range:
-        new_exp_name = f'e1_run_{run}'
+        new_exp_name = f'a7_run_{run}'
         
         context = {
             'experiment_name': new_exp_name,
             'input_species_path': 'data/input/fourdbs_hi_gff_input_species.csv',
             'input_species_path_column': 'cds_file_name',
             'input_directory': 'data/input/cds/cds_from_gff/',
-            'track': 'track_e',
+            'track': 'track_a',
             'scorer': 'dummy',
             'beta': 0,
-            'mult': '1',
+            'mult': '7',
             'filter_repetitive': True,
             'mp_threshold': 0
         }
 
-        config_name = f'temp_config_e1_{run}.yaml'
+        config_name = f'temp_config_a7_{run}.yaml'
         with open(config_name, 'w') as f:
             f.write(config.format(**context))
 
@@ -87,7 +87,7 @@ def threaded_split(run_range):
 args_list = list()
 runs = [[i for i in range(1 * n - 1, 1 * n)] for n in range(1, 101)]
 
-with multiprocessing.Pool(processes=20) as pool:
+with multiprocessing.Pool(processes=30) as pool:
     for r in runs:
         pool.apply_async(threaded_split, args=(r,))
 

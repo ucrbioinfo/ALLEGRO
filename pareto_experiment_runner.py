@@ -1,45 +1,55 @@
-config_text = '''
-# ---
+config = '''
+#================================================================
+# General Settings
+#================================================================
 experiment_name: {experiment_name}
 # ---
 
-# ---
-input_directory: 'data/input/cds/orthogroups/'
-input_species_path: 'data/input/fourdbs_hi_input_species.csv'
-input_species_path_column: 'cds_file_name'
+# ---------------------------------------------------------------
+# Path Settings
+# ---------------------------------------------------------------
+input_directory: {input_directory}
+input_species_path: {input_species_path}
+input_species_path_column: {input_species_path_column}
 # ---
 
-# ---
 track: {track}
 # ---
 
-# ---
-multiplicity: {multiplicity}
+multiplicity: {mult}
 # ---
 
-# ---
 beta: {beta}
 # ---
 
-# ---
-scorer: 'ucrispr'
+#================================================================
+# Advanced Settings
+# ===============================================================
+
+output_offtargets: False
+report_up_to_n_mismatches: 3  # This may be 0, 1, 2, or 3
+seed_region_is_n_upstream_of_pam: 12
+
+
+input_species_offtarget_dir: 'data/input/cds/cds'
+input_species_offtarget_column: 'cds_file_name'
+
+max_threads: 128
 # ---
 
-# ---
-filter_repetitive: True
-# ---
-
-# ---
-mp_threshold: 0
+scorer: {scorer}
 # ---
 
+filter_repetitive: {filter_repetitive}
 # ---
+
+mp_threshold: {mp_threshold}
+# ---
+
 num_trials: 10000
 # ---
 
-# ---
-cluster_guides: True
-seed_region_is_n_from_pam: 10
+cluster_guides: False
 mismatches_allowed_after_seed_region: 2
 # ---
 '''
@@ -71,7 +81,7 @@ def run_exp(track, multi, beta):
 
         config_name = f'{new_exp_name}_config.yaml'
         with open(config_name, 'w') as f:
-            f.write(config_text.format(**context))
+            f.write(config.format(**context))
 
         os.system('python src/main.py --config ' + config_name)
         os.remove(config_name)

@@ -5,7 +5,7 @@ import numpy as np
 from Bio import SeqIO
 import multiprocessing
 from sklearn.model_selection import KFold
-from src.utils.guide_finder import GuideFinder
+from src.utils.test_guide_finder import GuideFinder
 
 
 def find_all_matches(list1, list2):
@@ -56,47 +56,61 @@ orthologous_name_regex = r'\[orthologous_to_gene=(.*?)\]'
 orthologous_protein_regex = r'\[orthologous_to_ref_protein=(.*?)\]'
 
 config = '''
-# ---
+#================================================================
+# General Settings
+#================================================================
 experiment_name: {experiment_name}
 # ---
 
-# ---
+# ---------------------------------------------------------------
+# Path Settings
+# ---------------------------------------------------------------
+# input_directory: 'data/input/cds/cds_from_gff/'
+# input_species_path: 'data/input/fourdbs_hi_gff_input_species.csv'
+# input_species_path_column: 'cds_file_name'
+
 input_directory: {input_directory}
 input_species_path: {input_species_path}
 input_species_path_column: {input_species_path_column}
 # ---
 
-# ---
 track: {track}
 # ---
 
-# ---
 multiplicity: {mult}
 # ---
 
-# ---
 beta: {beta}
 # ---
 
+#================================================================
+# Advanced Settings
+# ===============================================================
+
+output_offtargets: False
+report_up_to_n_mismatches: 3  # This may be 0, 1, 2, or 3
+seed_region_is_n_upstream_of_pam: 12
+
+
+input_species_offtarget_dir: 'data/input/cds/cds'
+input_species_offtarget_column: 'cds_file_name'
+
+max_threads: 128
 # ---
+
 scorer: {scorer}
 # ---
 
-# ---
 filter_repetitive: {filter_repetitive}
 # ---
 
-# ---
 mp_threshold: {mp_threshold}
 # ---
 
-# ---
 num_trials: 10000
 # ---
 
-# ---
-cluster_guides: True
-seed_region_is_n_from_pam: 10
+cluster_guides: False
 mismatches_allowed_after_seed_region: 2
 # ---
 '''
@@ -113,12 +127,15 @@ def threaded_split(args):
 
     for run in run_range:
         new_exp_name = f'a7_cv_split_{split}_run_{run}'
+
+        if os.path.exists(f'data/output/test_{new_exp_name}_results.csv'):
+            return
         
         context = {
             'experiment_name': new_exp_name,
             'input_species_path': train_new_path,
             'input_species_path_column': 'cds_file_name',
-            'input_directory': 'data/input/cds/orthogroups/',
+            'input_directory': 'data/input/cds/cds_from_gff/',
             'track': 'track_a',
             'scorer': 'dummy',
             'beta': 0,
@@ -263,7 +280,7 @@ def threaded_split(args):
         os.remove(config_name)
 
 
-df = pd.read_csv('data/input/fourdbs_hi_input_species.csv')
+df = pd.read_csv('data/input/fourdbs_hi_gff_input_species.csv')
 
 # Set the random seed for reproducibility.
 seed = 42
