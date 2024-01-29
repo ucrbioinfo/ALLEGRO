@@ -23,4 +23,14 @@ std::vector<GuideStruct> randomized_rounding(
     std::ostringstream &log_buffer,
     std::string output_directory);
 
+
+std::vector<GuideStruct> sat_solver(
+    std::vector<operations_research::MPVariable *> &feasible_solutions,
+    boost::dynamic_bitset<> all_containers_bitset,
+    std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
+    std::size_t multiplicity,
+    std::size_t beta,
+    std::size_t early_stopping_patience_s,
+    std::ostringstream &log_buffer);
+
 #endif
