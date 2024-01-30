@@ -14,7 +14,8 @@ namespace Kirschtorte
         std::size_t num_containers,
         std::size_t guide_length,
         std::size_t early_stopping_patience_s,
-        std::string output_directory)
+        std::string output_directory,
+        bool enable_solver_diagnostics)
     {
         this->num_containers = num_containers; // A container may be a gene, species, or chromosome.
         this->guide_length = guide_length;     // Twenty (20) for cas9.
@@ -25,6 +26,7 @@ namespace Kirschtorte
         this->bits_required_to_store_seq = guide_length * 2; // Each nucleotide A/C/T/G in a guide
                                                              // can be represented by 2 bits.
         this->all_containers_bitset = boost::dynamic_bitset<>(num_containers);
+        this->enable_solver_diagnostics = enable_solver_diagnostics;
     }
 
     Kirschtorte::~Kirschtorte() {}
@@ -98,7 +100,7 @@ namespace Kirschtorte
         std::size_t multiplicity,
         std::size_t beta)
     {
-        ::google::InitGoogleLogging("ALLEGRO");
+        ::google::InitGoogleLogging("ALLEGRO VON AMIR");
 
         // Create a linear solver with the GLOP backend.
         std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
@@ -122,14 +124,14 @@ namespace Kirschtorte
 
         if (beta > 0)
         {
-            beta_constraint = solver->MakeRowConstraint(-infinity, beta);
+            beta_constraint = solver->MakeRowConstraint(-infinity, beta, "BetaConstraint");
         }
 
-        // Maps a bitset (representing a guide container (gene or species) to
-        // a set of bitsets (representing a protospacer sequence).
+        // Maps a bitset (representing a target container (gene or species) to
+        // a set of bitsets (representing a target sequence).
         std::map<boost::dynamic_bitset<>, std::set<boost::dynamic_bitset<>>> hit_containers;
 
-        // Maps a bitset (representing a protospace sequence) to an OR-TOOLS variable.
+        // Maps a bitset (representing a target sequence) to an OR-TOOLS variable.
         std::map<boost::dynamic_bitset<>, operations_research::MPVariable *> map_seq_to_vars;
 
         auto it = this->coversets.begin();
@@ -248,21 +250,65 @@ namespace Kirschtorte
         }
 
         // Solve the linear program
-        const operations_research::MPSolver::ResultStatus result_status = solver->Solve();
+        operations_research::MPSolver::ResultStatus result_status = solver->Solve();
 
-        // Check that the problem has an optimal solution.
-        this->log_buffer << "Status: " << result_status << std::endl;
-        if (result_status != operations_research::MPSolver::OPTIMAL)
+        // Check that the problem has a solution.
+        if (result_status == operations_research::MPSolver::OPTIMAL)
         {
-            std::cout << RED << "> Status: " << result_status << RESET << std::endl;
-            std::cout << RED << "> The LP does not have an optimal solution! Exiting." << RESET << std::endl;
-            this->log_buffer << "The LP does not have an optimal solution!" << std::endl;
+            std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
+            std::cout << BLUE << "> " << RESET << "The LP problem has an optimal solution." << std::endl;
+            this->log_buffer << "The LP problem has an optimal solution." << std::endl;
 
-            return std::vector<GuideStruct>();
+        }
+        else if (result_status == operations_research::MPSolver::FEASIBLE)
+        {
+            std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
+            std::cout << BLUE << "> " << RESET << "The LP problem has a feasible solution." << std::endl;
+            this->log_buffer << "The LP problem has a feasible solution." << std::endl;
         }
         else
         {
-            std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
+            std::cout << RED << "> Status: " << result_status << RESET << std::endl;
+            std::cout << RED << "> The LP problem cannot be solved." << RESET << std::endl;
+            this->log_buffer << "The LP problem cannot be solved. Status: " << result_status << std::endl;
+
+            if (this->enable_solver_diagnostics)
+            {
+                std::size_t counter = 1;
+
+                std::cout << BLUE << "> " << RESET << "Diagnosing constraints by iteratively relaxing them and resolving..." << std::endl;
+                for (auto constraint : solver->constraints()) {
+                    // Temporarily relax the constraint
+
+                    std::cout << BLUE "\r> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
+                    constraint->SetBounds(-infinity, infinity);
+
+                    result_status = solver->Solve();
+
+                    // Check feasibility
+                    if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+                    {
+                        std::cout << BLUE "> " << RESET << "\nRelaxing constraint " << constraint->name() << " makes the problem feasible. Exiting." << std::endl;
+                        this->log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible. Exiting." << std::endl;
+                        log_info(this->log_buffer, this->output_directory);
+                        return std::vector<GuideStruct>();
+                    }
+
+                    counter++;
+                }
+
+                std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
+                this->log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
+                log_info(this->log_buffer, this->output_directory);
+                return std::vector<GuideStruct>();
+            }
+            else
+            {
+                std::cout << RED << "Exiting. Enable diagnostics in config.yaml to iteratively look for a possibly bad constraint." << RESET << std::endl;
+            }
+
+            log_info(this->log_buffer, this->output_directory);
+            return std::vector<GuideStruct>();
         }
 
         // Save the feasible variables.
@@ -283,7 +329,6 @@ namespace Kirschtorte
                     num_have_fractional_vars++;
                 }
 
-                // std::cout << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
                 this->log_buffer << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
 
                 feasible_solutions.push_back(var);
@@ -293,8 +338,6 @@ namespace Kirschtorte
         map_seq_to_vars.clear();
 
         std::size_t len_solutions = feasible_solutions.size();
-        std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << std::endl;
-        this->log_buffer << "Number of feasible candidate guides: " << len_solutions << std::endl;
         // --------------------------------------------------
         // ---------------------- ILP -----------------------
         // --------------------------------------------------
@@ -306,7 +349,10 @@ namespace Kirschtorte
         {
             if (num_have_fractional_vars > 0)
             {
+                std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
                 std::cout << BLUE << "> " << RESET << "Switching to the ILP solver as " << num_have_fractional_vars << " residual guides remain." << std::endl;
+                this->log_buffer << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
+                
                 // SAT solver with time limit
                 solution_set = sat_solver(
                     feasible_solutions,
@@ -319,7 +365,9 @@ namespace Kirschtorte
             }
             else
             {
+                std::cout << BLUE << "> " << RESET <<  "The final set consists of " << len_solutions << " guides." << std::endl;
                 this->log_buffer << "The final set consists of:" << std::endl;
+
                 for (auto var_ptr : feasible_solutions)
                 {
                     boost::dynamic_bitset<> bitset(var_ptr->name());
@@ -333,7 +381,7 @@ namespace Kirschtorte
                     std::string decoded_bitset = decode_bitset(var_ptr->name());
 
                     GuideStruct guide;
-                    guide.sequence = decoded_bitset;
+                    guide.sequence = decoded_bitset;  // This will be in binary and NOT "ACTGTG..."
                     guide.score = score;
                     guide.species_hit = buffer;
 
