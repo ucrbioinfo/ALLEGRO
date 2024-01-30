@@ -8,6 +8,7 @@ from queue import Queue
 # ALLEGRO CYTHON CUSTOM LIBS.
 # Cythonized custom C++ lib, AKA kirschtorte.so.
 import kirschtorte  # type: ignore
+from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
@@ -39,7 +40,8 @@ cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
             size_t num_containers,
             size_t guide_length,
             size_t early_stopping_patience,
-            string output_directory) except +
+            string output_directory,
+            bool enable_solver_diagnostics) except +
         
         # Google OR-Tools solver code
         # Returns a python-iterable list of tuples. tuple[0] is a plain-text sequence
@@ -79,6 +81,7 @@ cdef class KirschtorteCython:
         cut_multiplicity: int,
         monophonic_threshold: int,
         input_species_csv_file_path: str,
+        enable_solver_diagnostics: bool
         ) -> None:
 
         self.beta = beta
@@ -96,7 +99,7 @@ cdef class KirschtorteCython:
         clusters = self.species_df.shape[0] if track == 'track_a' else records_count_finder.count_records(self.input_directory, self.species_df[self.input_species_path_column].tolist())
 
         # Instantiate a C++ class. The linear programming part of ALLEGRO is done there.
-        self.kirschtorte = new Kirschtorte(clusters, guide_length, early_stopping_patience, output_directory.encode('utf-8'))
+        self.kirschtorte = new Kirschtorte(clusters, guide_length, early_stopping_patience, output_directory.encode('utf-8'), enable_solver_diagnostics)
 
         # To translate indices back to legible names later.
         self.guide_origin: dict[int, str] = dict()
@@ -131,7 +134,8 @@ cdef class KirschtorteCython:
         # Make an object for each species
         for idx, row in self.species_df.iterrows():
             self.guide_origin[idx] = row.species_name
-            
+            total_available_guides_for_this_species = 0
+
             records_path = os.path.join(self.input_directory, row[self.input_species_path_column])
             
             species_object = Species(
@@ -156,12 +160,22 @@ cdef class KirschtorteCython:
                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
                 sys.exit(1)
 
+            total_available_guides_for_this_species += len(guide_objects_list)
+
             for guide_object in guide_objects_list:
                 guide_sequence = guide_object.sequence
                 
                 # interact with C++ -- encode and pass the sequence string, score, and index.
                 self.kirschtorte.encode_and_save_dna(guide_sequence.encode('utf-8'), guide_object.score, idx)
                 
+            if total_available_guides_for_this_species < self.cut_multiplicity:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: The genes in species {row.species_name} ' +
+                f'contain fewer total guides ({total_available_guides_for_this_species}) than ' +
+                f'the requested multiplicity {self.cut_multiplicity} for Track A. ' +
+                f'Either remove this species from your input file, or reduce your multiplicity ' +
+                f'to at most the total available guides for this species ({total_available_guides_for_this_species}) and try again. Exiting.')
+                sys.exit(1)
+
             print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1} species...', end='\r')
         print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all species.')
         print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
@@ -173,7 +187,7 @@ cdef class KirschtorteCython:
         guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
 
         if guide_struct_vector.size() == 0:
-            sys.exit(0)
+            sys.exit(1)
 
         self.solution: list[tuple[str, float, list[str]]] = list()
         for guide_struct in guide_struct_vector:
@@ -218,16 +232,24 @@ cdef class KirschtorteCython:
                 guide_containers_list = species_object.guide_containers_list
 
                 if len(guide_containers_list) == 0:
-                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Species', row.species_name, 'contains no cas9 guides, or ' +
-                    'all of its cas9 guides have been marked as repetitive and thus removed in ' +
-                    'a preprocessing step. Set the filter_repetitive option to False in config.yaml ' +
-                    'to include them. Excluding', row.species_name, 'from further consideration.')
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: Species {row.species_name} contains no cas9 guides, or ' +
+                    f'all of its cas9 guides have been marked as repetitive and thus removed in ' +
+                    f'a preprocessing step. Set the filter_repetitive and/or filter_by_gc option(s) to False in config.yaml ' +
+                    f'to include them, or remove this species from your input file and try again. Exiting.')
+                    sys.exit(1)
             else:
-                print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.')
                 sys.exit(1)
 
             for guide_container in guide_containers_list:
                 guide_objects_list: list[Guide] = guide_container.get_cas9_guides()
+
+                if len(guide_objects_list) < self.cut_multiplicity:
+                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: In species {row.species_name}, gene {guide_container.string_id} ' +
+                    f'contains fewer {self.cas_variant} guides ({len(guide_objects_list)}) than the requested multiplicity ({self.cut_multiplicity}) for Track E. Discarding this gene.')
+
+                    continue
+
                 for guide_object in guide_objects_list:
                     guide_sequence = guide_object.sequence
                     
