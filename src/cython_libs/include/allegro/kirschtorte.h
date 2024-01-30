@@ -19,7 +19,8 @@ namespace Kirschtorte
             std::size_t num_containers,
             std::size_t guide_length,
             std::size_t early_stopping_patience_s,
-            std::string output_directory);
+            std::string output_directory,
+            bool enable_solver_diagnostics);
 
         ~Kirschtorte();
 
@@ -41,6 +42,7 @@ namespace Kirschtorte
         std::size_t bits_required_to_store_seq;
         boost::dynamic_bitset<> all_containers_bitset;
         std::ostringstream log_buffer;
+        bool enable_solver_diagnostics;
 
         // guide bitvector --> (score, bitvector of species it hits)
         // The width of the guide bitvector is 2x guide length AKA this->(std::size_t) bits_required_to_store_seq
