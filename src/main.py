@@ -35,11 +35,11 @@ def main() -> int:
         input_species_csv_file_path=args.input_species_path,
         input_species_path_column=args.input_species_path_column,
         cut_multiplicity=args.multiplicity,
-        monophonic_threshold=args.mp_threshold
+        monophonic_threshold=args.mp_threshold,
+        enable_solver_diagnostics=args.enable_solver_diagnostics
     )
 
-    # TODO Use Bowtie to align these. Detect changes in last modified of the CDS files and rerun bowtie-build if file has been changed.
-    output_csv_path = write_solution.write_solution_to_file_bowtie(
+    output_csv_path, total_time_elapsed = write_solution.write_solution_to_file_bowtie(
         pam='NGG',
         species_names=coversets_obj.species_names,
         solution=coversets_obj.solution,
@@ -71,7 +71,7 @@ def main() -> int:
             pam_length=3
         )
         
-    configurator.log_time()
+    configurator.log_time(total_time_elapsed)
 
     return 0
 
