@@ -1,28 +1,30 @@
-# use bowtie for the final output -- DONE!!!!!!!
+# use bowtie for the final output -- Done
 # implement callback for solver
-# check if solution is correct after reaching time limit and early termination...
-# check if track a works.
+# check if solution is correct after reaching time limit and early termination
+# check if track a works. -- works
 # check if beta works.
-# check if multiplicity works.
+# check if multiplicity works. -- works with track_a | works with track_e
+
+# implemented warnings for when there are fewer guides than the required multiplicity in both tracks
+# fixed bowtie time measurement that was causing the finish time report to be shorter than the actual
+# configurator changes to accomodate removed + new parameters
+# added constraint relaxation for diagnosing infeasible solutions -- required diagnostics set to True
 
 # low prio:
-# fix max_threading arg
-# elapsed time at the end is incorrect. i think it uses all cpu times. all 128 cores. 
-# clean up files and code
+# fix max_threading arg -- Fixed
+# elapsed time at the end is incorrect. i think it uses all cpu times. all 128 cores. -- Fixed
 
 #================================================================
 # General Settings
 #================================================================
-experiment_name: 'bigortho_bowtie_timelimit_sat'
+experiment_name: 'five_hundred_e3'
 # ---
 
 # ---------------------------------------------------------------
 # Path Settings
 # ---------------------------------------------------------------
-input_directory: 'data/input/cds/'
-# input_species_path: 'data/input/cds/hundred_ortho.csv'
-# input_species_path: 'data/input/fourdbs_hi_input_species.csv'   # either a .csv file with the right format, or list of species paths
-input_species_path: 'data/input/big_ortho.csv'
+input_directory: 'data/input/cds/orthogroups'
+input_species_path: 'data/input/five_hundred.csv'
 input_species_path_column: 'cds_file_name'
 # ---
 
@@ -34,26 +36,50 @@ track: 'track_e'
 # ---
 
 # Integer value, default: 1
-# In track_a, every species needs to be targeted at least this many times anywhere.
-# In track_e, each gene needs to be targeted at least this many times in that gene.
-multiplicity: 1
+# In track_a, each species needs to be targeted at least this many times ANYWHERE.
+# In track_e, EACH gene needs to be targeted at least this many times in that gene.
+multiplicity: 3
 # ---
 
 # Integer value, default: 0
 beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as your budget.
-          # Set to 0 to disable: this causes ALLEGRO to find the smallest gRNA set IGNORING scores
+          # Setting to 0 disables beta and causes ALLEGRO to find the smallest gRNA set IGNORING scores
           # (treats all of the gRNAs as equals).
           # If set to the number of input species, the final size of the set may be up to
           # the number of species you have (worst case, one gRNA per species).
-          # If set to a number HIGHER than the number of species, finds the best #beta gRNAs
-          # and ensures each species is hit at least once.
+          # If set to a number HIGHER than the number of species, finds the best #beta gRNAs.
+# ---
+
+# Integer value, measured in seconds, default: 60
+# Only used in solving the ILP if there are remaining feasible guides with
+# fractional values after solving the LP.
+# Stop searching for an optimal solution when the size of the set has stopped
+# improving after this many seconds.
+early_stopping_patience: 120
+# ---
+
+# Boolean: True or False. Default: True
+# If True, discards gRNAs with 5 or more repeated 2-mers.
+# For example, this cas9 gRNA will not be included in the output: ACCACCACCACCACCACCAC
+# since it contains 7 'AC' 2-mers.
+# Also discards gRNAs containing repeating 4- or 5-mers such as AAAAA or TTTT.
+# For example, this cas9 RNA will not be included in the output: AAAAAAAACATCGATTTGGG
+filter_repetitive: True
+
+# Possible values: True or False. Default: True
+# Remove guides with > gc_max and < gc_min from consideration?
+# gc_max and gc_min only work if filter_by_gc is True.
+filter_by_gc: True
+gc_max: 0.7
+gc_min: 0.3
 # ---
 
 #================================================================
 # Advanced Settings
 # ===============================================================
 
-# (Significantly affects running time) output_offtargets default: False
+# Boolean: True or False. Default: False
+# Significantly affects running time.
 # True reports gRNA with off-targets.
 # report_up_to_n_mismatches reports gRNA with fewer <= N mismatches after the seed region.
 output_offtargets: False
@@ -66,48 +92,40 @@ input_species_offtarget_dir: 'data/input/cds/cds'
 input_species_offtarget_column: 'cds_file_name'
 # ---
 
-# Choices: 'dummy' (default), 'ucrispr', 'chopchop_METHOD'
-# Choices for METHOD: "XU_2015", "DOENCH_2014", "DOENCH_2016", "MORENO_MATEOS_2015", "CHARI_2015", "G_20", "KIM_2018", "ALKAN_2018", "ZHANG_2019", "ALL"
-# For example, scorer: "chopchop_doench_2016"
+# Possible choices: 'dummy' (default), 'ucrispr', 'chopchop_METHOD'
+# Choices for METHOD: "XU_2015", "DOENCH_2014", "DOENCH_2016", 
+# "MORENO_MATEOS_2015", "CHARI_2015", "G_20", "KIM_2018", "ALKAN_2018", "ZHANG_2019", "ALL"
+#
+# For example, scorer: 'chopchop_doench_2016'
 # scorer: 'ucrispr' uses a faster implementation of 'chopchop_zhang_2019'
-# dummy assigns a score of 1.0 to all gRNAs
+# dummy assigns a score of 1.0 to all gRNAs, essentially treats all guides as the same.
 scorer: 'dummy'
 # ---
 
-# (True improves running time and memory performance) Default: True
-# If True, discards gRNAs with 5 or more repeated 2-mers.
-# For example, this cas9 gRNA will not be in the output: ACCACCACCACCACCACCAC
-# since it contains 7 'AC' 2-mers.
-# Also discards gRNAs containing repeating 4- or 5-mers such as AAAAA or TTTT.
-filter_repetitive: False
-
-# Remove guides with > gc_max and < gc_min from consideration?
-# gc_max and gc_min only work if filter_by_gc is True.
-filter_by_gc: True
-gc_max: 0.7
-gc_min: 0.3
-# ---
-
-# (Affects running time and memory performance) Default: 4
+# Integer value, default: 4
+# Affects running time and memory performance.
 # A higher number decreases running time and reduces memory consumption,
 # especially when you have millions of gRNAs.
 # Pre-select gRNAs that hit only up to this number of species to act as representatives
-# for these species. Set to 0 to disable and save all gRNAs to memory (memory inefficient).
+# for these species. Set to 0 to disable and save all gRNAs to memory.
 mp_threshold: 0
 # ---
 
-# (Affects running time performance) Number of randomized rounding trials
-# Default: 10000
-# A higher number increases running time but attempts to find a smaller cover set.
-# Integer value: Only used if the number of feasible gRNAs is above the exhaustive_threshold.
-# How many times to run the randomized rounding algorithm? Any value under 1 disables trials.
-# num_trials: 1
-early_stopping_patience: 60
-# ---
-
-# (Affects running time performance) Post-processing. Default: True, 2
+# Boolean: True or False. Default: False
+# Significantly affects running time performance.
 # Compresses the output gRNA set by clustering similar gRNAs.
-# Adds a new column 'cluster' to output.csv
+# Adds a new column called 'cluster' to output/EXPERIMENT_NAME/EXPERIMENT_NAME.csv
 cluster_guides: False
-mismatches_allowed_after_seed_region: 2
+# Integer value, default: 2
+mismatches_allowed_after_seed_region: 2  
+
+# Boolean: True or False. Default: False
+# When a problem is deemed unsolvable (e.g., Status: MPSOLVER_INFEASIBLE)
+# Enabling diagnostics will attempt to relax each constraint and resolve the problem.
+# If the new problem with the relaxed constraint is solvable, ALLEGRO outputs 
+# the culprit gene/species.
+# Currently, to stop this process, you need to find the PID of 
+# the python process running ALLEGRO using: $ top
+# and kill it manually: $ kill -SIGKILL PID
+enable_solver_diagnostics: True
 # ---
