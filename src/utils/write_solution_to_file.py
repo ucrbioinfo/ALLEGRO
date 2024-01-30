@@ -18,7 +18,7 @@ def write_solution_to_file_bowtie(
     paths_csv_column_name: str,
     species_names_csv_column_name: str,
     output_directory: str,
-    ) -> str:
+    ) -> tuple[str, str]:
 
     output_txt_path = os.path.join(output_directory, experiment_name + '.txt')
     output_library_path = os.path.join(output_directory, experiment_name + '_library.txt')
@@ -79,17 +79,21 @@ def write_solution_to_file_bowtie(
         for g in library:
             f.write(f'{g}\n')
 
+    total_time_elapsed = 0.0
+
     for _, row in input_df.iterrows():
         name = row[species_names_csv_column_name]
         df_file_path = row[paths_csv_column_name]
         full_path = os.path.join(input_directory, df_file_path)
 
-        bowtie_sequences, bowtie_strands, reference_names, orthos, bowtie_start_positions = guide_finder.align_guides_to_seq_bowtie(
+        bowtie_sequences, bowtie_strands, reference_names, orthos, bowtie_start_positions, time_elapsed = guide_finder.align_guides_to_seq_bowtie(
             name=name,
             output_align_temp_path=output_align_temp_path,
             file_path=full_path,
             output_directory=output_bowtie_temp_dir)
         
+        total_time_elapsed += time_elapsed
+
         bowtie_scores = [solution_dict[s[:-len(pam)]][0] for s in bowtie_sequences]
 
         sequences.extend(bowtie_sequences)
@@ -118,7 +122,7 @@ def write_solution_to_file_bowtie(
 
     shutil.rmtree(output_bowtie_temp_dir)
 
-    return output_csv_path
+    return output_csv_path, total_time_elapsed
 
 # DEPRECATED
 # def write_solution_to_file(
