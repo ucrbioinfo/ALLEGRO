@@ -51,7 +51,7 @@ std::vector<GuideStruct> sat_solver(
         absl::Status status = solver->SetNumThreads(processor_count);
 
         if (!status.ok()) {
-            std::cout << RED << "> " << RESET << "Error setting number of threads: " << status.message() << std::endl;
+            std::cout << RED << "> Error setting number of threads: " << RESET << status.message() << std::endl;
         }
     }
 
@@ -160,10 +160,10 @@ std::vector<GuideStruct> sat_solver(
     }
 
     // Solve the integer linear program
-    std::cout << BLUE << "> " << RESET << "Solving the ILP within given time limit of " << early_stopping_patience_s << " seconds..." << std::endl;
+    std::cout << BLUE << "> " << RESET << "Solving the ILP within the given time limit of " << early_stopping_patience_s << " seconds..." << std::endl;
     const operations_research::MPSolver::ResultStatus result_status = solver->Solve();
 
-    // Check that the problem has an optimal solution.
+    // Check that the problem has a solution.
     log_buffer << "Status: " << result_status << std::endl;
     if (result_status == operations_research::MPSolver::OPTIMAL)
     {
@@ -180,8 +180,9 @@ std::vector<GuideStruct> sat_solver(
     else
     {
         std::cout << RED << "> Status: " << result_status << RESET << std::endl;
-        std::cout << RED << "> The ILP cannot be solved." << RESET << std::endl;
+        std::cout << RED << "> The ILP cannot be solved. Exiting." << RESET << std::endl;
         log_buffer << "The ILP cannot be solved." << std::endl;
+        return std::vector<GuideStruct>();
     }
 
     std::vector<operations_research::MPVariable *> sat_feasible_solutions;
