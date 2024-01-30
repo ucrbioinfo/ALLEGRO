@@ -4,7 +4,7 @@
 import re
 import os
 import sys
-import shutil
+import time
 import pandas
 import subprocess
 from io import StringIO
@@ -172,7 +172,7 @@ class GuideFinder:
         output_align_temp_path: str,
         file_path: str,
         output_directory: str,
-        ) -> list[tuple[str, str, int, int, str, str]]:
+        ) -> tuple[list[str], list[str], list[str], list[str], list[str], float]:
 
         base_path = os.getcwd()
         index_basename = os.path.join(output_directory, name + '_idx')
@@ -180,6 +180,7 @@ class GuideFinder:
         bowtie_build_command = ['bowtie-build', '--quiet', '-f', base_path + '/' + file_path, base_path + '/' + index_basename]
         bowtie_command = ['bowtie', '-a', '-v', '0', '--quiet', '--suppress', '5,6,7,8', '-f', base_path + '/' + index_basename, base_path + '/' + output_align_temp_path]
 
+        start_time = time.time()
         process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         _, stderr = process.communicate()
 
@@ -188,6 +189,11 @@ class GuideFinder:
 
         process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
+
+        end_time = time.time()
+
+        # Calculate the elapsed time in seconds
+        elapsed_seconds = end_time - start_time
 
         # Check for any errors
         if stderr: print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie error: {stderr.decode()}')
@@ -213,7 +219,7 @@ class GuideFinder:
                 file_path = os.path.join(output_directory, filename)
                 os.remove(file_path)
 
-        return sequences, strands, reference_names, orthos, start_positions
+        return sequences, strands, reference_names, orthos, start_positions, elapsed_seconds
 
     def locate_guides_in_sequence(
         self,
