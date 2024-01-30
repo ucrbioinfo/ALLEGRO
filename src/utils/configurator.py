@@ -64,7 +64,7 @@ class Configurator:
         )
 
         help = "- Which scoring method to use? Default: 'dummy'\n" + \
-        "- Options are 'chopchop', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
+        "- Options are 'chopchop_METHOD', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
         parser.add_argument(
             '--scorer',
             type=str,
@@ -93,7 +93,16 @@ class Configurator:
             default=True,
             help=help
         )
-
+        
+        help = "- Boolean: True or False. Default: False\n" + \
+        " - When a problem is deemed unsolvable by the LP solver (e.g., Status: MPSOLVER_INFEASIBLE), enabling diagnostics will attempt to relax each constraint and resolve the problem. If the new problem with the relaxed constraint is solvable, ALLEGRO outputs the internal name of the culprit gene/species. Currently, to stop this process, you need to find the PID of the python process running ALLEGRO using: $ top and kill it manually: $ kill -SIGKILL PID"
+        parser.add_argument(
+            '--enable_solver_diagnostics',
+            type=bool,
+            default=False,
+            help=help
+        )
+        
         # help = '''
         # - Which cas endonuclease to use? Default: 'cas9'. Options are: 'cas9'.
         # '''
@@ -168,25 +177,6 @@ class Configurator:
             type=str,
             help=help,
         )
-
-        # help = '''
-        # - Search all combinatorial possibilities unless there are more feasible solutions than this (then uses randomized rounding).
-        # - The number of calculations grows exponentially.
-        # - ONLY increase this parameter when the number of guides in under about twenty.
-        # '''
-        # parser.add_argument(
-        #     '--exhaustive_threshold',
-        #     type=int,
-        #     help=help,
-        # )
-
-        # help = "- Only used if the number of feasible guides is above the exhaustive_threshold.\n" + \
-        # "- How many times to run the randomized rounding algorithm?"
-        # parser.add_argument(
-        #     '--num_trials',
-        #     type=int,
-        #     help=help,
-        # )
 
         help = "- Only used in solving the ILP if there are remaining feasible guides with fractional values after solving the LP.\n" + \
         "- Stop searching for an optimal solution when the size of the set has stopped improving after this many seconds."
@@ -327,13 +317,9 @@ class Configurator:
 
         if self.args.filter_repetitive == True:
             print(f'{bcolors.BLUE}>{bcolors.RESET} filter_repetitive is set to True. Filtering guides with repetitive sequences.')
-
-        # if self.args.num_trials <= 0:
-        #     print(f'{bcolors.BLUE}>{bcolors.RESET} num_trials is {self.args.num_trials} <= 0. Auto adjusting to 1 and running randomized rounding only once. ALLEGRO may potentially be able to find a smaller sized solution with larger trial count.')
-        #     self.args.num_trials = 1
             
         if self.args.early_stopping_patience < 1:
-            print(f'{bcolors.BLUE}>{bcolors.RESET} early_stopping_patience is {self.args.num_trials} < 1. Auto adjusting to 1. ALLEGRO may be able to find a smaller sized solution with a larger patience.')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} early_stopping_patience is {self.args.num_trials} < 1 second. Auto adjusting to 1. ALLEGRO may be able to find a smaller sized solution with a larger patience.')
             self.args.early_stopping_patience = 1
 
         scorer_settings = self.configure_scorer_settings()
@@ -356,11 +342,11 @@ class Configurator:
         return output_txt_path
 
 
-    def log_time(self):
+    def log_time(self, total_time_elapsed):
         end_time = time.thread_time()
 
         # Calculate the elapsed time in seconds
-        elapsed_seconds = end_time - self.start_time
+        elapsed_seconds = end_time - self.start_time + total_time_elapsed
 
         # Convert elapsed_seconds to a timedelta object
         time_elapsed = timedelta(seconds=elapsed_seconds)
