@@ -63,12 +63,27 @@ class Configurator:
             help=help
         )
 
-        help = "- Which scoring method to use? Default: 'dummy'\n" + \
-        "- Options are 'chopchop_METHOD', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
+        help = "- Files in this directory must end with .fna."
         parser.add_argument(
-            '--scorer',
+            '--input_directory',
             type=str,
-            default='dummy',
+            help=help,
+        )
+
+
+        help = "- The .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
+        "- Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds."
+        parser.add_argument(
+            '--input_species_path',
+            type=str,
+            help=help,
+        )
+
+        help = "- The desired column name of the .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
+        "- Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds."
+        parser.add_argument(
+            '--input_species_path_column',
+            type=str,
             help=help,
         )
 
@@ -79,6 +94,31 @@ class Configurator:
         parser.add_argument(
             '--track',
             type=str,
+            help=help,
+        )
+
+        help = "- Ensures to cut each species/gene at least this many times. Default: 1"
+        parser.add_argument(
+            '--multiplicity',
+            type=int,
+            default=1,
+            help=help,
+        )
+
+        help = "- Beta represents a loose budge or threshold for the maximum number of guides you would like in the final covering set.\n" + \
+        "- This is *not* a guaranteed maximum due to the hardness of the problem. See the topic on Integrality Gap."
+        parser.add_argument(
+            '--beta',
+            type=int,
+            default=0,
+            help=help,
+        )
+
+        help = "- Only used in solving the ILP if there are remaining feasible guides with fractional values after solving the LP.\n" + \
+        "- Stop searching for an optimal solution when the size of the set has stopped improving after this many seconds."
+        parser.add_argument(
+            '--early_stopping_patience',
+            type=int,
             help=help,
         )
 
@@ -93,32 +133,84 @@ class Configurator:
             default=True,
             help=help
         )
-        
-        help = "- Boolean: True or False. Default: False\n" + \
-        " - When a problem is deemed unsolvable by the LP solver (e.g., Status: MPSOLVER_INFEASIBLE), enabling diagnostics will attempt to relax each constraint and resolve the problem. If the new problem with the relaxed constraint is solvable, ALLEGRO outputs the internal name of the culprit gene/species. Currently, to stop this process, you need to find the PID of the python process running ALLEGRO using: $ top and kill it manually: $ kill -SIGKILL PID"
+
         parser.add_argument(
-            '--enable_solver_diagnostics',
+            '--filter_by_gc',
             type=bool,
-            default=False,
+            default=True,
+        )
+
+        parser.add_argument(
+            '--gc_max',
+            type=float,
+            default=0.7,
+        )
+
+        parser.add_argument(
+            '--gc_min',
+            type=float,
+            default=0.3,
+        )
+
+        help = "- True/False boolean, significantly affects running time. True generates a report of gRNA with off-targets."
+        parser.add_argument(
+            '--output_offtargets',
+            type=bool,
             help=help
         )
-        
-        # help = '''
-        # - Which cas endonuclease to use? Default: 'cas9'. Options are: 'cas9'.
-        # '''
-        # parser.add_argument(
-        #     '--cas',
-        #     type=str,
-        #     default='cas9',
-        #     help=help,
-        # )
 
-        help = "- Ensures to cut each species/gene at least this many times. Default: 1"
+        help = "- Generate a report with gRNA with fewer <= N mismatches after the seed region.\n" + \
+        "- May be 0, 1, 2, or 3."
         parser.add_argument(
-            '--multiplicity',
+            '--report_up_to_n_mismatches',
             type=int,
-            default=1,
             help=help,
+            default=3
+        )
+
+        help = "- Requires output_offtargets=True. In the generated report, discards gRNA with off-targets mismatching " + \
+        "in the seed region upstream of PAM. For example, the following will NOT be considered an off-target " + \
+        "when this value is set to 1:\n" + \
+        "- Target: ACTGACTGACTGACTGACTTAGG\n" + \
+        "- gRNA:   ACTGACTGACTGACTGACTGAGG\n" + \
+        "                             ^\n" + \
+        "- Since A and T mismatch in the seed region."
+        parser.add_argument(
+            '--seed_region_is_n_upstream_of_pam',
+            type=int,
+            help=help
+        )
+
+        help = '- The directory in which the input csv file with the name of the background fastas to check off-targets against lives.'
+        parser.add_argument(
+            '--input_species_offtarget_dir',
+            type=str,
+            help=help,
+        )
+
+        help = '- The column in the input csv file with the name of the background fasta to check off-targets against.'
+        parser.add_argument(
+            '--input_species_offtarget_column',
+            type=str,
+            help=help,
+        )
+
+        help = "- Which scoring method to use? Default: 'dummy'\n" + \
+        "- Options are 'chopchop_METHOD', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
+        parser.add_argument(
+            '--scorer',
+            type=str,
+            default='dummy',
+            help=help,
+        )
+
+        help = "- A higher number increases running time while decreasing memory consumption.\n" + \
+        "- Pre-select guides that hit only up to this number of species/genes to act as representatives for them."
+        parser.add_argument(
+            '--mp_threshold',
+            type=int,
+            help=help,
+            default=0
         )
 
         help = "- (Affects performance) Post-processing. Default: False\n" + \
@@ -139,31 +231,16 @@ class Configurator:
             default=2,
             help=help,
         )
-
-        help = "- Beta represents a loose budge or threshold for the maximum number of guides you would like in the final covering set.\n" + \
-        "- This is *not* a guaranteed maximum due to the hardness of the problem. See the topic on Integrality Gap."
-        parser.add_argument(
-            '--beta',
-            type=int,
-            default=0,
-            help=help,
-        )
-
-        help = "- The .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
-        "- Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds."
-        parser.add_argument(
-            '--input_species_path',
-            type=str,
-            help=help,
-        )
-
-        help = "- The desired column name of the .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
-        "- Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds."
-        parser.add_argument(
-            '--input_species_path_column',
-            type=str,
-            help=help,
-        )
+        
+        # help = '''
+        # - Which cas endonuclease to use? Default: 'cas9'. Options are: 'cas9'.
+        # '''
+        # parser.add_argument(
+        #     '--cas',
+        #     type=str,
+        #     default='cas9',
+        #     help=help,
+        # )
 
         parser.add_argument(
             '--output_directory',
@@ -171,54 +248,12 @@ class Configurator:
             default="data/output/"
         )
 
-        help = "- Files in this directory must end with .fna."
+        help = "- Boolean: True or False. Default: False\n" + \
+        " - When a problem is deemed unsolvable by the LP solver (e.g., Status: MPSOLVER_INFEASIBLE), enabling diagnostics will attempt to relax each constraint and resolve the problem. If the new problem with the relaxed constraint is solvable, ALLEGRO outputs the internal name of the culprit gene/species. Currently, to stop this process, you need to find the PID of the python process running ALLEGRO using: $ top and kill it manually: $ kill -SIGKILL PID"
         parser.add_argument(
-            '--input_directory',
-            type=str,
-            help=help,
-        )
-
-        help = "- Only used in solving the ILP if there are remaining feasible guides with fractional values after solving the LP.\n" + \
-        "- Stop searching for an optimal solution when the size of the set has stopped improving after this many seconds."
-        parser.add_argument(
-            '--early_stopping_patience',
-            type=int,
-            help=help,
-        )
-
-        help = "- A higher number increases running time while decreasing memory consumption.\n" + \
-        "- Pre-select guides that hit only up to this number of species/genes to act as representatives for them."
-        parser.add_argument(
-            '--mp_threshold',
-            type=int,
-            help=help,
-        )
-
-        help = "- Generate a report with gRNA with fewer <= N mismatches after the seed region.\n" + \
-        "- May be 0, 1, 2, or 3."
-        parser.add_argument(
-            '--report_up_to_n_mismatches',
-            type=int,
-            help=help
-        )
-
-        help = "- True/False boolean, significantly affects running time. True generates a report of gRNA with off-targets."
-        parser.add_argument(
-            '--output_offtargets',
+            '--enable_solver_diagnostics',
             type=bool,
-            help=help
-        )
-
-        help = "- Requires output_offtargets=True. In the generated report, discards gRNA with off-targets mismatching " + \
-        "in the seed region upstream of PAM. For example, the following will NOT be considered an off-target " + \
-        "when this value is set to 1:\n" + \
-        "- Target: ACTGACTGACTGACTGACTTAGG\n" + \
-        "- gRNA:   ACTGACTGACTGACTGACTGAGG\n" + \
-        "                             ^\n" + \
-        "- Since A and T mismatch in the seed region."
-        parser.add_argument(
-            '--seed_region_is_n_upstream_of_pam',
-            type=int,
+            default=False,
             help=help
         )
         
@@ -275,6 +310,25 @@ class Configurator:
 
             self.args.chopchop_scoring_method = join.upper()
             self.args.scorer = 'chopchop'
+
+        if self.args.gc_max < self.args.gc_min:
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: gc_max ({self.args.gc_max}) is set to be lower than gc_min ({self.args.gv_min}). Edit these values in the config. Exiting.')
+            sys.exit(1)
+
+        if self.args.gc_min < 0:
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: gc_min ({self.args.gc_min}) is set to negative. Auto adjusting to 0.')
+            self.args.gc_min = 0
+
+        if self.args.seed_region_is_n_upstream_of_pam < 0:
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: seed_region_is_n_upstream_of_pam ({self.args.seed_region_is_n_upstream_of_pam}) is set to negative. Auto adjusting to 0.')
+            self.args.seed_region_is_n_upstream_of_pam = 0
+
+        if self.args.report_up_to_n_mismatches > 3:
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: report_up_to_n_mismatches ({self.args.report_up_to_n_mismatches}) is set to a value higher than 3. It may only be between 0 to 3. Adjust this value in the config and try again.')
+
+        if self.args.mismatches_allowed_after_seed_region < 0:
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: mismatches_allowed_after_seed_region ({self.args.mismatches_allowed_after_seed_region}) is set to negative. Auto adjusting to 0.')
+            self.args.mismatches_allowed_after_seed_region = 0
 
         if self.args.track not in ['track_a', 'track_e']:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown track "{self.args.track}" selected in config.yaml. Exiting.')
