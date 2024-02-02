@@ -131,6 +131,8 @@ cdef class KirschtorteCython:
 
 
     def track_a(self) -> list[tuple[str, float, list[str]]]:
+        total_number_of_guides: int = 0
+
         # Make an object for each species
         for idx, row in self.species_df.iterrows():
             self.guide_origin[idx] = row.species_name
@@ -152,15 +154,17 @@ cdef class KirschtorteCython:
                 guide_objects_list: list[Guide] = species_object.get_guides_from_containers()
 
                 if len(guide_objects_list) == 0:
-                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Species', row.species_name, 'contains no Cas9 guides, or ' +
-                    'all of its Cas9 guides have been marked as repetitive and thus removed in ' +
-                    'a preprocessing step. Set the filter_repetitive option to False in config.yaml ' +
-                    'to include them. Excluding', row.species_name, 'from further consideration.')
+                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Species {row.species_name} contains no Cas9 guides, or ' +
+                    f'all of its Cas9 guides have been marked as repetitive and thus removed in ' +
+                    f'a preprocessing step. First, check the input file. Set the filter_repetitive and/or filter_by_gc option(s) to False in config.yaml ' +
+                    f'to include them, or remove this species from your input file and try again. Exiting.')
+                    continue
             else:
                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
                 sys.exit(1)
 
             total_available_guides_for_this_species += len(guide_objects_list)
+            total_number_of_guides += len(guide_objects_list)
 
             for guide_object in guide_objects_list:
                 guide_sequence = guide_object.sequence
@@ -177,7 +181,7 @@ cdef class KirschtorteCython:
                 sys.exit(1)
 
             print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1} species...', end='\r')
-        print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all species.')
+        print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all species containing a total of {total_number_of_guides} guides.')
         print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
 
         # Deallocate.
@@ -214,8 +218,11 @@ cdef class KirschtorteCython:
 
     def track_e(self) -> list[tuple[str, float, list[str]]]:
         container_idx: int = 0
+        total_number_of_guides: int = 0
         
         for _, row in self.species_df.iterrows():  # Make an object for each species.
+            total_available_guides_for_this_species = 0
+
             records_path = os.path.join(self.input_directory, row[self.input_species_path_column])
             
             species_object = Species(
@@ -234,7 +241,7 @@ cdef class KirschtorteCython:
                 if len(guide_containers_list) == 0:
                     print(f'{bcolors.RED}> Error{bcolors.RESET}: Species {row.species_name} contains no cas9 guides, or ' +
                     f'all of its cas9 guides have been marked as repetitive and thus removed in ' +
-                    f'a preprocessing step. Set the filter_repetitive and/or filter_by_gc option(s) to False in config.yaml ' +
+                    f'a preprocessing step. First, check the input file. Set the filter_repetitive and/or filter_by_gc option(s) to False in config.yaml ' +
                     f'to include them, or remove this species from your input file and try again. Exiting.')
                     sys.exit(1)
             else:
@@ -249,6 +256,9 @@ cdef class KirschtorteCython:
                     f'contains fewer {self.cas_variant} guides ({len(guide_objects_list)}) than the requested multiplicity ({self.cut_multiplicity}) for Track E. Discarding this gene.')
 
                     continue
+                
+                total_number_of_guides += len(guide_objects_list)
+                total_available_guides_for_this_species += len(guide_objects_list)
 
                 for guide_object in guide_objects_list:
                     guide_sequence = guide_object.sequence
@@ -266,7 +276,17 @@ cdef class KirschtorteCython:
                 container_idx += 1
                 
                 print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {container_idx} genes...', end='\r')
-        print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all genes.')
+
+            if total_available_guides_for_this_species < self.cut_multiplicity:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: The genes in species {row.species_name} ' +
+                f'contain fewer total guides ({total_available_guides_for_this_species}) than ' +
+                f'the requested multiplicity {self.cut_multiplicity} for Track E. ' +
+                f'Either remove this species from your input file, or reduce your multiplicity ' +
+                f'to at most the total available guides for this species ({total_available_guides_for_this_species}) and try again. Exiting.')
+                sys.exit(1)
+                
+        print()
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Created coversets for all species containing a total of {total_number_of_guides} guides.')
         print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
 
         # Deallocate.
@@ -293,7 +313,7 @@ cdef class KirschtorteCython:
             
             # Find all the indices where you have a '1' and transform back to actual species names.
             for idx in [idx.start() for idx in re.finditer('1', binary_hits)]:
-                names_hits.append(self.guide_origin[idx])  # TODO critical 
+                names_hits.append(self.guide_origin[idx])
                 # -- need to know exactly where the guide came from. not just its species
             
             # E.g., ('ACCTGAG...', 6, ['saccharomyces, LYS2', 'yarrowia, URA3', 'kmarx, LYS3']).
