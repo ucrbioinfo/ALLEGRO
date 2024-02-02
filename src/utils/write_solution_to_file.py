@@ -30,7 +30,6 @@ def write_solution_to_file_bowtie(
     if not os.path.exists(output_bowtie_temp_dir):
         os.mkdir(output_bowtie_temp_dir)
 
-    print(f'{bcolors.BLUE}>{bcolors.RESET} Writing to file: {output_txt_path}')
     with open(output_txt_path, 'w') as f:
 
         for tup in solution:
@@ -54,8 +53,6 @@ def write_solution_to_file_bowtie(
 
     guide_finder = GuideFinder()
     input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
-
-    print(f'{bcolors.BLUE}>{bcolors.RESET} Locating the solution guides in the input species to generate the final report...')
     
     solution_dict = dict()
 
@@ -67,7 +64,7 @@ def write_solution_to_file_bowtie(
         if seq not in solution_dict:
             solution_dict[seq] = (score, hit_species)
         else:
-            print('Dev error in utils/write_solution_to_file. Not your fault. Just bad coding.')
+            print('Dev error in utils/write_solution_to_file.py. Not your fault. Just bad coding.')
 
     library = list(solution_dict.keys())
     with open(output_align_temp_path, 'w') as f:
@@ -78,15 +75,23 @@ def write_solution_to_file_bowtie(
     with open(output_library_path, 'w') as f:
         for g in library:
             f.write(f'{g}\n')
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Your library is ready. Find it in {output_library_path}.')
 
     total_time_elapsed = 0.0
 
-    for _, row in input_df.iterrows():
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Aligning the library against the input species to generate the final report...')
+
+    for idx, row in input_df.iterrows():
         name = row[species_names_csv_column_name]
         df_file_path = row[paths_csv_column_name]
         full_path = os.path.join(input_directory, df_file_path)
 
-        bowtie_sequences, bowtie_strands, reference_names, orthos, bowtie_start_positions, time_elapsed = guide_finder.align_guides_to_seq_bowtie(
+        (bowtie_sequences,
+         bowtie_strands, 
+         reference_names, 
+         orthos, 
+         bowtie_start_positions, 
+         time_elapsed) = guide_finder.align_guides_to_seq_bowtie(
             name=name,
             output_align_temp_path=output_align_temp_path,
             file_path=full_path,
@@ -105,6 +110,8 @@ def write_solution_to_file_bowtie(
         species_list.extend([name] * len(bowtie_sequences))
         ortho_list.extend(orthos)
 
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1}/{len(input_df)} species...', end='\r')
+    print()
     pandas.DataFrame(list(zip(
         sequences,
         species_list,

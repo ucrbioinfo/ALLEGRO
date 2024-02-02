@@ -38,15 +38,14 @@ std::vector<GuideStruct> sat_solver(
     
     // solver->EnableOutput();
     
-    int time_limit_ms = early_stopping_patience_s * 1000; // Time limit in milliseconds
-    absl::Duration time_limit = absl::Milliseconds(time_limit_ms); // Convert milliseconds to absl::Duration
+    int time_limit_ms = early_stopping_patience_s * 1000;  // Time limit in milliseconds
+    absl::Duration time_limit = absl::Milliseconds(time_limit_ms);  // Convert milliseconds to absl::Duration
     solver->SetTimeLimit(time_limit);
 
-    const double infinity = solver->infinity(); // Used for constraints to denote >= 1 and <= 1
+    const double infinity = solver->infinity();  // Used for constraints to denote >= 1 and <= 1
 
     // May return 0 when not able to detect
     const auto processor_count = std::thread::hardware_concurrency();
-
     if (processor_count > 1) {
         absl::Status status = solver->SetNumThreads(processor_count);
 
@@ -168,20 +167,20 @@ std::vector<GuideStruct> sat_solver(
     if (result_status == operations_research::MPSolver::OPTIMAL)
     {
         std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
-        std::cout << BLUE << "> " << RESET << "The ILP has an optimal solution!" << std::endl;
+        std::cout << BLUE << "> " << RESET << "Found an optimal solution!" << std::endl;
         log_buffer << "The ILP has an optimal solution!" << std::endl;
     }
     else if (result_status == operations_research::MPSolver::FEASIBLE)
     {
         std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
-        std::cout << BLUE << "> " << RESET << "The ILP has a feasible solution." << std::endl;
+        std::cout << BLUE << "> " << RESET << "Found a feasible solution. Increasing the patience may result in finding an optimal solution." << std::endl;
         log_buffer << "The ILP has a feasible solution." << std::endl;
     }
     else
     {
         std::cout << RED << "> Status: " << result_status << RESET << std::endl;
-        std::cout << RED << "> The ILP cannot be solved. Exiting." << RESET << std::endl;
-        log_buffer << "The ILP cannot be solved." << std::endl;
+        std::cout << RED << "> The ILP problem cannot be solved. Exiting." << RESET << std::endl;
+        log_buffer << "The ILP problem cannot be solved." << std::endl;
         return std::vector<GuideStruct>();
     }
 

@@ -1,30 +1,41 @@
-# use bowtie for the final output -- Done
-# implement callback for solver
+# implement callback for solver -- 
 # check if solution is correct after reaching time limit and early termination
-# check if track a works. -- works
 # check if beta works.
-# check if multiplicity works. -- works with track_a | works with track_e
 
-# implemented warnings for when there are fewer guides than the required multiplicity in both tracks
-# fixed bowtie time measurement that was causing the finish time report to be shorter than the actual
-# configurator changes to accomodate removed + new parameters
-# added constraint relaxation for diagnosing infeasible solutions -- required diagnostics set to True
+# minorg threads!
 
-# low prio:
-# fix max_threading arg -- Fixed
-# elapsed time at the end is incorrect. i think it uses all cpu times. all 128 cores. -- Fixed
+# e1 ran with 2074 species for *7 hours*: 2757 guides vs. 2761 for 1 minute
+# check how many guides these sets share WHATS GOING ON
+
+# showed on monday that the number for 2434 species was 2569 for 1 minute. This was
+# with repetitive guides allowed: bigortho_bowtie_timelimit_sat_1
+# filter_repetitive: False
+# filter_by_gc: True
+# gc_max: 0.7
+# gc_min: 0.3
+# ran again with 2434 1 minute: 2577 guides
+
+# are reptitive guides such as AAAAAAAACATCGATTTGGG at all interesting?
+# Guide ATTTTCGAGGATCGCAAGTT targets 40 genes/chromosomes.
+
+# not repetitive but woo:
+# Guide CTACCACGGCCTCAAGTTCT targets 179 genes/chromosomes.
+# Guide CATCTGCAGATGATTGCCAT targets 169 genes/chromosomes.
+# Guide CATTTGCAGATGATTGCCAT targets 137 genes/chromosomes.
+
+# checked mp threshold. it reduces the stored-in-mem guides massively see testMP0 vs testMP5
 
 #================================================================
 # General Settings
 #================================================================
-experiment_name: 'five_hundred_e3'
+experiment_name: '700_ascomycetes_xcript_a1_gff_ilp_mp10'
 # ---
 
 # ---------------------------------------------------------------
 # Path Settings
 # ---------------------------------------------------------------
-input_directory: 'data/input/cds/orthogroups'
-input_species_path: 'data/input/five_hundred.csv'
+input_directory: 'data/input/cds/cds_from_gff'
+input_species_path: 'data/input/seven_hundo_input_species.csv'
 input_species_path_column: 'cds_file_name'
 # ---
 
@@ -32,13 +43,13 @@ input_species_path_column: 'cds_file_name'
 # track_a: any of the containers can be targeted.
 # There will be multiplicity targets per container.
 # track_e: each container has to be targeted at least multiplicity times,
-track: 'track_e'
+track: 'track_a'
 # ---
 
 # Integer value, default: 1
 # In track_a, each species needs to be targeted at least this many times ANYWHERE.
 # In track_e, EACH gene needs to be targeted at least this many times in that gene.
-multiplicity: 3
+multiplicity: 1
 # ---
 
 # Integer value, default: 0
@@ -55,7 +66,7 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
 # fractional values after solving the LP.
 # Stop searching for an optimal solution when the size of the set has stopped
 # improving after this many seconds.
-early_stopping_patience: 120
+early_stopping_patience: 10800
 # ---
 
 # Boolean: True or False. Default: True
@@ -102,13 +113,13 @@ input_species_offtarget_column: 'cds_file_name'
 scorer: 'dummy'
 # ---
 
-# Integer value, default: 4
+# Integer value, default: 5
 # Affects running time and memory performance.
 # A higher number decreases running time and reduces memory consumption,
 # especially when you have millions of gRNAs.
 # Pre-select gRNAs that hit only up to this number of species to act as representatives
 # for these species. Set to 0 to disable and save all gRNAs to memory.
-mp_threshold: 0
+mp_threshold: 10
 # ---
 
 # Boolean: True or False. Default: False
@@ -116,8 +127,7 @@ mp_threshold: 0
 # Compresses the output gRNA set by clustering similar gRNAs.
 # Adds a new column called 'cluster' to output/EXPERIMENT_NAME/EXPERIMENT_NAME.csv
 cluster_guides: False
-# Integer value, default: 2
-mismatches_allowed_after_seed_region: 2  
+mismatches_allowed_after_seed_region: 2  # Integer value, default: 2
 
 # Boolean: True or False. Default: False
 # When a problem is deemed unsolvable (e.g., Status: MPSOLVER_INFEASIBLE)
@@ -127,5 +137,5 @@ mismatches_allowed_after_seed_region: 2
 # Currently, to stop this process, you need to find the PID of 
 # the python process running ALLEGRO using: $ top
 # and kill it manually: $ kill -SIGKILL PID
-enable_solver_diagnostics: True
+enable_solver_diagnostics: False
 # ---

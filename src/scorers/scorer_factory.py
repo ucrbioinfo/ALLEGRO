@@ -14,7 +14,7 @@ class ScorerFactory:
         scorer_name: str,
         scorer_settings: dict,
         ) -> Scorer:
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Selected scorer:', scorer_name)
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Selected scorer: {scorer_name}.')
 
         match scorer_name:
             case 'chopchop':
@@ -39,5 +39,5 @@ class ScorerFactory:
                 return uCRISPR_scorer(scorer_settings)
             
             case _:
-                print(f'{bcolors.RED}> Warning{bcolors.RESET}: Unknown scorer selected. Aborting.')
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown scorer selected. Exiting.')
                 raise ValueError
