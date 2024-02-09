@@ -6,6 +6,8 @@
 #include "allegro/definitions.h"
 #include "allegro/decode_bitset.h"
 #include "allegro/ilp_approximators.h"
+
+#include "absl/time/time.h"
 #include "ortools/linear_solver/linear_solver.h"
 
 namespace Kirschtorte
@@ -124,7 +126,7 @@ namespace Kirschtorte
 
         if (beta > 0)
         {
-            beta_constraint = solver->MakeRowConstraint(-infinity, beta, "BetaConstraint");
+            beta_constraint = solver->MakeRowConstraint(-infinity, beta, "BETA");
         }
 
         // Maps a bitset (representing a target container (gene or species) to
@@ -275,40 +277,91 @@ namespace Kirschtorte
             if (this->enable_solver_diagnostics)
             {
                 std::size_t counter = 1;
+                bool fixed_beta = false;
 
                 std::cout << BLUE << "> " << RESET << "Diagnosing constraints by iteratively relaxing them and resolving..." << std::endl;
-                for (auto constraint : solver->constraints()) {
+                for (auto constraint : solver->constraints())
+                {
                     // Temporarily relax the constraint
-
                     std::cout << BLUE "\r> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
                     constraint->SetBounds(-infinity, infinity);
 
-                    result_status = solver->Solve();
+                    result_status = solver->Solve();  // Resolve with relaxed constraint
 
                     // Check feasibility
                     if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
                     {
-                        std::cout << BLUE "> " << RESET << "\nRelaxing constraint " << constraint->name() << " makes the problem feasible. Exiting." << std::endl;
-                        this->log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible. Exiting." << std::endl;
-                        log_info(this->log_buffer, this->output_directory);
-                        return std::vector<GuideStruct>();
+                        std::cout << BLUE "\n> " << RESET << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
+                        this->log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
+
+                        // Was Beta the bad constraint? Binary search the best Beta.
+                        if (constraint->name() == "BETA")
+                        {
+                            std::cout << BLUE "> " << RESET << "Performing binary search to find the lowest feasible beta..." << std::endl;
+                            std::cout << BLUE "> " << RESET << "Auto-setting LP solver time limit to 2 minutes per round." << std::endl;
+
+                            int time_limit_ms = 120 * 1000;  // Time limit in milliseconds
+                            absl::Duration time_limit = absl::Milliseconds(time_limit_ms);  // Convert milliseconds to absl::Duration
+                            solver->SetTimeLimit(time_limit);
+
+                            std::size_t low = beta;
+                            std::size_t high = solver->NumVariables();
+                            std::size_t mid = (low + high) / 2;
+
+                            while (low < high)
+                            {
+                                mid = (low + high) / 2;
+
+                                std::cout << BLUE "\r> " << RESET << "Trying " << mid << "..." << std::flush;
+
+                                constraint->SetBounds(-infinity, mid);
+                                result_status = solver->Solve();
+                                if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+                                {
+                                    high = mid;
+                                }
+                                else
+                                {
+                                    low = mid + 1;
+                                }
+                            }
+                            
+                            constraint->SetBounds(-infinity, low);
+                            result_status = solver->Solve();
+                            if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+                            {
+                                std::cout << BLUE "\n> " << RESET << "Relaxing Beta to " << low << " makes the problem feasible. Continuing with this value..." << std::endl;
+                                this->log_buffer << "Relaxing Beta " << low << " makes the problem feasible. Continuing with this value..." << std::endl;
+                                
+                                fixed_beta = true;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            std::cout << BLUE "> " << RESET << "Exiting." << std::endl; 
+                            log_info(this->log_buffer, this->output_directory);
+                            return std::vector<GuideStruct>();
+                        }
                     }
 
                     counter++;
                 }
 
-                std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
-                this->log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
-                log_info(this->log_buffer, this->output_directory);
-                return std::vector<GuideStruct>();
+                if (fixed_beta == false)
+                {
+                    std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
+                    this->log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
+                    log_info(this->log_buffer, this->output_directory);
+                    return std::vector<GuideStruct>();
+                }
             }
             else
             {
-                std::cout << RED << "Exiting. Enable diagnostics in config.yaml to iteratively look for a possibly bad constraint." << RESET << std::endl;
+                std::cout << RED << "> Exiting. Enable diagnostics in config.yaml to iteratively look for a possibly bad constraint." << RESET << std::endl;
+                log_info(this->log_buffer, this->output_directory);
+                return std::vector<GuideStruct>();
             }
-
-            log_info(this->log_buffer, this->output_directory);
-            return std::vector<GuideStruct>();
         }
 
         // Save the feasible variables.
