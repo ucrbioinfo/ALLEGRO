@@ -1,4 +1,5 @@
 import os
+import sys
 import pickle
 import subprocess
 import scipy.stats
@@ -6,12 +7,13 @@ import scipy.stats
 from classes.guide_container import GuideContainer
 from scorers.scorer_base import Scorer
 from utils.guide_finder import GuideFinder
+from utils.shell_colors import bcolors
 
 
 class uCRISPR_scorer(Scorer):
     def __init__(self, settings: dict) -> None:
         self.pam: str = settings['pam']
-        self.filter_repetitive: bool = settings['filter_repetitive']
+        self.patterns_to_exclude: bool = settings['patterns_to_exclude']
         self.protospacer_length: int = settings['protospacer_length']
         self.use_secondary_memory: bool = settings['use_secondary_memory']
         self.context_toward_five_prime: int = settings['context_toward_five_prime']
@@ -46,7 +48,7 @@ class uCRISPR_scorer(Scorer):
             protospacer_length=self.protospacer_length,
             context_toward_five_prime=self.context_toward_five_prime,
             context_toward_three_prime=self.context_toward_three_prime,
-            filter_repetitive=self.filter_repetitive
+            patterns_to_exclude=self.patterns_to_exclude
         )
 
         scores: list = list()
@@ -68,15 +70,26 @@ class uCRISPR_scorer(Scorer):
                 indices_of_uncached_guides.append(idx)
 
         if len(indices_of_uncached_guides) > 0:
-            
             for i in range(0, len(indices_of_uncached_guides), 1000):
                 payload = b''
                 for j in indices_of_uncached_guides[i:i+1000]:
                     payload += guides_context_list[j].encode() + b'\n'
 
-                process = subprocess.Popen(self.cpp_program_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                process = None
+                try:
+                    process = subprocess.Popen(self.cpp_program_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                except PermissionError:
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: {bcolors.ORANGE}ALLEGRO{bcolors.RESET} could not initiate the uCRISPR executable for guide scoring. Please manually navigate to src/scorers/uCRISPR/ and give the appropriate execution permission to this file: uCRISPR_scorer ($ chmod +x uCRISPR_scorer) and try again. Exiting.')
+                    sys.exit(1)
 
                 output, stderr = process.communicate(payload)
+
+                # Check for any errors
+                if stderr:
+                    print(f'{bcolors.RED}>{bcolors.RESET} ucrispr_scorer.py: ucrispr_scorer encountered an error: {stderr.decode()}')
+                    print('Exiting.')
+                    sys.exit(1)
+
                 output = output.decode().strip().split('\n')      # Split the output into a list of strings.
 
                 # Calculation method taken from CHOPCHOP's code.
