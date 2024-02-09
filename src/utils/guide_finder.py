@@ -8,14 +8,16 @@ import time
 import pandas
 import subprocess
 from io import StringIO
+from itertools import product
 from Bio import SeqIO
 from Bio.Seq import Seq
 
 from utils.shell_colors import bcolors
-
+from utils.iupac_codes import iupac_dict
 
 def calculate_gc_content(sequence):
     return (sequence.upper().count('G') + sequence.upper().count('C')) / len(sequence)
+
 
 def count_kmers(sequence, k):
     kmers = dict()
@@ -29,7 +31,7 @@ def count_kmers(sequence, k):
 class GuideFinder:
     _self = None
     pam_dict = None
-    exclusion_list = None
+    exclusion_list = []
 
     # Singleton
     def __new__(self):
@@ -44,13 +46,49 @@ class GuideFinder:
                 'NGG': r'(?=([ACTG]GG))',
             }
 
-        if self.exclusion_list is None:
+        if self.exclusion_list == []:
             # Whether there are guides to exclude
             if os.path.exists('data/input/_the_blocklist_.txt'):
                 with open('data/input/_the_blocklist_.txt', 'r') as file:
                     self.exclusion_list = file.read().splitlines()
                     if len(self.exclusion_list) != 0:
                         print(f'{bcolors.BLUE}>{bcolors.RESET} Excluding the gRNA(s) in data/input/{bcolors.BLACK}_the_blocklist_.csv{bcolors.RESET}')
+
+
+    def contains_iupac_pattern(self, sequence: str, patterns: list[str]) -> bool:
+        sequence = sequence.strip().upper()
+
+        for pattern in patterns:
+            pattern = pattern.strip().upper()
+
+            if (len(pattern) == len(sequence)):
+                for i, p in enumerate(pattern):
+
+                    # seq: AAAAGGAAGTAGCGGAGCAG
+                    # pat: TAAAGGAAGTAGCGGAGCAG
+                    # p  : T
+                    # if T =/= A return False
+                    if not (sequence[i] in iupac_dict[p]):
+                        return False
+
+                return True
+
+            elif (len(pattern) < len(sequence)):
+                # For example, if pattern = 'MK', if any of the ['GA', 'GC', 'TA', 'TC'] 
+                # appear in sequence, return True
+                lists = [iupac_dict[code] for code in pattern]
+                if lists != []:
+                    combinations = [''.join(pair) for pair in product(*lists)]
+                    
+                    for combination in combinations:
+                        if combination in sequence:
+                            return True
+
+            else:
+                print(f'Dev warning in contains_iupac_pattern(). Pattern {pattern} is longer than {sequence}. Ignoring pattern.')
+                continue
+
+        return False
 
 
     def identify_guides_and_indicate_strand(
@@ -60,7 +98,7 @@ class GuideFinder:
         protospacer_length: int,
         context_toward_five_prime: int,
         context_toward_three_prime: int,
-        filter_repetitive: bool
+        patterns_to_exclude: list[str] = []
         ) -> tuple[list[str], list[str], list[str], list[int]]:
         '''
         ## Args:
@@ -71,8 +109,7 @@ class GuideFinder:
                 the 5-prime after the protospacer (to the left of the sequence).
             * context_toward_three_prime: The number of nucleotides to extract toward
                 the 3-prime after (and excluding) the PAM (to the right side of the sequence).
-            * filter_repetitive: Discards a guide if the protospace contains 2-mers
-                repeated 5 or more times.
+            * patterns_to_exclude: Discards a guide if the target contains any of the IUPAC patterns.
 
         ## Returns:
             A tuple of four lists:
@@ -126,19 +163,24 @@ class GuideFinder:
                     if guide in self.exclusion_list:
                         continue
 
-                    if filter_repetitive == True:
-                        # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
-                        # 7 times or GA is repeated 6 times.
-                        if max(count_kmers(guide, 2).values()) >= 5:
+                    if patterns_to_exclude:
+                        # ['NNNNNGNNNNNNNGNNNNNN', 'TTTT']
+                        if self.contains_iupac_pattern(guide, patterns_to_exclude):
                             continue
 
-                        # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
-                        if any(substr in guide for substr in ['AAAAA', 'CCCCC', 'GGGGG', 'TTTTT']):
-                            continue
+                    # if filter_repetitive == True:
+                    #     # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
+                    #     # 7 times or GA is repeated 6 times.
+                    #     if max(count_kmers(guide, 2).values()) >= 5:
+                    #         continue
+
+                    #     # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
+                    #     if any(substr in guide for substr in ['AAAAA', 'CCCCC', 'GGGGG', 'TTTTT']):
+                    #         continue
                         
-                        # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
-                        if any(substr in guide for substr in ['AAAA', 'CCCC', 'GGGG', 'TTTT']):
-                            continue
+                    #     # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
+                    #     if any(substr in guide for substr in ['AAAA', 'CCCC', 'GGGG', 'TTTT']):
+                    #         continue
 
                     if filter_by_gc == True:
                         gc = calculate_gc_content(guide)
@@ -185,7 +227,10 @@ class GuideFinder:
         _, stderr = process.communicate()
 
         # Check for any errors
-        if stderr: print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie-build error: {stderr.decode()}')
+        if stderr:
+            print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie-build error: {stderr.decode()}')
+            print('Exiting.')
+            sys.exit(1)
 
         process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
