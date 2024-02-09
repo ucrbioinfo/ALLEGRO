@@ -6,7 +6,7 @@ from utils.guide_finder import GuideFinder
 class DummyScorer(Scorer):
     def __init__(self, settings: dict) -> None:
         self.pam = settings['pam']
-        self.filter_repetitive = settings['filter_repetitive']
+        self.patterns_to_exclude = settings['patterns_to_exclude']
         self.protospacer_length = settings['protospacer_length']
         self.context_toward_five_prime = settings['context_toward_five_prime']
         self.context_toward_three_prime = settings['context_toward_three_prime']
@@ -30,7 +30,7 @@ class DummyScorer(Scorer):
             protospacer_length=self.protospacer_length,
             context_toward_five_prime=self.context_toward_five_prime,
             context_toward_three_prime=self.context_toward_three_prime,
-            filter_repetitive=self.filter_repetitive
+            patterns_to_exclude=self.patterns_to_exclude
         )
         
         scores = [1.0] * len(guides_list)
