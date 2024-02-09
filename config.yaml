@@ -15,27 +15,25 @@
 # gc_min: 0.3
 # ran again with 2434 1 minute: 2577 guides
 
-# are reptitive guides such as AAAAAAAACATCGATTTGGG at all interesting?
-# Guide ATTTTCGAGGATCGCAAGTT targets 40 genes/chromosomes.
 
-# not repetitive but woo:
-# Guide CTACCACGGCCTCAAGTTCT targets 179 genes/chromosomes.
-# Guide CATCTGCAGATGATTGCCAT targets 169 genes/chromosomes.
-# Guide CATTTGCAGATGATTGCCAT targets 137 genes/chromosomes.
-
-# checked mp threshold. it reduces the stored-in-mem guides massively see testMP0 vs testMP5
+# scores with new code
+# diagnostics with new code
+# multithread final bowtie
 
 #================================================================
 # General Settings
 #================================================================
-experiment_name: '700_ascomycetes_xcript_a1_gff_ilp_mp10'
+experiment_name: 'test'
 # ---
 
 # ---------------------------------------------------------------
 # Path Settings
 # ---------------------------------------------------------------
-input_directory: 'data/input/cds/cds_from_gff'
-input_species_path: 'data/input/seven_hundo_input_species.csv'
+# input_directory: 'data/input/cds/cds_from_gff'
+# input_species_path: 'data/input/ascomycota_input_species.csv'
+
+input_directory: 'data/input/cds/'
+input_species_path: 'data/input/big_ortho.csv'
 input_species_path_column: 'cds_file_name'
 # ---
 
@@ -43,7 +41,7 @@ input_species_path_column: 'cds_file_name'
 # track_a: any of the containers can be targeted.
 # There will be multiplicity targets per container.
 # track_e: each container has to be targeted at least multiplicity times,
-track: 'track_a'
+track: 'track_e'
 # ---
 
 # Integer value, default: 1
@@ -66,16 +64,8 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
 # fractional values after solving the LP.
 # Stop searching for an optimal solution when the size of the set has stopped
 # improving after this many seconds.
-early_stopping_patience: 10800
+early_stopping_patience: 10
 # ---
-
-# Boolean: True or False. Default: True
-# If True, discards gRNAs with 5 or more repeated 2-mers.
-# For example, this cas9 gRNA will not be included in the output: ACCACCACCACCACCACCAC
-# since it contains 7 'AC' 2-mers.
-# Also discards gRNAs containing repeating 4- or 5-mers such as AAAAA or TTTT.
-# For example, this cas9 RNA will not be included in the output: AAAAAAAACATCGATTTGGG
-filter_repetitive: True
 
 # Possible values: True or False. Default: True
 # Remove guides with > gc_max and < gc_min from consideration?
@@ -88,6 +78,15 @@ gc_min: 0.3
 #================================================================
 # Advanced Settings
 # ===============================================================
+
+# List of strings, Default: ['TTTT']
+# To exclude nothing, enter ['']
+# Supports up to 5 chained IUPAC codes; e.g., 'RYSN'
+# Supports individual nucleotides; e.g., 'TTTT'
+# ALLEGRO will output guides that do not contain any of the patterns in this list.
+# Be careful not to place common nucleotides or IUPAC codes here such as 'A' or 'AG'
+# You may end up excluding most or all guides from the calculation.
+patterns_to_exclude: ['TTTT']
 
 # Boolean: True or False. Default: False
 # Significantly affects running time.
@@ -119,7 +118,7 @@ scorer: 'dummy'
 # especially when you have millions of gRNAs.
 # Pre-select gRNAs that hit only up to this number of species to act as representatives
 # for these species. Set to 0 to disable and save all gRNAs to memory.
-mp_threshold: 10
+mp_threshold: 200
 # ---
 
 # Boolean: True or False. Default: False
@@ -129,7 +128,7 @@ mp_threshold: 10
 cluster_guides: False
 mismatches_allowed_after_seed_region: 2  # Integer value, default: 2
 
-# Boolean: True or False. Default: False
+# Boolean: True or False. Default: True
 # When a problem is deemed unsolvable (e.g., Status: MPSOLVER_INFEASIBLE)
 # Enabling diagnostics will attempt to relax each constraint and resolve the problem.
 # If the new problem with the relaxed constraint is solvable, ALLEGRO outputs 
@@ -137,5 +136,5 @@ mismatches_allowed_after_seed_region: 2  # Integer value, default: 2
 # Currently, to stop this process, you need to find the PID of 
 # the python process running ALLEGRO using: $ top
 # and kill it manually: $ kill -SIGKILL PID
-enable_solver_diagnostics: False
+enable_solver_diagnostics: True
 # ---
