@@ -8,11 +8,11 @@ from cython_libs.kirschtorte import KirschtorteCython as coverset  # type: ignor
 
 def main() -> int:
     configurator = Configurator()
-    configurator.begruessung()  # Guten Tag!
+    configurator.begruessung()  # Guten Tag
     
     # Read command line arguments and config.yaml.
     # Some arguments are not shown in config.yaml and are defaulted in parse_configurations().
-    # Arguments specified on the command line have priority over and will replace those in config.yaml.
+    # Arguments specified on the command line have priority and will replace those in config.yaml.
     args = configurator.parse_configurations()
 
     # This is the only function that changes the arguments in the config file.
@@ -27,7 +27,7 @@ def main() -> int:
         track=args.track,
         early_stopping_patience=args.early_stopping_patience,
         scorer_name=args.scorer,
-        cas_variant='cas9',
+        cas_variant=args.cas,
         guide_length=20,
         scorer_settings=scorer_settings,
         input_directory=args.input_directory,
@@ -40,7 +40,7 @@ def main() -> int:
     )
 
     output_csv_path, total_time_elapsed = write_solution.write_solution_to_file_bowtie(
-        pam='NGG',
+        pam=args.pam,
         species_names=coversets_obj.species_names,
         solution=coversets_obj.solution,
         experiment_name=args.experiment_name,
