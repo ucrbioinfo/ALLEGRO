@@ -1,11 +1,10 @@
 # Utility functions imported by main.py.
-# These do not need to be run manually.
 import os
 import shutil
 import pandas
 
-from utils.guide_finder import GuideFinder
 from utils.shell_colors import bcolors
+from utils.guide_finder import GuideFinder
 
 
 def write_solution_to_file_bowtie(
@@ -37,7 +36,7 @@ def write_solution_to_file_bowtie(
             score = tup[1]
             hit_species = tup[2]
 
-            f.write(f'Guide {seq} targets {len(hit_species)} genes/chromosomes.\n')
+            f.write(f'Guide {seq} targets {len(hit_species)} locations.\n')
 
         f.write(f'We can cut the following {len(species_names)} species: {str(species_names)}.\n')
         f.write(f'Using the following {str(len(solution))} guides: {str(solution)}.\n')
@@ -112,6 +111,8 @@ def write_solution_to_file_bowtie(
 
         print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1}/{len(input_df)} species...', end='\r')
     print()
+    
+    
     pandas.DataFrame(list(zip(
         sequences,
         species_list,
