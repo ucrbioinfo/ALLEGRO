@@ -58,7 +58,7 @@ class GuideContainer:
         cas9_guide_objects: list[Guide] = list()
 
         (guides_list,
-        guides_context_list,
+        _guides_context_list,
         strands_list, 
         locations_list,
         scores_list) = self.guide_scorer.score_sequence(self)
