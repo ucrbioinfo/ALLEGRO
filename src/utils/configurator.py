@@ -1,18 +1,65 @@
 # Functions imported by ALLEGRO. No need to run it manually.
 import os
+import re
 import sys
 import time
 import yaml
 import pandas
+import signal
 import argparse
 from datetime import timedelta
 
 from utils.shell_colors import bcolors
+from utils.iupac_codes import iupac_dict
+
+
+# Thank you ChatGPT
+def sanitize_filename(filename, max_length=255):
+    # Remove disallowed characters (e.g., /, \0, *, ?, ", <, >, |)
+    sanitized = re.sub(r'[\/\0\*\?"<>\|]', '', filename)
+    
+    # Replace whitespace characters with underscores
+    sanitized = re.sub(r'\s+', '_', sanitized)
+    
+    # Optionally, remove leading periods to avoid hidden files, unless it's a special case (e.g., ".", "..")
+    if sanitized.startswith('.') and sanitized not in ['.', '..']:
+        sanitized = sanitized.lstrip('.')
+
+    # Böse böse...
+    if sanitized == '.':
+        sanitized = '._'
+    elif sanitized == '..':
+        sanitized = '.._'
+    
+    # Shorten the filename to comply with filesystem limits
+    if len(sanitized.encode('utf-8')) > max_length:
+        # Shorten while trying to preserve file extension
+        name, dot, extension = sanitized.rpartition('.')
+        if dot and extension and len(extension) <= max_length - 1:
+            # Shorten name part, leave room for dot and extension
+            name = name[:max_length - len(extension) - 2]
+            sanitized = f"{name}.{extension}"
+        else:
+            # If there's no extension or it's too long, just truncate the name
+            sanitized = sanitized[:max_length]
+    
+    return sanitized
+
+
+def signal_handler(sig, frame):
+    print(f'\n{bcolors.BLUE}>{bcolors.RESET} Interrupted {bcolors.ORANGE}ALLEGRO{bcolors.RESET}. Ciao.')
+    sys.exit(0)
 
 
 class Configurator:
     def __init__(self) -> None:
         self.start_time = time.thread_time()
+        
+        signal.signal(signal.SIGINT, signal_handler)
+
+        self.target_lengths = {
+            'cas9': 20
+        }
 
 
     def begruessung(self) -> None:
@@ -122,18 +169,6 @@ class Configurator:
             help=help,
         )
 
-        help = "- (Affects performance) Default: True\n" + \
-        "- True reduces running time and reduces memory consumption.\n" + \
-        "- If True, discards guides with 5 or more repeated 2-mers.\n" + \
-        "- For example, this cas9 guide will not be in the output: ACCACCACCACCACCACCAC since it contains 7 'AC' 2-mers.\n" + \
-        "- Also discards guides containing repeating 4- or 5-mers such as AAAAA or TTTT."
-        parser.add_argument(
-            '--filter_repetitive',
-            type=bool,
-            default=True,
-            help=help
-        )
-
         parser.add_argument(
             '--filter_by_gc',
             type=bool,
@@ -150,6 +185,14 @@ class Configurator:
             '--gc_min',
             type=float,
             default=0.3,
+        )
+
+        help = "Supports up to 5 chained IUPAC codes; e.g., 'RYSN' ALLEGRO will output guides that do not contain any of the patterns in this list."
+        parser.add_argument(
+            '--patterns_to_exclude',
+            type=list[str],
+            help=help,
+            default=['TTTT']
         )
 
         help = "- True/False boolean, significantly affects running time. True generates a report of gRNA with off-targets."
@@ -231,16 +274,6 @@ class Configurator:
             default=2,
             help=help,
         )
-        
-        # help = '''
-        # - Which cas endonuclease to use? Default: 'cas9'. Options are: 'cas9'.
-        # '''
-        # parser.add_argument(
-        #     '--cas',
-        #     type=str,
-        #     default='cas9',
-        #     help=help,
-        # )
 
         parser.add_argument(
             '--output_directory',
@@ -256,6 +289,26 @@ class Configurator:
             default=False,
             help=help
         )
+
+        help = '''
+        - Only cas9 is supported. Which cas endonuclease to use? Default: 'cas9'. Options are: 'cas9'.
+        '''
+        parser.add_argument(
+            '--cas',
+            type=str,
+            default='cas9',
+            help=help,
+        )
+
+        help = '''
+        - Only NGG is supported.
+        '''
+        parser.add_argument(
+            '--pam',
+            type=str,
+            default='NGG',
+            help=help,
+        )
         
         parser.set_defaults(**config_arg_dict)
         args = parser.parse_args(remaining_args)
@@ -266,6 +319,36 @@ class Configurator:
 
 
     def check_and_fix_configurations(self) -> tuple[argparse.Namespace, dict]:
+        # ------------------------------------------------------------------------------
+        #   experiment_name
+        # ------------------------------------------------------------------------------
+        # Bitte benehmen Sie sich
+        self.args.experiment_name = sanitize_filename(self.args.experiment_name)
+
+        # ------------------------------------------------------------------------------
+        #   input_directory
+        # ------------------------------------------------------------------------------
+        if not os.path.exists(self.args.input_directory):
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find directory {self.args.input_directory}. Did you spell its name (input_directory) correctly? Exiting.')
+            sys.exit(1)
+
+        # ------------------------------------------------------------------------------
+        #   cas
+        # ------------------------------------------------------------------------------
+        if self.args.cas != 'cas9':
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: No cas endonuclease other than Cas9 is currently supported. Do not specify this parameter. Exiting.')
+            sys.exit(1)
+
+        # ------------------------------------------------------------------------------
+        #   PAM
+        # ------------------------------------------------------------------------------
+        if self.args.pam != 'NGG':
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: No PAM other than NGG is currently supported. Do not specify this parameter. Exiting.')
+            sys.exit(1)
+
+        # ------------------------------------------------------------------------------
+        #   input_species_path
+        # ------------------------------------------------------------------------------
         try:
             species_df = pandas.read_csv(self.args.input_species_path)
         except pandas.errors.EmptyDataError:
@@ -274,20 +357,80 @@ class Configurator:
         except FileNotFoundError:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find file {self.args.input_species_path}. Did you spell the path/file name (input_species_path) correctly? Exiting.')
             sys.exit(1)
+        
+        # ------------------------------------------------------------------------------
+        #   input_species_path_column
+        # ------------------------------------------------------------------------------
         try:
             species_df[self.args.input_species_path_column]
         except KeyError:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "{self.args.input_species_path_column}" in {self.args.input_species_path}. Did you spell the column name (input_species_path_column) correctly? Exiting.')
             sys.exit(1)
+        
+        # ------------------------------------------------------------------------------
+        #   species_name
+        # ------------------------------------------------------------------------------
         try:
             species_df["species_name"]
         except KeyError:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "species_name" in {self.args.input_species_path}. Did you format the CSV file correctly? Exiting.')
             sys.exit(1)
-        
-        if self.args.report_up_to_n_mismatches > 3 or self.args.report_up_to_n_mismatches < 0:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: The value for report_up_to_n_mismatches may be 0, 1, 2, or 3. Exiting.')
 
+        # ------------------------------------------------------------------------------
+        #   patterns_to_exclude
+        # ------------------------------------------------------------------------------
+        if self.args.patterns_to_exclude:
+            if type(self.args.patterns_to_exclude) == str:
+                self.args.patterns_to_exclude = [self.args.patterns_to_exclude]
+
+            patterns_to_remove = list()
+            for pattern in self.args.patterns_to_exclude:
+                for character in pattern:
+                    if character not in iupac_dict:
+                        print(f'{bcolors.RED}> Warning{bcolors.RESET}: patterns_to_exclude pattern "{pattern}" contains the letter "{character}" which is not an IUPAC code. Ignoring pattern.')
+                        patterns_to_remove.append(pattern)
+
+                if len(pattern) > self.target_lengths[self.args.cas]:
+                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Pattern {pattern} is longer than the length of your guides ({self.target_lengths[self.args.cas]}). Ignoring pattern.')
+                    patterns_to_remove.append(pattern)
+
+            for pattern in patterns_to_remove:
+                self.args.patterns_to_exclude.remove(pattern)
+
+            # Do not allow more than 5 non-ACTG characters in exclusion patterns
+            for pattern in self.args.patterns_to_exclude:
+                if sum([i not in ['A', 'C', 'T', 'G'] for i in pattern]) > 5:
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot have more than 5 non-ACTG IUPAC codes in pattern {pattern} due to the exponential number of combinations. Remove {pattern} from the list and retry. Exiting.')
+                    sys.exit(1)
+
+        # ------------------------------------------------------------------------------
+        #   output_offtargets
+        # ------------------------------------------------------------------------------
+        if self.args.output_offtargets:
+            try:
+                species_df[self.args.input_species_offtarget_column]
+            except KeyError:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "{self.args.input_species_offtarget_column}" in {self.args.input_species_path}. Did you format the CSV file correctly? Exiting.')
+                sys.exit(1)
+        
+            if self.args.report_up_to_n_mismatches > 3 or self.args.report_up_to_n_mismatches < 0:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: The value for report_up_to_n_mismatches may be 0, 1, 2, or 3. Exiting.')
+                sys.exit(1)
+
+            if self.args.seed_region_is_n_upstream_of_pam < 0:
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: seed_region_is_n_upstream_of_pam ({self.args.seed_region_is_n_upstream_of_pam}) is set to negative. Auto adjusting to 0.')
+                self.args.seed_region_is_n_upstream_of_pam = 0
+
+            if not os.path.exists(f'{self.args.input_species_offtarget_dir}'):
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Path {self.args.input_species_offtarget_dir} does not exist. Exiting.')
+                sys.exit(1)
+            elif len(os.listdir(f'{self.args.input_species_offtarget_dir}')) == 0:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Path {self.args.input_species_offtarget_dir} exists but is empty. Exiting.')
+                sys.exit(1)
+
+        # ------------------------------------------------------------------------------
+        #   scorer
+        # ------------------------------------------------------------------------------
         # If CHOPCHOP is the selected scorer, set the chopchop scoring method.
         if 'chopchop' in self.args.scorer or 'CHOPCHOP' in self.args.scorer:
             # Set paths for CHOPCHOP
@@ -311,42 +454,75 @@ class Configurator:
             self.args.chopchop_scoring_method = join.upper()
             self.args.scorer = 'chopchop'
 
+        # ------------------------------------------------------------------------------
+        #   gc_max
+        # ------------------------------------------------------------------------------
         if self.args.gc_max < self.args.gc_min:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: gc_max ({self.args.gc_max}) is set to be lower than gc_min ({self.args.gv_min}). Edit these values in the config. Exiting.')
             sys.exit(1)
 
+        # ------------------------------------------------------------------------------
+        #   gc_min
+        # ------------------------------------------------------------------------------
         if self.args.gc_min < 0:
             print(f'{bcolors.RED}> Warning{bcolors.RESET}: gc_min ({self.args.gc_min}) is set to negative. Auto adjusting to 0.')
             self.args.gc_min = 0
 
-        if self.args.seed_region_is_n_upstream_of_pam < 0:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: seed_region_is_n_upstream_of_pam ({self.args.seed_region_is_n_upstream_of_pam}) is set to negative. Auto adjusting to 0.')
-            self.args.seed_region_is_n_upstream_of_pam = 0
+        # ------------------------------------------------------------------------------
+        #   report_up_to_n_mismatches
+        # ------------------------------------------------------------------------------
+        self.args.report_up_to_n_mismatches = int(self.args.report_up_to_n_mismatches)
 
         if self.args.report_up_to_n_mismatches > 3:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: report_up_to_n_mismatches ({self.args.report_up_to_n_mismatches}) is set to a value higher than 3. It may only be between 0 to 3. Adjust this value in the config and try again.')
+
+        # ------------------------------------------------------------------------------
+        #   mismatches_allowed_after_seed_region
+        # ------------------------------------------------------------------------------
+        self.args.mismatches_allowed_after_seed_region = int(self.args.mismatches_allowed_after_seed_region)
 
         if self.args.mismatches_allowed_after_seed_region < 0:
             print(f'{bcolors.RED}> Warning{bcolors.RESET}: mismatches_allowed_after_seed_region ({self.args.mismatches_allowed_after_seed_region}) is set to negative. Auto adjusting to 0.')
             self.args.mismatches_allowed_after_seed_region = 0
 
+        # ------------------------------------------------------------------------------
+        #   track
+        # ------------------------------------------------------------------------------
         if self.args.track not in ['track_a', 'track_e']:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown track "{self.args.track}" selected in config.yaml. Exiting.')
             sys.exit(1)
+
+        # ------------------------------------------------------------------------------
+        #   multiplicity
+        # ------------------------------------------------------------------------------
+        self.args.multiplicity = int(self.args.multiplicity)
 
         if self.args.multiplicity < 1:
             print(f'{bcolors.RED}> Warning{bcolors.RESET}: Multiplicity is set to {self.args.multiplicity}, a value smaller than 1. Auto adjusting multiplicity to 1.')
             self.args.multiplicity = 1
 
+        # ------------------------------------------------------------------------------
+        #   mp_threshold
+        # ------------------------------------------------------------------------------
+        self.args.mp_threshold = int(self.args.mp_threshold)
+
         if self.args.mp_threshold <= 0:
             print(f'{bcolors.BLUE}>{bcolors.RESET} mp_threshold is set to {self.args.mp_threshold} and thus disabled. Saving all guides to memory.')
             self.args.mp_threshold = 0
 
+        # ------------------------------------------------------------------------------
+        #   mp_threshold & multiplicity
+        # ------------------------------------------------------------------------------
         if self.args.mp_threshold > 0 and self.args.mp_threshold < self.args.multiplicity:
             print(f'{bcolors.RED}> Warning{bcolors.RESET}: mp_threshold is set to {self.args.mp_threshold}, a positive value smaller than the multiplicity {self.args.multiplicity}.')
             print(f'{bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot remove all but {self.args.mp_threshold} guides from each container and still ensure each container is targeted at least {self.args.multiplicity} times.')
             print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature. Refer to the manual for more details.')
             self.args.mp_threshold = self.args.multiplicity
+
+        # ------------------------------------------------------------------------------
+        #   beta
+        # ------------------------------------------------------------------------------
+        self.args.beta = int(self.args.beta)
 
         if self.args.beta <= 0:
             print(f'{bcolors.BLUE}>{bcolors.RESET} Beta is set to {self.args.beta} and thus disabled.')
@@ -355,7 +531,7 @@ class Configurator:
 
             if self.args.scorer != 'dummy':
                 print(f'{bcolors.BLUE}>{bcolors.RESET} Scorer is set to {self.args.scorer}. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will score the guides for information only and will not use them in calculations.')
-            
+        
         if self.args.scorer == 'dummy' and self.args.beta > 0:
             # No feasible solutions if there are fewer guides than beta
             # Say there are 5 species, 5 guides total, and beta is set to 1. Say that none of the species share any guides.
@@ -369,11 +545,13 @@ class Configurator:
             print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting beta to be equal to the multiplicity. You may also set beta to 0. Refer to the manual for more details.')
             self.args.beta = self.args.multiplicity
 
-        if self.args.filter_repetitive == True:
-            print(f'{bcolors.BLUE}>{bcolors.RESET} filter_repetitive is set to True. Filtering guides with repetitive sequences.')
-            
+        # ------------------------------------------------------------------------------
+        #   early_stopping_patience
+        # ------------------------------------------------------------------------------
+        self.args.early_stopping_patience = int(self.args.early_stopping_patience)
+
         if self.args.early_stopping_patience < 1:
-            print(f'{bcolors.BLUE}>{bcolors.RESET} early_stopping_patience is {self.args.num_trials} < 1 second. Auto adjusting to 1. ALLEGRO may be able to find a smaller sized solution with a larger patience.')
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: early_stopping_patience is {self.args.early_stopping_patience} < 1 second. Auto adjusting to 1. ALLEGRO may be able to find a smaller sized solution with a larger patience.')
             self.args.early_stopping_patience = 1
 
         scorer_settings = self.configure_scorer_settings()
@@ -452,8 +630,8 @@ class Configurator:
                 case 'dummy':
                     scorer_settings = {
                         'pam': 'NGG',
-                        'protospacer_length': 20,
-                        'filter_repetitive': self.args.filter_repetitive,
+                        'protospacer_length': self.target_lengths['cas9'],
+                        'patterns_to_exclude': self.args.patterns_to_exclude,
                         'context_toward_five_prime': 0,
                         'context_toward_three_prime': 0,
                     }
@@ -461,9 +639,9 @@ class Configurator:
                 case 'ucrispr':
                     scorer_settings = {
                         'pam': 'NGG',
-                        'use_secondary_memory': self.args.use_secondary_memory,
-                        'protospacer_length': 20,
-                        'filter_repetitive': self.args.filter_repetitive,
+                        'use_secondary_memory': True,
+                        'protospacer_length': self.target_lengths['cas9'],
+                        'patterns_to_exclude': self.args.patterns_to_exclude,
                         'context_toward_five_prime': 4,  # example: ACAATTTAAAGCTTGCCTCTAACTTGGCCA
                         'context_toward_three_prime': 3,  # 4 refers to ACAA, followed by a 20mer,
                                                             # then TGG PAM, then 3 bases CCA 
