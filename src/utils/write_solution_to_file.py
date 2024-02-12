@@ -2,13 +2,93 @@
 import os
 import shutil
 import pandas
+from functools import partial
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from utils.shell_colors import bcolors
-from utils.guide_finder import GuideFinder
+from utils.guide_finder import align_guides_to_seq_bowtie
+
+
+def process_row(row, species_names_csv_column_name, paths_csv_column_name, input_directory, output_align_temp_path, output_bowtie_temp_dir, solution_dict, pam):
+    name = row[species_names_csv_column_name]
+    df_file_path = row[paths_csv_column_name]
+    full_path = os.path.join(input_directory, df_file_path)
+
+    (bowtie_sequences,
+     bowtie_strands,
+     reference_names,
+     orthos,
+     bowtie_start_positions,
+     time_elapsed) = align_guides_to_seq_bowtie(
+        name=name,
+        output_align_temp_path=output_align_temp_path,
+        file_path=full_path,
+        output_directory=output_bowtie_temp_dir)
+
+    bowtie_scores = [solution_dict[s[:-len(pam)]][0] for s in bowtie_sequences]
+
+    return {
+        "sequences": bowtie_sequences,
+        "paths": [df_file_path] * len(bowtie_sequences),
+        "scores": bowtie_scores,
+        "strands": bowtie_strands,
+        "start_positions": bowtie_start_positions,
+        "chromosomes_or_genes": reference_names,
+        "species_list": [name] * len(bowtie_sequences),
+        "ortho_list": orthos,
+        "time_elapsed": time_elapsed
+    }
+
+def process_dataframe(input_df, species_names_csv_column_name, paths_csv_column_name, input_directory, output_align_temp_path, output_bowtie_temp_dir, solution_dict, pam):
+    count = 0
+    num_cpus = os.cpu_count()
+    max_workers = num_cpus - 1 if num_cpus is not None else 1  # Ensure at least 1 worker is used
+    
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        # Prepare the partial function to include all necessary parameters except 'row'
+        func = partial(process_row,
+                       species_names_csv_column_name=species_names_csv_column_name,
+                       paths_csv_column_name=paths_csv_column_name,
+                       input_directory=input_directory,
+                       output_align_temp_path=output_align_temp_path,
+                       output_bowtie_temp_dir=output_bowtie_temp_dir,
+                       solution_dict=solution_dict,
+                       pam=pam)
+        
+        # Submit tasks
+        futures = [executor.submit(func, row) for _, row in input_df.iterrows()]
+
+        # Initialize lists for results outside the loop
+        sequences = []
+        paths = []
+        scores = []
+        strands = []
+        start_positions = []
+        chromosomes_or_genes = []
+        species_list = []
+        ortho_list = []
+        time_elapsed = 0.0
+
+        # Collect results as tasks complete
+        for future in as_completed(futures):
+            result = future.result()
+            sequences.extend(result["sequences"])
+            paths.extend(result["paths"])
+            scores.extend(result["scores"])
+            strands.extend(result["strands"])
+            start_positions.extend(result["start_positions"])
+            chromosomes_or_genes.extend(result["chromosomes_or_genes"])
+            species_list.extend(result["species_list"])
+            ortho_list.extend(result["ortho_list"])
+            time_elapsed += result["time_elapsed"]
+            count += 1
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {count + 1}/{len(input_df)} species...', end='\r')
+
+        return sequences, paths, scores, strands, start_positions, chromosomes_or_genes, species_list, ortho_list, time_elapsed
 
 
 def write_solution_to_file_bowtie(
-    pam: str,  # todo - useless
+    pam: str,
     species_names: list[str],
     solution: list[tuple[str, float, list[str]]],
     experiment_name: str,
@@ -17,7 +97,7 @@ def write_solution_to_file_bowtie(
     paths_csv_column_name: str,
     species_names_csv_column_name: str,
     output_directory: str,
-    ) -> tuple[str, str]:
+    ) -> tuple[str, float]:
 
     output_txt_path = os.path.join(output_directory, experiment_name + '.txt')
     output_library_path = os.path.join(output_directory, experiment_name + '_library.txt')
@@ -41,16 +121,7 @@ def write_solution_to_file_bowtie(
         f.write(f'We can cut the following {len(species_names)} species: {str(species_names)}.\n')
         f.write(f'Using the following {str(len(solution))} guides: {str(solution)}.\n')
 
-    paths: list[str] = list()
-    species_list: list[str] = list()
-    scores: list[float] = list()
-    strands: list[str] = list()
-    sequences: list[str] = list()
-    start_positions: list[int] = list()
-    chromosomes_or_genes: list[str] = list()
-    ortho_list: list[str] = list()
-
-    guide_finder = GuideFinder()
+    # guide_finder = GuideFinder()
     input_df = pandas.read_csv(input_csv_path)[[species_names_csv_column_name, paths_csv_column_name]]
     
     solution_dict = dict()
@@ -80,39 +151,66 @@ def write_solution_to_file_bowtie(
 
     print(f'{bcolors.BLUE}>{bcolors.RESET} Aligning the library against the input species to generate the final report...')
 
-    for idx, row in input_df.iterrows():
-        name = row[species_names_csv_column_name]
-        df_file_path = row[paths_csv_column_name]
-        full_path = os.path.join(input_directory, df_file_path)
+    # paths: list[str] = list()
+    # species_list: list[str] = list()
+    # scores: list[float] = list()
+    # strands: list[str] = list()
+    # sequences: list[str] = list()
+    # start_positions: list[int] = list()
+    # chromosomes_or_genes: list[str] = list()
+    # ortho_list: list[str] = list()
 
-        (bowtie_sequences,
-         bowtie_strands, 
-         reference_names, 
-         orthos, 
-         bowtie_start_positions, 
-         time_elapsed) = guide_finder.align_guides_to_seq_bowtie(
-            name=name,
-            output_align_temp_path=output_align_temp_path,
-            file_path=full_path,
-            output_directory=output_bowtie_temp_dir)
+    # for idx, row in input_df.iterrows():
+    #     name = row[species_names_csv_column_name]
+    #     df_file_path = row[paths_csv_column_name]
+    #     full_path = os.path.join(input_directory, df_file_path)
+
+    #     (bowtie_sequences,
+    #      bowtie_strands,
+    #      reference_names,
+    #      orthos,
+    #      bowtie_start_positions,
+    #      time_elapsed) = align_guides_to_seq_bowtie(
+    #         name=name,
+    #         output_align_temp_path=output_align_temp_path,
+    #         file_path=full_path,
+    #         output_directory=output_bowtie_temp_dir)
         
-        total_time_elapsed += time_elapsed
+    #     total_time_elapsed += time_elapsed
 
-        bowtie_scores = [solution_dict[s[:-len(pam)]][0] for s in bowtie_sequences]
+    #     bowtie_scores = [solution_dict[s[:-len(pam)]][0] for s in bowtie_sequences]
 
-        sequences.extend(bowtie_sequences)
-        paths.extend([df_file_path] * len(bowtie_sequences))
-        scores.extend(bowtie_scores)
-        strands.extend(bowtie_strands)
-        start_positions.extend(bowtie_start_positions)
-        chromosomes_or_genes.extend(reference_names)
-        species_list.extend([name] * len(bowtie_sequences))
-        ortho_list.extend(orthos)
+    #     sequences.extend(bowtie_sequences)
+    #     paths.extend([df_file_path] * len(bowtie_sequences))
+    #     scores.extend(bowtie_scores)
+    #     strands.extend(bowtie_strands)
+    #     start_positions.extend(bowtie_start_positions)
+    #     chromosomes_or_genes.extend(reference_names)
+    #     species_list.extend([name] * len(bowtie_sequences))
+    #     ortho_list.extend(orthos)
 
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1}/{len(input_df)} species...', end='\r')
-    print()
+    #     print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1}/{len(input_df)} species...', end='\r')
+    # print()
+
+    (sequences,
+    paths,
+    scores,
+    strands,
+    start_positions,
+    chromosomes_or_genes,
+    species_list,
+    ortho_list,
+    time_elapsed) = process_dataframe(input_df,
+                                      species_names_csv_column_name,
+                                      paths_csv_column_name,
+                                      input_directory,
+                                      output_align_temp_path,
+                                      output_bowtie_temp_dir,
+                                      solution_dict,
+                                      pam)
     
-    
+    total_time_elapsed += time_elapsed
+
     pandas.DataFrame(list(zip(
         sequences,
         species_list,
