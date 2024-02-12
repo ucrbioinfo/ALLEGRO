@@ -28,6 +28,76 @@ def count_kmers(sequence, k):
     return kmers
 
 
+def align_guides_to_seq_bowtie(
+    name: str,
+    output_align_temp_path: str,
+    file_path: str,
+    output_directory: str,
+    ) -> tuple[list[str], list[str], list[str], list[str], list[str], float]:
+
+    base_path = os.getcwd()
+    index_basename = os.path.join(output_directory, name + '_idx')
+
+    bowtie_build_command = ['bowtie-build', '--quiet', '-f', base_path + '/' + file_path, base_path + '/' + index_basename]
+    bowtie_command = ['bowtie', '-a', '-v', '0', '--quiet', '--suppress', '5,6,7,8', '-f', base_path + '/' + index_basename, base_path + '/' + output_align_temp_path]
+
+    start_time = time.process_time()
+    process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    _, stderr = process.communicate()
+
+    # Check for any errors
+    if stderr:
+        print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie-build error: {stderr.decode()}')
+        print('Exiting.')
+        sys.exit(1)
+
+    if process.returncode != 0:
+        # Handle error: log or raise exception
+        error_message = f"Command failed with return code {process.returncode}. Error: {stderr.decode('utf-8')}"
+        raise RuntimeError(error_message)
+
+    process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+
+    # Check for any errors
+    if stderr:
+        print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie error: {stderr.decode()}')
+        print('Exiting.')
+        sys.exit(1)
+
+    if process.returncode != 0:
+        # Handle error: log or raise exception
+        error_message = f"Command failed with return code {process.returncode}. Error: {stderr.decode('utf-8')}"
+        raise RuntimeError(error_message)
+
+    end_time = time.process_time()
+    # Calculate the elapsed time in seconds
+    elapsed_seconds = end_time - start_time
+
+    df = pandas.read_csv(StringIO(stdout.decode()), sep='\t',
+                names=['query_name', 'strand', 'reference_name', 'start_position'])
+
+    records = list(SeqIO.parse(file_path, 'fasta'))
+
+    map_ref_id_to_ortho = dict()
+    for record in records:
+        match = re.search(r'\[orthologous_to_gene=(.*?)\]', record.description)
+        map_ref_id_to_ortho[record.id] = match.group(1) if match else 'N/A'
+
+    sequences = df['query_name'].tolist()
+    strands = df['strand'].tolist()
+    reference_names = df['reference_name'].tolist()
+    orthos = [map_ref_id_to_ortho[ref_id] for ref_id in reference_names]
+    start_positions = df['start_position'].tolist()
+
+    # for filename in os.listdir(output_directory):
+    #     if filename.endswith('.ebwt'):
+    #         file_path = os.path.join(output_directory, filename)
+    #         os.remove(file_path)
+
+    return sequences, strands, reference_names, orthos, start_positions, elapsed_seconds
+
+
 class GuideFinder:
     _self = None
     pam_dict = None
@@ -163,24 +233,12 @@ class GuideFinder:
                     if guide in self.exclusion_list:
                         continue
 
+                    # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
+                    # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
                     if patterns_to_exclude:
                         # ['NNNNNGNNNNNNNGNNNNNN', 'TTTT']
                         if self.contains_iupac_pattern(guide, patterns_to_exclude):
                             continue
-
-                    # if filter_repetitive == True:
-                    #     # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
-                    #     # 7 times or GA is repeated 6 times.
-                    #     if max(count_kmers(guide, 2).values()) >= 5:
-                    #         continue
-
-                    #     # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
-                    #     if any(substr in guide for substr in ['AAAAA', 'CCCCC', 'GGGGG', 'TTTTT']):
-                    #         continue
-                        
-                    #     # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
-                    #     if any(substr in guide for substr in ['AAAA', 'CCCC', 'GGGG', 'TTTT']):
-                    #         continue
 
                     if filter_by_gc == True:
                         gc = calculate_gc_content(guide)
@@ -206,65 +264,7 @@ class GuideFinder:
         find_matches(seq=sequence_rev_comp, strand='-')  # - is the reverse complement strand
 
         return guides_list, guides_context_list, strands_list, locations_list
-
-
-    def align_guides_to_seq_bowtie(
-        self,
-        name: str,
-        output_align_temp_path: str,
-        file_path: str,
-        output_directory: str,
-        ) -> tuple[list[str], list[str], list[str], list[str], list[str], float]:
-
-        base_path = os.getcwd()
-        index_basename = os.path.join(output_directory, name + '_idx')
-
-        bowtie_build_command = ['bowtie-build', '--quiet', '-f', base_path + '/' + file_path, base_path + '/' + index_basename]
-        bowtie_command = ['bowtie', '-a', '-v', '0', '--quiet', '--suppress', '5,6,7,8', '-f', base_path + '/' + index_basename, base_path + '/' + output_align_temp_path]
-
-        start_time = time.time()
-        process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        _, stderr = process.communicate()
-
-        # Check for any errors
-        if stderr:
-            print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie-build error: {stderr.decode()}')
-            print('Exiting.')
-            sys.exit(1)
-
-        process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-
-        end_time = time.time()
-
-        # Calculate the elapsed time in seconds
-        elapsed_seconds = end_time - start_time
-
-        # Check for any errors
-        if stderr: print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie error: {stderr.decode()}')
-
-        df = pandas.read_csv(StringIO(stdout.decode()), sep='\t',
-                    names=['query_name', 'strand', 'reference_name', 'start_position'])
-
-        records = list(SeqIO.parse(file_path, 'fasta'))
-
-        map_ref_id_to_ortho = dict()
-        for record in records:
-            match = re.search(r'\[orthologous_to_gene=(.*?)\]', record.description)
-            map_ref_id_to_ortho[record.id] = match.group(1) if match else 'N/A'
-
-        sequences = df['query_name'].tolist()
-        strands = df['strand'].tolist()
-        reference_names = df['reference_name'].tolist()
-        orthos = [map_ref_id_to_ortho[ref_id] for ref_id in reference_names]
-        start_positions = df['start_position'].tolist()
-
-        for filename in os.listdir(output_directory):
-            if filename.endswith('.ebwt'):
-                file_path = os.path.join(output_directory, filename)
-                os.remove(file_path)
-
-        return sequences, strands, reference_names, orthos, start_positions, elapsed_seconds
+    
 
     def locate_guides_in_sequence(
         self,
