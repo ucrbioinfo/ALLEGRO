@@ -95,11 +95,11 @@ cdef class KirschtorteCython:
         # Set how many clusters we need.
         # If track_a is selected, we have the same number of clusters as species. This is the same number for "Number of constraints" in solver_log.txt 
         # If track_e is selected, count the total number of fasta records in all species input files (uses multithreading). 
-        #   This is the same number for "Number of constraints" in solver_log.txt aka total number of genes/chromosomes.
-        clusters = self.species_df.shape[0] if track == 'track_a' else records_count_finder.count_records(self.input_directory, self.species_df[self.input_species_path_column].tolist())
+        #   This is the same number for "Number of constraints" in solver_log.txt aka total number of genes (track E)/species(track A).
+        self.clusters = self.species_df.shape[0] if track == 'track_a' else records_count_finder.count_records(self.input_directory, self.species_df[self.input_species_path_column].tolist())
 
-        # Instantiate a C++ class. The linear programming part of ALLEGRO is done there.
-        self.kirschtorte = new Kirschtorte(clusters, guide_length, early_stopping_patience, output_directory.encode('utf-8'), enable_solver_diagnostics)
+        # Instantiate a C++ class. The linear programming part of ALLEGRO is done here
+        self.kirschtorte = new Kirschtorte(self.clusters, guide_length, early_stopping_patience, output_directory.encode('utf-8'), enable_solver_diagnostics)
 
         # To translate indices back to legible names later.
         self.guide_origin: dict[int, str] = dict()
@@ -157,7 +157,7 @@ cdef class KirschtorteCython:
                     print(f'{bcolors.RED}> Warning{bcolors.RESET}: Species {row.species_name} contains no Cas9 guides, or ' +
                     f'all of its Cas9 guides have been marked as repetitive and thus removed in ' +
                     f'a preprocessing step. First, check the input file. Set the filter_repetitive and/or filter_by_gc option(s) to False in config.yaml ' +
-                    f'to include them, or remove this species from your input file and try again. Exiting.')
+                    f'to include them, or remove this species from your input file and try again.')
                     continue
             else:
                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: No such cas variant as {self.cas_variant}. Modify this value in config.yaml. Exiting.\n')
@@ -180,7 +180,7 @@ cdef class KirschtorteCython:
                 f'to at most the total available guides for this species ({total_available_guides_for_this_species}) and try again. Exiting.')
                 sys.exit(1)
 
-            print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1} species...', end='\r')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1}/{self.clusters} species...', end='\r')
         print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all species containing a total of {total_number_of_guides} guides.')
         print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
 
@@ -190,6 +190,7 @@ cdef class KirschtorteCython:
         # Interface with the C++ functions.
         guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
 
+        # Nichts zu tun
         if guide_struct_vector.size() == 0:
             sys.exit(1)
 
@@ -254,7 +255,6 @@ cdef class KirschtorteCython:
                 if len(guide_objects_list) < self.cut_multiplicity:
                     print(f'{bcolors.RED}> Warning{bcolors.RESET}: In species {row.species_name}, gene {guide_container.string_id} ' +
                     f'contains fewer {self.cas_variant} guides ({len(guide_objects_list)}) than the requested multiplicity ({self.cut_multiplicity}) for Track E. Discarding this gene.')
-
                     continue
                 
                 total_number_of_guides += len(guide_objects_list)
@@ -275,7 +275,7 @@ cdef class KirschtorteCython:
                 
                 container_idx += 1
                 
-                print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {container_idx} genes...', end='\r')
+                print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {container_idx}/{self.clusters} genes...', end='\r')
 
             if total_available_guides_for_this_species < self.cut_multiplicity:
                 print(f'{bcolors.RED}> Error{bcolors.RESET}: The genes in species {row.species_name} ' +
@@ -295,8 +295,9 @@ cdef class KirschtorteCython:
         # Interface with the C++ functions.
         guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
 
+        # Nichts zu tun
         if guide_struct_vector.size() == 0:
-            sys.exit(0)
+            sys.exit(1)
 
         self.solution: list[tuple[str, float, list[str]]] = list()
         for guide_struct in guide_struct_vector:

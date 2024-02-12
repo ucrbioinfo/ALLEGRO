@@ -257,15 +257,14 @@ namespace Kirschtorte
         // Check that the problem has a solution.
         if (result_status == operations_research::MPSolver::OPTIMAL)
         {
-            std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
-            std::cout << BLUE << "> " << RESET << "The LP problem has an optimal solution." << std::endl;
+            // std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
+            std::cout << BLUE << "> " << RESET << "The LP problem has an " << BLUE << "optimal" << RESET << " solution!" << std::endl;
             this->log_buffer << "The LP problem has an optimal solution." << std::endl;
-
         }
         else if (result_status == operations_research::MPSolver::FEASIBLE)
         {
-            std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
-            std::cout << BLUE << "> " << RESET << "The LP problem has a feasible solution." << std::endl;
+            // std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
+            std::cout << BLUE << "> " << RESET << "The LP problem has a " << BLUE << "feasible" << RESET << " solution." << std::endl;
             this->log_buffer << "The LP problem has a feasible solution." << std::endl;
         }
         else
@@ -280,6 +279,7 @@ namespace Kirschtorte
                 bool fixed_beta = false;
 
                 std::cout << BLUE << "> " << RESET << "Diagnosing constraints by iteratively relaxing them and resolving..." << std::endl;
+                
                 for (auto constraint : solver->constraints())
                 {
                     // Temporarily relax the constraint
@@ -294,13 +294,13 @@ namespace Kirschtorte
                         std::cout << BLUE "\n> " << RESET << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
                         this->log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
 
-                        // Was Beta the bad constraint? Binary search the best Beta.
+                        // Was Beta the bad constraint? Binary search for the best Beta
                         if (constraint->name() == "BETA")
                         {
-                            std::cout << BLUE "> " << RESET << "Performing binary search to find the lowest feasible beta..." << std::endl;
-                            std::cout << BLUE "> " << RESET << "Auto-setting LP solver time limit to 2 minutes per round." << std::endl;
+                            std::cout << BLUE "> " << RESET << "Looking for the lowest feasible beta..." << std::endl;
+                            // std::cout << BLUE "> " << RESET << "Auto-setting LP solver time limit to 2 minutes per round." << std::endl;
 
-                            int time_limit_ms = 120 * 1000;  // Time limit in milliseconds
+                            int time_limit_ms = early_stopping_patience_s * 1000;  // Time limit in milliseconds
                             absl::Duration time_limit = absl::Milliseconds(time_limit_ms);  // Convert milliseconds to absl::Duration
                             solver->SetTimeLimit(time_limit);
 
@@ -314,8 +314,10 @@ namespace Kirschtorte
 
                                 std::cout << BLUE "\r> " << RESET << "Trying " << mid << "..." << std::flush;
 
+                                // Relax and resolve
                                 constraint->SetBounds(-infinity, mid);
                                 result_status = solver->Solve();
+
                                 if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
                                 {
                                     high = mid;
@@ -326,8 +328,10 @@ namespace Kirschtorte
                                 }
                             }
                             
+                            // Relax and resolve
                             constraint->SetBounds(-infinity, low);
                             result_status = solver->Solve();
+
                             if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
                             {
                                 std::cout << BLUE "\n> " << RESET << "Relaxing Beta to " << low << " makes the problem feasible. Continuing with this value..." << std::endl;
@@ -414,6 +418,8 @@ namespace Kirschtorte
                     multiplicity,
                     beta,
                     this->early_stopping_patience_s,
+                    this->enable_solver_diagnostics,
+                    this->output_directory,
                     this->log_buffer);
             }
             else
