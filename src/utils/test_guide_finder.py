@@ -4,9 +4,16 @@
 import re
 import os
 import sys
+import time
+import pandas
+import subprocess
+from io import StringIO
 from Bio import SeqIO
 from Bio.Seq import Seq
 
+
+def calculate_gc_content(sequence):
+    return (sequence.upper().count('G') + sequence.upper().count('C')) / len(sequence)
 
 def count_kmers(sequence, k):
     kmers = dict()
@@ -20,7 +27,7 @@ def count_kmers(sequence, k):
 class GuideFinder:
     _self = None
     pam_dict = None
-    exclusion_list = None
+    exclusion_list = []
 
     # Singleton
     def __new__(self):
@@ -35,14 +42,11 @@ class GuideFinder:
                 'NGG': r'(?=([ACTG]GG))',
             }
 
-        if self.exclusion_list is None:
+        if self.exclusion_list == []:
             # Whether there are guides to exclude
             if os.path.exists('data/input/_the_blocklist_.txt'):
                 with open('data/input/_the_blocklist_.txt', 'r') as file:
                     self.exclusion_list = file.read().splitlines()
-                    if len(self.exclusion_list) != 0:
-                        print(f'Excluding the gRNA(s) in data/input/_the_blocklist_.csv')
-
 
     def identify_guides_and_indicate_strand(
         self,
@@ -95,7 +99,6 @@ class GuideFinder:
         if pam in self.pam_dict:
             pam_regex = self.pam_dict[pam]
         else:
-            print(f'Unsupported Feature Error: PAM {pam} not recognized. ALLEGRO currently does not support any Cas PAM other than Cas9 NGG. Exiting.')
             sys.exit(1)
             # pam_regex = r'(?=({PAM}))'.format(PAM=pam)
             
@@ -103,6 +106,8 @@ class GuideFinder:
         def find_matches(seq: str, strand: str) -> None:        
             matches = re.finditer(pam_regex, seq)  # Find PAMs on seq
             pam_positions = [match.start() for match in matches]
+
+            filter_by_gc = True
 
             for position in pam_positions:
                 if (position - protospacer_length >= 0):
@@ -119,20 +124,19 @@ class GuideFinder:
                         # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
                         # 7 times or GA is repeated 6 times.
                         if max(count_kmers(guide, 2).values()) >= 5:
-                            # self.num_more_than_four_twomers_removed += 1
-                            # print(guide, 'contains more than 5 of the same 2-mer')
                             continue
 
                         # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
                         if any(substr in guide for substr in ['AAAAA', 'CCCCC', 'GGGGG', 'TTTTT']):
-                            # self.num_containing_fivemers_removed += 1
-                            # print(guide, 'contains 5-mers')
                             continue
                         
                         # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
                         if any(substr in guide for substr in ['AAAA', 'CCCC', 'GGGG', 'TTTT']):
-                            # self.num_containing_fourmers_removed += 1
-                            # print(guide, 'contains 4-mers')
+                            continue
+
+                    if filter_by_gc == True:
+                        gc = calculate_gc_content(guide)
+                        if (gc > 0.7) or (gc < 0.3):
                             continue
 
                     guide_with_context = ''
@@ -155,6 +159,61 @@ class GuideFinder:
 
         return guides_list, guides_context_list, strands_list, locations_list
 
+
+    def align_guides_to_seq_bowtie(
+        self,
+        name: str,
+        output_align_temp_path: str,
+        file_path: str,
+        output_directory: str,
+        ) -> tuple[list[str], list[str], list[str], list[str], list[str], float]:
+
+        base_path = os.getcwd()
+        index_basename = os.path.join(output_directory, name + '_idx')
+
+        bowtie_build_command = ['bowtie-build', '--quiet', '-f', base_path + '/' + file_path, base_path + '/' + index_basename]
+        bowtie_command = ['bowtie', '-a', '-v', '0', '--quiet', '--suppress', '5,6,7,8', '-f', base_path + '/' + index_basename, base_path + '/' + output_align_temp_path]
+
+        start_time = time.time()
+        process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _, stderr = process.communicate()
+
+        # Check for any errors
+        if stderr: print(f'test_guide_finder.py: bowtie-build error: {stderr.decode()}')
+
+        process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+
+        end_time = time.time()
+
+        # Calculate the elapsed time in seconds
+        elapsed_seconds = end_time - start_time
+
+        # Check for any errors
+        if stderr: print(f'test_guide_finder.py: bowtie error: {stderr.decode()}')
+
+        df = pandas.read_csv(StringIO(stdout.decode()), sep='\t',
+                    names=['query_name', 'strand', 'reference_name', 'start_position'])
+
+        records = list(SeqIO.parse(file_path, 'fasta'))
+
+        map_ref_id_to_ortho = dict()
+        for record in records:
+            match = re.search(r'\[orthologous_to_gene=(.*?)\]', record.description)
+            map_ref_id_to_ortho[record.id] = match.group(1) if match else 'N/A'
+
+        sequences = df['query_name'].tolist()
+        strands = df['strand'].tolist()
+        reference_names = df['reference_name'].tolist()
+        orthos = [map_ref_id_to_ortho[ref_id] for ref_id in reference_names]
+        start_positions = df['start_position'].tolist()
+
+        for filename in os.listdir(output_directory):
+            if filename.endswith('.ebwt'):
+                file_path = os.path.join(output_directory, filename)
+                os.remove(file_path)
+
+        return sequences, strands, reference_names, orthos, start_positions, elapsed_seconds
 
     def locate_guides_in_sequence(
         self,
