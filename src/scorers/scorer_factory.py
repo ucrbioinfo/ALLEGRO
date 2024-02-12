@@ -4,6 +4,11 @@ from scorers.chopchop_wrapper import ChopChopWrapper
 from scorers.ucrispr_scorer import uCRISPR_scorer
 from utils.shell_colors import bcolors
 
+scorer_names = {
+    'dummy': 'dummy',
+    'ucrispr': 'uCRISPR',
+}
+
 class ScorerFactory:
     def __init__(self) -> None:
         pass
@@ -14,9 +19,9 @@ class ScorerFactory:
         scorer_name: str,
         scorer_settings: dict,
         ) -> Scorer:
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Selected scorer: {scorer_name}.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Selected scorer: {scorer_names[scorer_name]}.')
 
-        match scorer_name:
+        match scorer_name.lower():
             case 'chopchop':
                 if scorer_settings == None:
                     print(f'{bcolors.RED}> Dev Error{bcolors.RESET}: ChopChopWrapper requires scorer_settings.')
@@ -31,7 +36,7 @@ class ScorerFactory:
                 
                 return DummyScorer(scorer_settings)
             
-            case 'uCRISPR' | 'ucrispr':
+            case 'ucrispr':
                 if scorer_settings == None:
                     print(f'{bcolors.RED}> Dev Error{bcolors.RESET}: uCRISPR_scorer requires scorer_settings.')
                     raise ValueError

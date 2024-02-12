@@ -4,10 +4,10 @@ import pickle
 import subprocess
 import scipy.stats
 
-from classes.guide_container import GuideContainer
+from utils.shell_colors import bcolors
 from scorers.scorer_base import Scorer
 from utils.guide_finder import GuideFinder
-from utils.shell_colors import bcolors
+from classes.guide_container import GuideContainer
 
 
 class uCRISPR_scorer(Scorer):

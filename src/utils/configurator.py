@@ -13,7 +13,6 @@ from utils.shell_colors import bcolors
 from utils.iupac_codes import iupac_dict
 
 
-# Thank you ChatGPT
 def sanitize_filename(filename, max_length=255):
     # Remove disallowed characters (e.g., /, \0, *, ?, ", <, >, |)
     sanitized = re.sub(r'[\/\0\*\?"<>\|]', '', filename)
@@ -21,7 +20,7 @@ def sanitize_filename(filename, max_length=255):
     # Replace whitespace characters with underscores
     sanitized = re.sub(r'\s+', '_', sanitized)
     
-    # Optionally, remove leading periods to avoid hidden files, unless it's a special case (e.g., ".", "..")
+    # Remove leading periods to avoid hidden files, unless it's a special case (e.g., ".", "..")
     if sanitized.startswith('.') and sanitized not in ['.', '..']:
         sanitized = sanitized.lstrip('.')
 
@@ -161,6 +160,16 @@ class Configurator:
             help=help,
         )
 
+
+        help = "- Which scoring method to use? Default: 'dummy'\n" + \
+        "- Options are 'chopchop_METHOD', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
+        parser.add_argument(
+            '--scorer',
+            type=str,
+            default='dummy',
+            help=help,
+        )
+
         help = "- Only used in solving the ILP if there are remaining feasible guides with fractional values after solving the LP.\n" + \
         "- Stop searching for an optimal solution when the size of the set has stopped improving after this many seconds."
         parser.add_argument(
@@ -235,15 +244,6 @@ class Configurator:
         parser.add_argument(
             '--input_species_offtarget_column',
             type=str,
-            help=help,
-        )
-
-        help = "- Which scoring method to use? Default: 'dummy'\n" + \
-        "- Options are 'chopchop_METHOD', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
-        parser.add_argument(
-            '--scorer',
-            type=str,
-            default='dummy',
             help=help,
         )
 
@@ -536,8 +536,16 @@ class Configurator:
             # No feasible solutions if there are fewer guides than beta
             # Say there are 5 species, 5 guides total, and beta is set to 1. Say that none of the species share any guides.
             # This will ask ALLEGRO to find 1 guide out of 5 to cover all 5 species. There is no solution.
-            print(f'{bcolors.BLUE}>{bcolors.RESET} The scorer is set to dummy and beta to the positive value {self.args.beta}. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will try to find (approximately) {self.args.beta} guides to cover all guide containers.')
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: {bcolors.ORANGE}ALLEGRO{bcolors.RESET} may find that there is no feasible solution if the number of shared guides is fewer than beta.')
+            if self.args.track == 'track_e':
+                print(f'{bcolors.BLUE}>{bcolors.RESET} The scorer is set to dummy and beta to {self.args.beta}. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will try to find {self.args.beta} guides to cover all genes.')
+            if self.args.track == 'track_a':
+                print(f'{bcolors.BLUE}>{bcolors.RESET} The scorer is set to dummy and beta to {self.args.beta}. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will try to find {self.args.beta} guides to cover all species.')
+            
+            if self.args.enable_solver_diagnostics:
+                print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} may find that there is no feasible solution if the number of shared guides is fewer than beta in which case it will find the smallest beta for you.')
+            else:
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: {bcolors.ORANGE}ALLEGRO{bcolors.RESET} may find that there is no feasible solution if the number of shared guides is fewer than beta. Enabling solver diagnostics in config.yaml will find the smallest beta for you.')
+
 
         if self.args.beta > 0 and self.args.beta < self.args.multiplicity:
             print(f'{bcolors.RED}> Warning{bcolors.RESET}: Beta is set to {self.args.beta}, a positive value smaller than the multiplicity {self.args.multiplicity}')
