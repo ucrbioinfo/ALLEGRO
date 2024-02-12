@@ -39,7 +39,8 @@ def main() -> int:
         enable_solver_diagnostics=args.enable_solver_diagnostics
     )
 
-    output_csv_path, total_time_elapsed = write_solution.write_solution_to_file_bowtie(
+    (output_csv_path,
+     total_time_elapsed) = write_solution.write_solution_to_file_bowtie(
         pam=args.pam,
         species_names=coversets_obj.species_names,
         solution=coversets_obj.solution,
@@ -70,7 +71,8 @@ def main() -> int:
             seed_region_is_n_upstream_of_pam=args.seed_region_is_n_upstream_of_pam,
             pam_length=3
         )
-        
+    
+    # configurator.cleanup(output_dir=args.output_directory)
     configurator.log_time(total_time_elapsed)
 
     return 0
