@@ -1,7 +1,10 @@
 import os
+import sys
+import subprocess
 import pandas as pd
 
 from utils.shell_colors import bcolors
+
 
 def reverse_complement(string):
     s = ''
@@ -65,15 +68,33 @@ class OfftargetFinder:
         if one_exists and two_exists and three_exists and four_exists and rev_one_exists and rev_two_exists:
             return
         else:
-            print(f'{bcolors.BLUE}>{bcolors.RESET} Creating Bowtie index for {species_name}')
-            os.system(f'bowtie-build -q {self._base_path}/{path_to_background_fasta} {self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx')
+            # print(f'{bcolors.BLUE}>{bcolors.RESET} Creating Bowtie index for {species_name}')
+            bowtie_build_command = ['bowtie-build', '-q', f'{self._base_path}/{path_to_background_fasta}', f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx']
+            process = subprocess.Popen(bowtie_build_command, stderr=subprocess.PIPE)
+            _, stderr = process.communicate()
+            
+            if stderr:
+                    print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie-build encountered an error: {stderr.decode()}')
+                    print('Exiting.')
+                    sys.exit(1)
+            
+            # os.system(f'bowtie-build -q {self._base_path}/{path_to_background_fasta} {self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx')
 
 
-    def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, background_source: str, guide_seq_list: list[str], num_of_mismatches: int) -> None:
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
+    def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, background_source: str, num_of_mismatches: int) -> None:
+        # print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
 
         for v in [num_of_mismatches]:
-            os.system(f'bowtie -v {v} -a --quiet {self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx {self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq {self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
+            bowtie_command = ['bowtie', '-v', v, '-a', '--quiet', f'{self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx', f'{self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq', f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam']
+            process = subprocess.Popen(bowtie_command, stderr=subprocess.PIPE)
+            _, stderr = process.communicate()
+            
+            if stderr:
+                    print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie encountered an error: {stderr.decode()}')
+                    print('Exiting.')
+                    sys.exit(1)
+
+            # os.system(f'bowtie -v {v} -a --quiet {self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx {self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq {self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
 
             df_mm_genomic = pd.read_csv(f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam', sep='\t',
                     names=['query_name', 'strand', 'reference_name', 'start_position', 'aligned_seq', 'mapping_quality', 'idk', 'mismatch'])
@@ -100,5 +121,7 @@ class OfftargetFinder:
             # df_mm_genomic['num_mutations'] = df_mm_genomic['num_mutations'].astype(int)
             df_mm_genomic.drop(columns=['idk', 'mapping_quality'], inplace=True)
 
+            os.remove(f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
+            
             return df_mm_genomic.reset_index(drop=True)
         
