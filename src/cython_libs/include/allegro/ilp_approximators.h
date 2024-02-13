@@ -19,7 +19,7 @@ std::vector<GuideStruct> sat_solver(
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
     std::size_t multiplicity,
     std::size_t beta,
-    std::size_t early_stopping_patience_s,
+    int early_stopping_patience_s,
     bool enable_solver_diagnostics,
     std::string output_directory,
     std::ostringstream &log_buffer);
