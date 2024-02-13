@@ -17,7 +17,7 @@ std::vector<GuideStruct> sat_solver(
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
     std::size_t multiplicity,
     std::size_t beta,
-    std::size_t early_stopping_patience_s,
+    int early_stopping_patience_s,
     bool enable_solver_diagnostics,
     std::string output_directory,
     std::ostringstream &log_buffer
@@ -39,11 +39,11 @@ std::vector<GuideStruct> sat_solver(
     // Create a linear solver with the ILP SAT backend.
     std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("SAT"));
     
-    solver->EnableOutput();
+    // solver->EnableOutput();
     
-    int time_limit_ms = early_stopping_patience_s * 1000;  // Time limit in milliseconds
-    absl::Duration time_limit = absl::Milliseconds(time_limit_ms);  // Convert milliseconds to absl::Duration
-    solver->SetTimeLimit(time_limit);
+    int time_limit = early_stopping_patience_s;
+    absl::Duration time_limit_ms = absl::Milliseconds(time_limit * 1000);  // Convert milliseconds to absl::Duration
+    solver->SetTimeLimit(time_limit_ms);
 
     const double infinity = solver->infinity();  // Used for constraints to denote >= 1 and <= 1
 
@@ -158,227 +158,246 @@ std::vector<GuideStruct> sat_solver(
     // Solve the integer linear program
     std::cout << BLUE << "> " << RESET << "Solving the ILP within the given time limit of " << early_stopping_patience_s << " seconds..." << std::endl;
     operations_research::MPSolver::ResultStatus result_status = solver->Solve();
+    
+    bool solved = false;
+    unsigned char num_retries = 0;
 
-    // Check that the problem has a solution.
-    // log_buffer << "Status: " << result_status << std::endl;
-    if (result_status == operations_research::MPSolver::OPTIMAL)
+    while (!solved && (num_retries != 10))
     {
-        // std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
-        std::cout << BLUE << "> " << RESET << "Found an " << BLUE << "optimal" << RESET << " solution!" << std::endl;
-        log_buffer << "The ILP has an optimal solution!" << std::endl;
-    }
-    else if (result_status == operations_research::MPSolver::FEASIBLE)
-    {
-        // std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
-        std::cout << BLUE << "> " << RESET << "Found a " << BLUE << "feasible" << RESET << " solution. Increasing the patience may result in finding an optimal solution." << std::endl;
-        log_buffer << "The ILP has a feasible solution." << std::endl;
-    }
-    else if (result_status == operations_research::MPSolver::NOT_SOLVED)
-    {
-        std::cout << RED << "> The ILP problem cannot be solved within the given time limit of " << time_limit << " seconds." << RESET << std::endl;
-
-        if (enable_solver_diagnostics)
+        if (result_status == operations_research::MPSolver::OPTIMAL)
         {
-            std::cout << BLUE << "> " << RESET << "Retrying with a time limit of 5 minutes." << std::endl;
-
-            time_limit_ms = 100 * 1000;  // Time limit in milliseconds
-            time_limit = absl::Milliseconds(time_limit_ms);  // Convert milliseconds to absl::Duration
-            solver->SetTimeLimit(time_limit);
-
-            result_status = solver->Solve();  // TODO fix control flow 
+            std::cout << BLUE << "> " << RESET << "Found an " << BLUE << "optimal" << RESET << " solution!" << std::endl;
+            log_buffer << "The ILP has an optimal solution!" << std::endl;
+            solved = true;
+            break;
         }
-        else
+        else if (result_status == operations_research::MPSolver::FEASIBLE)
         {
-            std::cout << RED << "> Exiting. Retrying with a larger patience may result in a solved problem." << RESET << std::endl;
-            log_info(log_buffer, output_directory);
-            return std::vector<GuideStruct>();
+            std::cout << BLUE << "> " << RESET << "Found a " << BLUE << "feasible" << RESET << " solution. Increasing the patience may result in finding an optimal solution." << std::endl;
+            log_buffer << "The ILP has a feasible solution." << std::endl;
+            solved = true;
+            break;
         }
-    }
-    else
-    {
-        std::cout << RED << "> Status: " << result_status << RESET << std::endl;
-        std::cout << RED << "> The ILP problem cannot be solved." << RESET << std::endl;
-        log_buffer << "The ILP problem cannot be solved." << std::endl;
-
-        if (enable_solver_diagnostics)
+        // Time limit issue - NOT_SOLVED means not **yet** solved
+        else if (result_status == operations_research::MPSolver::NOT_SOLVED)
         {
-            std::size_t counter = 1;
-            bool fixed_beta = false;
+            std::cout << RED << "> The ILP problem cannot be solved within the given time limit of " << time_limit << "." << RESET << std::endl;
 
-            std::cout << BLUE << "> " << RESET << "Diagnosing constraints by iteratively relaxing them and resolving..." << std::endl;
-            
-            for (auto constraint : solver->constraints())
+            if (enable_solver_diagnostics)
+            {
+                std::size_t auto_time_lim = 120;
+                if (early_stopping_patience_s < auto_time_lim)
                 {
-                    // Temporarily relax the constraint
-                    std::cout << BLUE "\r> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
-                    constraint->SetBounds(-infinity, infinity);
-
-                    time_limit_ms = early_stopping_patience_s * 1000;  // Time limit in milliseconds
-                    time_limit = absl::Milliseconds(time_limit_ms);  // Convert milliseconds to absl::Duration
-                    solver->SetTimeLimit(time_limit);
-
-                    result_status = solver->Solve();  // Resolve with relaxed constraint
-
-                    // Check feasibility
-                    if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
-                    {
-                        std::cout << BLUE "\n> " << RESET << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
-                        log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
-
-                        // Was Beta the bad constraint? Search for the best Beta
-                        if (constraint->name() == "BETA")
-                        {
-                            std::cout << BLUE "> " << RESET << "Looking for lowest feasible Beta..." << std::endl;
-
-                            // DO NOT DELETE.
-                            //
-                            // May need to use binary search if problem isnt solved 
-                            //
-                            // std::size_t low = beta;
-                            // std::size_t high = solver->NumVariables();
-                            // std::size_t mid = (low + high) / 2;
-
-                            // while (low < high)
-                            // {
-                            //     mid = (low + high) / 2;
-
-                            //     std::cout << BLUE "\r> " << RESET << "Trying " << mid << "..." << std::flush;
-
-                            //     // Relax and resolve
-                            //     constraint->SetBounds(-infinity, mid);
-                            //     result_status = solver->Solve();
-
-                            //     if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
-                            //     {
-                            //         high = mid;
-                            //     }
-                            //     else
-                            //     {
-                            //         low = mid + 1;
-                            //     }
-                            // }
-                            
-                            // // Relax and resolve
-                            // constraint->SetBounds(-infinity, low);
-                            // result_status = solver->Solve();
-
-                            // Remove all scores from guides and resolve with minimization.
-                            // The objective value of the minimization will be the new (smallest) beta.
-                            for (auto var : solver->variables())
-                            {
-                                objective->SetCoefficient(var, 1);
-                            }
-                            
-                            objective->SetMinimization();
-
-                            time_limit_ms = early_stopping_patience_s * 1000;  // Time limit in milliseconds
-                            time_limit = absl::Milliseconds(time_limit_ms);  // Convert milliseconds to absl::Duration
-                            solver->SetTimeLimit(time_limit);
-
-                            result_status = solver->Solve();  // Resolve with relaxed constraint
-
-                            if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
-                            {
-                                std::size_t min_beta = objective->Value();
-
-                                std::cout << BLUE "> " << RESET << "Increasing Beta to " << min_beta << " makes the problem feasible. Re-solving with this value..." << std::endl;
-                                log_buffer << "Increasing Beta " << min_beta << " makes the problem feasible. Re-solving with this value..." << std::endl;
-
-                                // If we found the new smallest beta, solve the maximization problem
-                                // with the scores again and using this new beta.
-                                for (auto it : map_seq_to_vars)
-                                {
-                                    operations_research::MPVariable *var = it.second;
-                                    double score = all_feasible_coverings[it.first].first;
-
-                                    objective->SetCoefficient(var, score);
-                                }
-
-                                constraint->SetBounds(-infinity, min_beta);
-                                objective->SetMaximization();
-
-                                time_limit_ms = early_stopping_patience_s * 1000;  // Time limit in milliseconds
-                                time_limit = absl::Milliseconds(time_limit_ms);  // Convert milliseconds to absl::Duration
-                                solver->SetTimeLimit(time_limit);
-
-                                result_status = solver->Solve();
-                                
-                                fixed_beta = true;
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            std::cout << BLUE "> " << RESET << "Exiting." << std::endl; 
-                            log_info(log_buffer, output_directory);
-                            return std::vector<GuideStruct>();
-                        }
-                    }
-                    counter++;
+                    time_limit = auto_time_lim;
+                }
+                else
+                {
+                    time_limit = early_stopping_patience_s * 2;
                 }
 
-            if (fixed_beta == false)
+                time_limit_ms = absl::Milliseconds(time_limit * 1000);
+                solver->SetTimeLimit(time_limit_ms);
+                early_stopping_patience_s = time_limit;
+                
+                std::cout << BLUE << "> " << RESET << "Retrying with a time limit of " << std::size_t(auto_time_lim) << " seconds." << std::endl;
+
+                if (beta > 0)
+                {
+                    float increment_percent = 0.02;
+                    beta = beta * increment_percent + beta;
+                    beta_constraint->SetBounds(-infinity, beta);
+                    std::cout << BLUE << "> " << RESET << "Increasing beta by a factor of " << increment_percent << " to " << beta << "." << std::endl;
+                }
+
+                result_status = solver->Solve();
+                // Go back to the while(!solved..) loop and check result_status again
+
+                if ((result_status != operations_research::MPSolver::FEASIBLE) && (result_status != operations_research::MPSolver::OPTIMAL))
+                {
+                    num_retries++;
+                }
+            }
+            else
             {
-                std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constrait is defective. The ILP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
-                log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
+                std::cout << RED << "> Exiting. Retrying with a larger patience may result in a solved problem." << RESET << std::endl;
                 log_info(log_buffer, output_directory);
                 return std::vector<GuideStruct>();
             }
         }
         else
         {
-            std::cout << RED << "> Exiting. Enable diagnostics in config.yaml to iteratively look for a possibly bad constraint." << RESET << std::endl;
-            log_info(log_buffer, output_directory);
-            return std::vector<GuideStruct>();
+            std::cout << RED << "> Status: " << result_status << RESET << std::endl;
+            std::cout << RED << "> The ILP problem cannot be solved." << RESET << std::endl;
+            log_buffer << "The ILP problem cannot be solved." << std::endl;
+
+            if (enable_solver_diagnostics)
+            {
+                std::size_t counter = 1;
+                bool fixed_beta = false;
+
+                std::cout << BLUE << "> " << RESET << "Diagnosing constraints by iteratively relaxing them and resolving..." << std::endl;
+                
+                for (auto constraint : solver->constraints())
+                    {
+                        // Temporarily relax the constraint
+                        std::cout << BLUE "\r> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
+                        constraint->SetBounds(-infinity, infinity);
+
+                        time_limit_ms = absl::Milliseconds(60 * 1000);  // Convert milliseconds to absl::Duration
+                        solver->SetTimeLimit(time_limit_ms);
+
+                        result_status = solver->Solve();  // Resolve with relaxed constraint
+
+                        // Check feasibility
+                        if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+                        {
+                            std::cout << BLUE "\n> " << RESET << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
+                            log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
+
+                            // Was Beta the bad constraint? Search for the best Beta
+                            if (constraint->name() == "BETA")
+                            {
+                                std::cout << BLUE "> " << RESET << "Looking for lowest feasible Beta..." << std::endl;
+
+                                // Remove all scores from guides and resolve with minimization.
+                                // The objective value of the minimization will be the new (smallest) beta.
+                                for (auto var : solver->variables())
+                                {
+                                    objective->SetCoefficient(var, 1);
+                                }
+                                
+                                objective->SetMinimization();
+
+                                time_limit = early_stopping_patience_s;  // Time limit in milliseconds
+                                time_limit_ms = absl::Milliseconds(time_limit * 1000);  // Convert milliseconds to absl::Duration
+                                solver->SetTimeLimit(time_limit_ms);
+
+                                result_status = solver->Solve();  // Resolve with relaxed constraint
+
+                                if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+                                {
+                                    std::size_t min_beta = objective->Value();
+
+                                    std::cout << BLUE "> " << RESET << "Increasing Beta to " << min_beta << " makes the problem feasible." << std::endl;
+                                    log_buffer << "Increasing Beta " << min_beta << " makes the problem feasible." << std::endl;
+                                    
+                                    beta = min_beta;
+                                    fixed_beta = true;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                std::cout << BLUE "> " << RESET << "Exiting." << std::endl; 
+                                log_info(log_buffer, output_directory);
+                                return std::vector<GuideStruct>();
+                            }
+                        }
+                        counter++;
+                    }
+
+                if (fixed_beta == false)
+                {
+                    std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constraint is defective. The ILP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
+                    log_buffer << "Relaxing each constraint and resolving did not find the issue. The ILP problem cannot be solved. Exiting." << std::endl;
+                    log_info(log_buffer, output_directory);
+                    return std::vector<GuideStruct>();
+                }
+            }
+            else
+            {
+                std::cout << RED << "> Exiting. Enable diagnostics in config.yaml to iteratively look for a possibly bad constraint." << RESET << std::endl;
+                log_info(log_buffer, output_directory);
+                return std::vector<GuideStruct>();
+            }
         }
+    }
+
+    if (!solved)
+    {
+        std::cout << RED << "> Exiting after 10 failed diagnostic retries." << RESET << std::endl;
+        log_info(log_buffer, output_directory);
+        return std::vector<GuideStruct>();
     }
 
     std::vector<operations_research::MPVariable *> sat_feasible_solutions;
 
     for (auto i : map_seq_to_vars)
+    {
+        boost::dynamic_bitset<> seq_bitset = i.first;
+        operations_research::MPVariable *var = i.second;
+
+        if (var->solution_value() > 0.0)
         {
-            boost::dynamic_bitset<> seq_bitset = i.first;
-            operations_research::MPVariable *var = i.second;
+            log_buffer << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
 
-            if (var->solution_value() > 0.0)
-            {
-                log_buffer << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
-
-                sat_feasible_solutions.push_back(var);
-            }
+            sat_feasible_solutions.push_back(var);
         }
+    }
 
-        map_seq_to_vars.clear();
+    map_seq_to_vars.clear();
 
-        std::size_t len_solutions = sat_feasible_solutions.size();
-        std::cout << BLUE << "> " << RESET << "The final set consists of: " << len_solutions << " guides." << std::endl;
+    std::size_t len_solutions = sat_feasible_solutions.size();
+    std::cout << BLUE << "> " << RESET << "The final set consists of: " << len_solutions << " guides." << std::endl;
 
-        std::vector<GuideStruct> decoded_winners;
+    std::vector<GuideStruct> decoded_winners;
 
-        log_buffer << "The final set consists of:" << std::endl;
-        for (auto var_ptr : sat_feasible_solutions)
-        {
-            boost::dynamic_bitset<> bitset(var_ptr->name());
+    log_buffer << "The final set consists of:" << std::endl;
+    for (auto var_ptr : sat_feasible_solutions)
+    {
+        boost::dynamic_bitset<> bitset(var_ptr->name());
 
-            double score = all_feasible_coverings[bitset].first;
-            boost::dynamic_bitset<> species_hit_by_this_guide = all_feasible_coverings[bitset].second;
+        double score = all_feasible_coverings[bitset].first;
+        boost::dynamic_bitset<> species_hit_by_this_guide = all_feasible_coverings[bitset].second;
 
-            std::string buffer;
-            boost::to_string(species_hit_by_this_guide, buffer);
+        std::string buffer;
+        boost::to_string(species_hit_by_this_guide, buffer);
 
-            std::string decoded_bitset = decode_bitset(var_ptr->name());
+        std::string decoded_bitset = decode_bitset(var_ptr->name());
 
-            GuideStruct guide;
-            guide.sequence = decoded_bitset;
-            guide.score = score;
-            guide.species_hit = buffer;
+        GuideStruct guide;
+        guide.sequence = decoded_bitset;
+        guide.score = score;
+        guide.species_hit = buffer;
 
-            decoded_winners.push_back(guide);
+        decoded_winners.push_back(guide);
 
-            log_buffer << decoded_bitset << std::endl;
-        }
+        log_buffer << decoded_bitset << std::endl;
+    }
 
     log_buffer << "Size of the final set: " << decoded_winners.size() << std::endl;
 
     return decoded_winners;
 }
+
+// DO NOT DELETE.
+//
+// May need to use binary search if problem isnt solved 
+//
+// std::size_t low = beta;
+// std::size_t high = solver->NumVariables();
+// std::size_t mid = (low + high) / 2;
+
+// while (low < high)
+// {
+//     mid = (low + high) / 2;
+
+//     std::cout << BLUE "\r> " << RESET << "Trying " << mid << "..." << std::flush;
+
+//     // Relax and resolve
+//     constraint->SetBounds(-infinity, mid);
+//     result_status = solver->Solve();
+
+//     if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+//     {
+//         high = mid;
+//     }
+//     else
+//     {
+//         low = mid + 1;
+//     }
+// }
+
+// // Relax and resolve
+// constraint->SetBounds(-infinity, low);
+// result_status = solver->Solve();
