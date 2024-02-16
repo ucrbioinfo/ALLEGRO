@@ -161,6 +161,7 @@ std::vector<GuideStruct> sat_solver(
     
     bool solved = false;
     unsigned char num_retries = 0;
+    std::size_t auto_time_lim = 120;
 
     while (!solved && (num_retries != 10))
     {
@@ -185,21 +186,20 @@ std::vector<GuideStruct> sat_solver(
 
             if (enable_solver_diagnostics)
             {
-                std::size_t auto_time_lim = 120;
                 if (early_stopping_patience_s < auto_time_lim)
                 {
                     time_limit = auto_time_lim;
                 }
                 else
                 {
-                    time_limit = early_stopping_patience_s * 2;
+                    time_limit = early_stopping_patience_s * 1.5;
                 }
 
                 time_limit_ms = absl::Milliseconds(time_limit * 1000);
                 solver->SetTimeLimit(time_limit_ms);
                 early_stopping_patience_s = time_limit;
                 
-                std::cout << BLUE << "> " << RESET << "Retrying with a time limit of " << std::size_t(auto_time_lim) << " seconds." << std::endl;
+                std::cout << BLUE << "> " << RESET << "Retrying with a time limit of " << early_stopping_patience_s << " seconds." << std::endl;
 
                 if (beta > 0)
                 {
@@ -257,7 +257,7 @@ std::vector<GuideStruct> sat_solver(
                             // Was Beta the bad constraint? Search for the best Beta
                             if (constraint->name() == "BETA")
                             {
-                                std::cout << BLUE "> " << RESET << "Looking for lowest feasible Beta..." << std::endl;
+                                std::cout << BLUE "> " << RESET << "Looking for lowest feasible beta..." << std::endl;
 
                                 // Remove all scores from guides and resolve with minimization.
                                 // The objective value of the minimization will be the new (smallest) beta.
@@ -278,8 +278,8 @@ std::vector<GuideStruct> sat_solver(
                                 {
                                     std::size_t min_beta = objective->Value();
 
-                                    std::cout << BLUE "> " << RESET << "Increasing Beta to " << min_beta << " makes the problem feasible." << std::endl;
-                                    log_buffer << "Increasing Beta " << min_beta << " makes the problem feasible." << std::endl;
+                                    std::cout << BLUE "> " << RESET << "Increasing beta to " << min_beta << " makes the problem feasible." << std::endl;
+                                    log_buffer << "Increasing beta " << min_beta << " makes the problem feasible." << std::endl;
                                     
                                     beta = min_beta;
                                     fixed_beta = true;
