@@ -168,6 +168,9 @@ class GuideFinder:
         protospacer_length: int,
         context_toward_five_prime: int,
         context_toward_three_prime: int,
+        gc_min: float,
+        gc_max: float,
+        filter_by_gc: bool = False,
         patterns_to_exclude: list[str] = []
         ) -> tuple[list[str], list[str], list[str], list[int]]:
         '''
@@ -220,8 +223,6 @@ class GuideFinder:
             matches = re.finditer(pam_regex, seq)  # Find PAMs on seq
             pam_positions = [match.start() for match in matches]
 
-            filter_by_gc = True
-
             for position in pam_positions:
                 if (position - protospacer_length >= 0):
                     guide = seq[position-protospacer_length:position]
@@ -240,17 +241,16 @@ class GuideFinder:
                         if self.contains_iupac_pattern(guide, patterns_to_exclude):
                             continue
 
-                    if filter_by_gc == True:
+                    if filter_by_gc:
                         gc = calculate_gc_content(guide)
-                        if (gc > 0.7) or (gc < 0.3):
+                        if (gc > gc_max) or (gc < gc_min):
                             continue
 
                     guide_with_context = ''
 
                     # There is enough context on both sides of the PAM
-                    if position-protospacer_length-context_toward_five_prime >= 0 and position+len(pam)+context_toward_three_prime < len(seq) + 1:
+                    if (position-protospacer_length-context_toward_five_prime >= 0) and (position+len(pam)+context_toward_three_prime < len(seq) + 1):
                         guide_with_context = seq[position-protospacer_length-context_toward_five_prime:position+len(pam)+context_toward_three_prime]
-                    
                     else:
                         continue
 
