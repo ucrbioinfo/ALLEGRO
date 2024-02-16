@@ -1,8 +1,8 @@
+from utils.shell_colors import bcolors
 from scorers.scorer_base import Scorer
 from scorers.dummy_scorer import DummyScorer
-from scorers.chopchop_wrapper import ChopChopWrapper
 from scorers.ucrispr_scorer import uCRISPR_scorer
-from utils.shell_colors import bcolors
+from scorers.chopchop_wrapper import ChopChopWrapper
 
 scorer_names = {
     'dummy': 'dummy',
