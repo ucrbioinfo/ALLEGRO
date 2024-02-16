@@ -1,52 +1,39 @@
-# implement callback for solver -- 
-# check if solution is correct after reaching time limit and early termination
-# check if beta works.
-
-# minorg threads!
-
-# e1 ran with 2074 species for *7 hours*: 2757 guides vs. 2761 for 1 minute
-# check how many guides these sets share WHATS GOING ON
-
-# showed on monday that the number for 2434 species was 2569 for 1 minute. This was
-# with repetitive guides allowed: bigortho_bowtie_timelimit_sat_1
-# filter_repetitive: False
-# filter_by_gc: True
-# gc_max: 0.7
-# gc_min: 0.3
-# ran again with 2434 1 minute: 2577 guides
-
-
-# scores with new code
-# diagnostics with new code
-# multithread final bowtie
-
 #================================================================
 # General Settings
 #================================================================
-experiment_name: 'test'
+experiment_name: 'e1'
 # ---
 
 # ---------------------------------------------------------------
-# Path Settings
+# Easy Mode - Has priority over Path Settings below
 # ---------------------------------------------------------------
-# input_directory: 'data/input/cds/cds_from_gff'
-# input_species_path: 'data/input/ascomycota_input_species.csv'
+input_csv_path_with_guides: ''  # Default: ''
 
-input_directory: 'data/input/cds/'
-input_species_path: 'data/input/big_ortho.csv'
+# ---------------------------------------------------------------
+# Path Settings - Ignored if Easy Mode has a value
+# ---------------------------------------------------------------
+
+# Ignored if Easy Mode input_csv_file_with_guides above has a value
+input_directory: 'data/input/cds/ortho_from_gff'
+input_species_path: 'data/input/fourdbs_hi_gff_input_species.csv'
+
+# input_directory: 'data/input/cds/'
+# input_species_path: 'data/input/big_ortho.csv'
+# input_directory: 'data/input/cds/orthogroups'
+# input_species_path: 'data/input/half.csv'
 input_species_path_column: 'cds_file_name'
-# ---
+# ---------------------------------------------------------------
 
-# default: 'track_e'
-# track_a: any of the containers can be targeted.
-# There will be multiplicity targets per container.
-# track_e: each container has to be targeted at least multiplicity times,
+# String value, default: 'track_e'
+# track_a: any of the fasta records can be targeted.
+# There will be multiplicity targets per fasta record.
+# track_e: each fasta record has to be targeted at least multiplicity times,
 track: 'track_e'
 # ---
 
 # Integer value, default: 1
 # In track_a, each species needs to be targeted at least this many times ANYWHERE.
-# In track_e, EACH gene needs to be targeted at least this many times in that gene.
+# In track_e, EACH gene/record needs to be targeted at least this many times in that gene/record.
 multiplicity: 1
 # ---
 
@@ -59,11 +46,16 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
           # If set to a number HIGHER than the number of species, finds the best #beta gRNAs.
 # ---
 
+# Possible choices: 'dummy' (default), 'ucrispr'
+# scorer: 'ucrispr' uses a faster implementation of zhang2019
+# dummy assigns a score of 1.0 to all gRNAs, essentially treats all guides as the same.
+scorer: 'dummy'
+# ---
+
 # Integer value, measured in seconds, default: 60
 # Only used in solving the ILP if there are remaining feasible guides with
 # fractional values after solving the LP.
-# Stop searching for an optimal solution when the size of the set has stopped
-# improving after this many seconds.
+# Stop searching for an optimal solution after this many seconds.
 early_stopping_patience: 10
 # ---
 
@@ -71,8 +63,8 @@ early_stopping_patience: 10
 # Remove guides with > gc_max and < gc_min from consideration?
 # gc_max and gc_min only work if filter_by_gc is True.
 filter_by_gc: True
-gc_max: 0.7
-gc_min: 0.3
+gc_max: 0.6
+gc_min: 0.4
 # ---
 
 #================================================================
@@ -86,7 +78,10 @@ gc_min: 0.3
 # ALLEGRO will output guides that do not contain any of the patterns in this list.
 # Be careful not to place common nucleotides or IUPAC codes here such as 'A' or 'AG'
 # You may end up excluding most or all guides from the calculation.
+
+# https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3568203/#:~:text=For%20vertebrates%2C%20as,of%20these%20species.
 patterns_to_exclude: ['TTTT']
+
 
 # Boolean: True or False. Default: False
 # Significantly affects running time.
@@ -98,18 +93,8 @@ seed_region_is_n_upstream_of_pam: 12
 
 # The column in the input csv file with the name of the 
 # background fasta to check off-targets against
-input_species_offtarget_dir: 'data/input/cds/cds'
+input_species_offtarget_dir: 'data/input/cds/cds_from_gff'
 input_species_offtarget_column: 'cds_file_name'
-# ---
-
-# Possible choices: 'dummy' (default), 'ucrispr', 'chopchop_METHOD'
-# Choices for METHOD: "XU_2015", "DOENCH_2014", "DOENCH_2016", 
-# "MORENO_MATEOS_2015", "CHARI_2015", "G_20", "KIM_2018", "ALKAN_2018", "ZHANG_2019", "ALL"
-#
-# For example, scorer: 'chopchop_doench_2016'
-# scorer: 'ucrispr' uses a faster implementation of 'chopchop_zhang_2019'
-# dummy assigns a score of 1.0 to all gRNAs, essentially treats all guides as the same.
-scorer: 'dummy'
 # ---
 
 # Integer value, default: 5
@@ -118,7 +103,7 @@ scorer: 'dummy'
 # especially when you have millions of gRNAs.
 # Pre-select gRNAs that hit only up to this number of species to act as representatives
 # for these species. Set to 0 to disable and save all gRNAs to memory.
-mp_threshold: 200
+mp_threshold: 0
 # ---
 
 # Boolean: True or False. Default: False
