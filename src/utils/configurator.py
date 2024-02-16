@@ -14,6 +14,9 @@ from utils.iupac_codes import iupac_dict
 
 
 def sanitize_filename(filename, max_length=255):
+    if filename == '':
+        return 'ALLEGRO_TEST_RUN'
+
     # Remove disallowed characters (e.g., /, \0, *, ?, ", <, >, |)
     sanitized = re.sub(r'[\/\0\*\?"<>\|]', '', filename)
     
@@ -52,7 +55,8 @@ def signal_handler(sig, frame):
 
 class Configurator:
     def __init__(self) -> None:
-        self.start_time = time.thread_time()
+        self.start_time = time.time()
+        self.using_easy_mode: bool = False
         
         signal.signal(signal.SIGINT, signal_handler)
 
@@ -108,6 +112,21 @@ class Configurator:
             type=str,
             help=help
         )
+
+        help = "Path to a CSV file to enable easy mode. In this mode, you " + \
+        "provide your own guides (column name 'sequence') and scores." + \
+        "If no scores are provided, ALLEGRO assigns all guides a score " + \
+        "of 1. If using Track A, you need a column called 'target' with " + \
+        "species names in it. If using Track E, you need a column called " + \
+        "'reference_name' with gene names in it. Enabling this mode " + \
+        "ignores input_directory, input_species_path, and input_species_path_column."
+        parser.add_argument(
+            '-em',
+            '--input_csv_path_with_guides',
+            type=str,
+            help=help
+        )
+        
 
         help = "- Files in this directory must end with .fna."
         parser.add_argument(
@@ -326,55 +345,94 @@ class Configurator:
         self.args.experiment_name = sanitize_filename(self.args.experiment_name)
 
         # ------------------------------------------------------------------------------
-        #   input_directory
+        #   Einfacher Modus
         # ------------------------------------------------------------------------------
-        if not os.path.exists(self.args.input_directory):
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find directory {self.args.input_directory}. Did you spell its name (input_directory) correctly? Exiting.')
-            sys.exit(1)
+        if self.args.input_csv_path_with_guides != '':
+            try:
+                species_df = pandas.read_csv(self.args.input_csv_path_with_guides)
+            except pandas.errors.EmptyDataError:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: File {self.args.input_csv_path_with_guides} is empty. Exiting.')
+                sys.exit(1)
+            except FileNotFoundError:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find file {self.args.input_csv_path_with_guides}. Did you spell the path/file name (input_csv_path_with_guides) correctly? Exiting.')
+                sys.exit(1)
 
-        # ------------------------------------------------------------------------------
-        #   cas
-        # ------------------------------------------------------------------------------
-        if self.args.cas != 'cas9':
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: No cas endonuclease other than Cas9 is currently supported. Do not specify this parameter. Exiting.')
-            sys.exit(1)
+            if 'sequence' not in species_df.columns:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "sequence" in {self.args.input_csv_path_with_guides}. Did you spell the column name correctly? Exiting.')
+                sys.exit(1)
 
-        # ------------------------------------------------------------------------------
-        #   PAM
-        # ------------------------------------------------------------------------------
-        if self.args.pam != 'NGG':
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: No PAM other than NGG is currently supported. Do not specify this parameter. Exiting.')
-            sys.exit(1)
+            if self.args.track == 'track_a':
+                if 'target' not in species_df.columns:
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "target" in {self.args.input_csv_path_with_guides}. Did you spell the column name correctly? Exiting.')
+                    sys.exit(1)
 
-        # ------------------------------------------------------------------------------
-        #   input_species_path
-        # ------------------------------------------------------------------------------
-        try:
-            species_df = pandas.read_csv(self.args.input_species_path)
-        except pandas.errors.EmptyDataError:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: File {self.args.input_species_path} is empty. Exiting.')
-            sys.exit(1)
-        except FileNotFoundError:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find file {self.args.input_species_path}. Did you spell the path/file name (input_species_path) correctly? Exiting.')
-            sys.exit(1)
-        
-        # ------------------------------------------------------------------------------
-        #   input_species_path_column
-        # ------------------------------------------------------------------------------
-        try:
-            species_df[self.args.input_species_path_column]
-        except KeyError:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "{self.args.input_species_path_column}" in {self.args.input_species_path}. Did you spell the column name (input_species_path_column) correctly? Exiting.')
-            sys.exit(1)
-        
-        # ------------------------------------------------------------------------------
-        #   species_name
-        # ------------------------------------------------------------------------------
-        try:
-            species_df["species_name"]
-        except KeyError:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "species_name" in {self.args.input_species_path}. Did you format the CSV file correctly? Exiting.')
-            sys.exit(1)
+            if self.args.track == 'track_e':
+                if 'reference_name' not in species_df.columns:
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "reference_name" in {self.args.input_csv_path_with_guides}. Did you spell the column name correctly? Exiting.')
+                    sys.exit(1)
+
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Using easy mode and reading from {self.args.input_csv_path_with_guides}.')
+            self.using_easy_mode = True
+
+        if not self.using_easy_mode:
+            # ------------------------------------------------------------------------------
+            #   input_directory
+            # ------------------------------------------------------------------------------
+            if not os.path.exists(self.args.input_directory):
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find directory {self.args.input_directory}. Did you spell its name (input_directory) correctly? Exiting.')
+                sys.exit(1)
+
+            # ------------------------------------------------------------------------------
+            #   input_species_path
+            # ------------------------------------------------------------------------------
+            try:
+                species_df = pandas.read_csv(self.args.input_species_path)
+            except pandas.errors.EmptyDataError:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: File {self.args.input_species_path} is empty. Exiting.')
+                sys.exit(1)
+            except FileNotFoundError:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find file {self.args.input_species_path}. Did you spell the path/file name (input_species_path) correctly? Exiting.')
+                sys.exit(1)
+            
+            # ------------------------------------------------------------------------------
+            #   input_species_path_column
+            # ------------------------------------------------------------------------------
+            if self.args.input_species_path_column not in species_df.columns:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "{self.args.input_species_path_column}" in {self.args.input_species_path}. Did you spell the column name (input_species_path_column) correctly? Exiting.')
+                sys.exit(1)
+            
+            # ------------------------------------------------------------------------------
+            #   species_name
+            # ------------------------------------------------------------------------------
+            if "species_name" not in species_df.columns:
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "species_name" in {self.args.input_species_path}. Did you format the CSV file correctly? Exiting.')
+                sys.exit(1)
+
+            # ------------------------------------------------------------------------------
+            #   scorer
+            # ------------------------------------------------------------------------------
+            # If CHOPCHOP is the selected scorer, set the chopchop scoring method.
+            if 'chopchop' in self.args.scorer or 'CHOPCHOP' in self.args.scorer:
+                # Set paths for CHOPCHOP
+                self.args.absolute_path_to_chopchop = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scorers/chopchop/'))
+                self.args.absolute_path_to_genomes_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'data/input/genomes/'))
+                
+                if self.conda_env_exists('chopchop') == False:
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: You have selected CHOPCHOP as the guide RNA scorer. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will attempt to run CHOPCHOP with a conda environment called "chopchop" that must include python 2.7 and all the other python libraries for running CHOPCHOP.\n')
+                    print(f'{bcolors.BLUE}>{bcolors.RESET} For more info, see here https://bitbucket.org/valenlab/chopchop/src/master/\n')
+                    print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} ships with CHOPCHOP so you do not need to download the repository or set any paths manually. You only need to create a conda environment called "chopchop" with python 2.7, and install any required scorer libraries in it such as scikit-learn, keras, theano, and etc.\n')
+                    print(f'{bcolors.BLUE}>{bcolors.RESET} When CHOPCHOP is selected as the scorer, you need to place the genome fasta files of every input species in data/input/genomes/ to be used with Bowtie.')
+                    sys.exit(1)
+
+                split = self.args.scorer.split('_')
+                join = '_'.join(split[1:])
+
+                if join == '':
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: Please select a scorer for CHOPCHOP in config.yaml (for example, scorer: "chopchop_doench_2016"). Exiting.')
+                    sys.exit(1)
+
+                self.args.chopchop_scoring_method = join.upper()
+                self.args.scorer = 'chopchop'
 
         # ------------------------------------------------------------------------------
         #   patterns_to_exclude
@@ -427,32 +485,6 @@ class Configurator:
             elif len(os.listdir(f'{self.args.input_species_offtarget_dir}')) == 0:
                 print(f'{bcolors.RED}> Error{bcolors.RESET}: Path {self.args.input_species_offtarget_dir} exists but is empty. Exiting.')
                 sys.exit(1)
-
-        # ------------------------------------------------------------------------------
-        #   scorer
-        # ------------------------------------------------------------------------------
-        # If CHOPCHOP is the selected scorer, set the chopchop scoring method.
-        if 'chopchop' in self.args.scorer or 'CHOPCHOP' in self.args.scorer:
-            # Set paths for CHOPCHOP
-            self.args.absolute_path_to_chopchop = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scorers/chopchop/'))
-            self.args.absolute_path_to_genomes_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'data/input/genomes/'))
-            
-            if self.conda_env_exists('chopchop') == False:
-                print(f'{bcolors.RED}> Error{bcolors.RESET}: You have selected CHOPCHOP as the guide RNA scorer. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will attempt to run CHOPCHOP with a conda environment called "chopchop" that must include python 2.7 and all the other python libraries for running CHOPCHOP.\n')
-                print(f'{bcolors.BLUE}>{bcolors.RESET} For more info, see here https://bitbucket.org/valenlab/chopchop/src/master/\n')
-                print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} ships with CHOPCHOP so you do not need to download the repository or set any paths manually. You only need to create a conda environment called "chopchop" with python 2.7, and install any required scorer libraries in it such as scikit-learn, keras, theano, and etc.\n')
-                print(f'{bcolors.BLUE}>{bcolors.RESET} When CHOPCHOP is selected as the scorer, you need to place the genome fasta files of every input species in data/input/genomes/ to be used with Bowtie.')
-                sys.exit(1)
-
-            split = self.args.scorer.split('_')
-            join = '_'.join(split[1:])
-
-            if join == '':
-                print(f'{bcolors.RED}> Error{bcolors.RESET}: Please select a scorer for CHOPCHOP in config.yaml (for example, scorer: "chopchop_doench_2016"). Exiting.')
-                sys.exit(1)
-
-            self.args.chopchop_scoring_method = join.upper()
-            self.args.scorer = 'chopchop'
 
         # ------------------------------------------------------------------------------
         #   gc_max
@@ -561,13 +593,28 @@ class Configurator:
         if self.args.early_stopping_patience < 1:
             print(f'{bcolors.RED}> Warning{bcolors.RESET}: early_stopping_patience is {self.args.early_stopping_patience} < 1 second. Auto adjusting to 1. ALLEGRO may be able to find a smaller sized solution with a larger patience.')
             self.args.early_stopping_patience = 1
+        
+        # ------------------------------------------------------------------------------
+        #   cas
+        # ------------------------------------------------------------------------------
+        if self.args.cas != 'cas9':
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: No cas endonuclease other than Cas9 is currently supported. Do not specify this parameter. Exiting.')
+            sys.exit(1)
 
+        # ------------------------------------------------------------------------------
+        #   PAM
+        # ------------------------------------------------------------------------------
+        if self.args.pam != 'NGG':
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: No PAM other than NGG is currently supported. Do not specify this parameter. Exiting.')
+            sys.exit(1)
+        # ------------------------------------------------------------------------------
+        
         scorer_settings = self.configure_scorer_settings()
 
         # Create the output folder using the output directory and experiment name
         self.args.output_directory = self.create_output_directory(self.args.output_directory, self.args.experiment_name)
 
-        return self.args, scorer_settings
+        return self.args, scorer_settings,
 
 
     def log_args(self) -> None:
@@ -582,8 +629,8 @@ class Configurator:
         return output_txt_path
 
 
-    def log_time(self, total_time_elapsed):
-        end_time = time.thread_time()
+    def log_time(self, total_time_elapsed=0):
+        end_time = time.time()
 
         # Calculate the elapsed time in seconds
         elapsed_seconds = end_time - self.start_time + total_time_elapsed
@@ -619,7 +666,7 @@ class Configurator:
         os.makedirs(dir_name)
 
         return dir_name
-
+    
 
     def configure_scorer_settings(self) -> dict:
         scorer_settings = dict()
@@ -638,6 +685,9 @@ class Configurator:
                 case 'dummy':
                     scorer_settings = {
                         'pam': 'NGG',
+                        'gc_min': self.args.gc_min,
+                        'gc_max': self.args.gc_max,
+                        'filter_by_gc': self.args.filter_by_gc,
                         'protospacer_length': self.target_lengths['cas9'],
                         'patterns_to_exclude': self.args.patterns_to_exclude,
                         'context_toward_five_prime': 0,
@@ -647,6 +697,9 @@ class Configurator:
                 case 'ucrispr':
                     scorer_settings = {
                         'pam': 'NGG',
+                        'gc_min': self.args.gc_min,
+                        'gc_max': self.args.gc_max,
+                        'filter_by_gc': self.args.filter_by_gc,
                         'use_secondary_memory': True,
                         'protospacer_length': self.target_lengths['cas9'],
                         'patterns_to_exclude': self.args.patterns_to_exclude,
@@ -660,3 +713,4 @@ class Configurator:
                     sys.exit(1)
         
         return scorer_settings
+    
