@@ -5,11 +5,14 @@ from utils.guide_finder import GuideFinder
 
 class DummyScorer(Scorer):
     def __init__(self, settings: dict) -> None:
-        self.pam = settings['pam']
-        self.patterns_to_exclude = settings['patterns_to_exclude']
-        self.protospacer_length = settings['protospacer_length']
-        self.context_toward_five_prime = settings['context_toward_five_prime']
-        self.context_toward_three_prime = settings['context_toward_three_prime']
+        self.pam: str = settings['pam']
+        self.gc_min: float = settings['gc_min']
+        self.gc_max: float = settings['gc_max']
+        self.filter_by_gc: bool = settings['filter_by_gc']
+        self.patterns_to_exclude: list[str] = settings['patterns_to_exclude']
+        self.protospacer_length: int = settings['protospacer_length']
+        self.context_toward_five_prime: int = settings['context_toward_five_prime']
+        self.context_toward_three_prime: int = settings['context_toward_three_prime']
         self.guide_finder = GuideFinder()
         
 
@@ -30,6 +33,9 @@ class DummyScorer(Scorer):
             protospacer_length=self.protospacer_length,
             context_toward_five_prime=self.context_toward_five_prime,
             context_toward_three_prime=self.context_toward_three_prime,
+            gc_min=self.gc_min,
+            gc_max=self.gc_max,
+            filter_by_gc=self.filter_by_gc,
             patterns_to_exclude=self.patterns_to_exclude
         )
         
