@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import pandas
-from queue import Queue
 
 # ALLEGRO CYTHON CUSTOM LIBS.
 # Cythonized custom C++ lib, AKA kirschtorte.so.
@@ -318,6 +317,204 @@ cdef class KirschtorteCython:
                 # -- need to know exactly where the guide came from. not just its species
             
             # E.g., ('ACCTGAG...', 6, ['saccharomyces, LYS2', 'yarrowia, URA3', 'kmarx, LYS3']).
+            self.solution.append((seq, score, names_hits))
+            
+        return self.solution
+
+
+cdef class EinfacherModusCython:
+    cdef dict __dict__  # Enable cython self.attribute binding.
+    cdef Kirschtorte *kirschtorte  # Pointer to C++ class instance.
+
+    def __cinit__(
+        self,
+        beta: int,
+        track: str,
+        early_stopping_patience: int,
+        cas_variant: str,
+        guide_length: int,
+        output_directory: str,
+        cut_multiplicity: int,
+        monophonic_threshold: int,
+        input_csv_path_with_guides: str,
+        enable_solver_diagnostics: bool
+        ) -> None:
+
+        self.beta = beta
+        self.cas_variant = cas_variant
+        self.cut_multiplicity = cut_multiplicity
+        self.monophonic_threshold = monophonic_threshold
+        self.input_csv_path_with_guides = pandas.read_csv(input_csv_path_with_guides).drop_duplicates().reset_index(drop=True)
+
+        # Set how many clusters we need.
+        # If track_a is selected, we have the same number of clusters as species. This is the same number for "Number of constraints" in solver_log.txt 
+        # If track_e is selected, count the total number of fasta records in all species input files (uses multithreading). 
+        #   This is the same number for "Number of constraints" in solver_log.txt aka total number of genes (track E)/species(track A).
+        self.clusters = len(self.input_csv_path_with_guides['target'].unique()) if track == 'track_a' else len(self.input_csv_path_with_guides['reference_name'].unique())
+
+        # Instantiate a C++ class. The linear programming part of ALLEGRO is done here
+        self.kirschtorte = new Kirschtorte(self.clusters, guide_length, early_stopping_patience, output_directory.encode('utf-8'), enable_solver_diagnostics)
+
+        # To translate indices back to legible names later.
+        self.guide_origin: dict[int, str] = dict()
+
+        # Choose the appropriate track.
+        if track == 'track_a':
+            self.track_a()
+        elif track == 'track_e':
+            self.track_e()
+
+
+    @property
+    def species_names(self) -> list[str]:
+        return list(self.guide_origin.values())
+
+
+    def __dealloc__(self):
+        del self.kirschtorte
+
+
+    def track_a(self) -> list[tuple[str, float, list[str]]]:
+        total_number_of_guides: int = 0
+
+        species = self.input_csv_path_with_guides['target'].unique().tolist()
+
+        for idx, species_name in enumerate(species):
+            total_available_guides_for_this_species = 0
+
+            view = self.input_csv_path_with_guides[self.input_csv_path_with_guides['target'] == species_name].drop_duplicates(subset='sequence', keep='first')
+
+            guides_list: list[str] = view['sequence'].tolist()
+            scores_list: list[float] = view['score'].tolist() if 'score' in view.columns else [1.0] * len(view)
+
+            total_number_of_guides += len(guides_list)
+
+            if len(guides_list) < self.cut_multiplicity:
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: The species {species_name} ' +
+                f'contains fewer total guides ({len(guides_list)}) than ' +
+                f'the requested multiplicity {self.cut_multiplicity} for Track A. ' +
+                f'Either remove this species from your input file, or reduce your multiplicity ' +
+                f'to at most the total available guides for this species ({len(guides_list)}) and try again. Skipping.')
+                continue
+
+            for g_idx, guide_sequence in enumerate(guides_list):
+                # interact with C++ -- encode and pass the sequence string, score, and index.
+                status = self.kirschtorte.encode_and_save_dna(
+                    guide_sequence.encode('utf-8'),
+                    scores_list[g_idx],
+                    idx)
+
+                if status == 0:
+                    self.guide_origin[idx] = species_name
+
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {idx + 1}/{self.clusters} species...', end='\r')
+        print(f'\n{bcolors.BLUE}>{bcolors.RESET} Created coversets for all species containing a total of {total_number_of_guides} guides.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
+
+        # Deallocate.
+        del self.input_csv_path_with_guides
+
+        # Interface with the C++ functions.
+        guide_struct_vector = self.kirschtorte.setup_and_solve(
+            self.monophonic_threshold,
+            self.cut_multiplicity,
+            self.beta)
+
+        # Nichts zu tun
+        if guide_struct_vector.size() == 0:
+            sys.exit(1)
+
+        self.solution: list[tuple[str, float, list[str]]] = list()
+        for guide_struct in guide_struct_vector:
+            seq = guide_struct.sequence
+            score = guide_struct.score
+            binary_hits = guide_struct.species_hit
+
+            # Decode the bytes object and reverse the binary string.
+            binary_hits = binary_hits.decode('utf-8')[::-1]  # e.g., '0111'.
+            seq = seq.decode('utf-8')  # e.g., 'ACCTGAG...'
+            
+            # e.g., ['saccharomyces', 'yarrowia', 'kmarx', ...].
+            names_hits: list[str] = list()
+            
+            # Find all the indices where you have a '1' and transform back to actual species names.
+            for idx in [idx.start() for idx in re.finditer('1', binary_hits)]:
+                names_hits.append(self.guide_origin[idx])
+            
+            # E.g., ('ACCTGAG...', 6, ['saccharomyces', 'yarrowia', 'kmarx']).
+            self.solution.append((seq, score, names_hits))
+
+        return self.solution
+    
+
+    def track_e(self) -> list[tuple[str, float, list[str]]]:
+        total_number_of_guides = 0
+        
+        reference_names = self.input_csv_path_with_guides['reference_name'].unique().tolist()
+
+        container_idx: int = 0
+        for _, reference_name in enumerate(reference_names):
+            view = self.input_csv_path_with_guides[self.input_csv_path_with_guides['reference_name'] == reference_name].drop_duplicates(subset='sequence', keep='first')
+
+            guides_list: list[str] = view['sequence'].tolist()
+            scores_list: list[float] = view['score'].tolist() if 'score' in view.columns else [1.0] * len(view)
+
+            if len(guides_list) < self.cut_multiplicity:
+                print(
+                    f'{bcolors.RED}> Warning{bcolors.RESET}: Reference name {reference_name} ' +
+                    f'contains fewer {self.cas_variant} guides ({len(guides_list)}) than the requested multiplicity ({self.cut_multiplicity}) for Track E. Discarding this gene.')
+                continue
+
+            total_number_of_guides += len(guides_list)
+
+            for guide_idx, guide_sequence in enumerate(guides_list):
+                # Interact with C++ -- encode and pass the sequence string, score, and index.
+                status = self.kirschtorte.encode_and_save_dna(
+                    guide_sequence.encode('utf-8'),
+                    scores_list[guide_idx],
+                    container_idx)
+
+                if status == 0:
+                    self.guide_origin[container_idx] = reference_name
+
+            container_idx += 1
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {container_idx}/{self.clusters} genes...', end='\r')
+        print()
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Created coversets for all references containing a total of {total_number_of_guides} guides.')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
+
+        # Deallocate.
+        del self.input_csv_path_with_guides
+
+        # Interface with the C++ functions.
+        guide_struct_vector = self.kirschtorte.setup_and_solve(
+            self.monophonic_threshold,
+            self.cut_multiplicity,
+            self.beta)
+
+        # Nichts zu tun
+        if guide_struct_vector.size() == 0:
+            sys.exit(1)
+
+        self.solution: list[tuple[str, float, list[str]]] = list()
+        for guide_struct in guide_struct_vector:
+            seq = guide_struct.sequence
+            score = guide_struct.score
+            binary_hits = guide_struct.species_hit
+
+            # Decode the bytes object and reverse the binary string.
+            binary_hits = binary_hits.decode('utf-8')[::-1]  # e.g., '0111'
+            seq = seq.decode('utf-8')  # e.g., 'ACCTGAG...'
+            
+            # e.g., ['saccharomyces_cerevisiae, LYS2', 'yarrowia_lipolytica, URA3', 'kluyveromyces_marxianus, LYS3', ...]
+            names_hits: list[str] = list()
+            
+            # Find all the indices where you have a '1' and transform back to actual reference names.
+            for idx in [idx.start() for idx in re.finditer('1', binary_hits)]:
+                names_hits.append(self.guide_origin[idx])
+                # -- need to know exactly where the guide came from. not just its species
+            
+            # E.g., ('ACCTGAG...', 6, ['refname1', 'refname12', 'refname13']).
             self.solution.append((seq, score, names_hits))
             
         return self.solution
