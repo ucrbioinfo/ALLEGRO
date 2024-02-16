@@ -49,10 +49,16 @@ def cluster_strings(strings: list[str], req_match_len: int, mm_allowed: int) -> 
     return clusters
 
 
-def cluster_solution(solution_path: str, req_match_len: int, mm_allowed: int) -> int:
+def cluster_solution(experiment_name: str,
+                     output_directory: str,
+                     req_match_len: int,
+                     mm_allowed: int) -> int:
+        
     print(f'{bcolors.BLUE}>{bcolors.RESET} Clustering guides: Guides in the same cluster have an identical sequence for the first {req_match_len} nucleotides after the PAM (3\' to 5\').')
     print(f'{bcolors.BLUE}>{bcolors.RESET} Guides in the same cluster may mismatch up to {mm_allowed} nucleotides after the seed region.')
     
+    solution_path = os.path.join(output_directory, experiment_name + '.csv')
+
     df = pandas.read_csv(solution_path)
     df['cluster'] = 0
     seqs = df.sequence.unique().tolist()
@@ -149,14 +155,15 @@ def find_targets(target_species: str,
 
 
 def report_offtargets(input_species_path: str,
-                      solution_path: str,
-                      output_dir: str,
+                      output_directory: str,
+                      experiment_name: str,
                       input_species_offtarget_dir: str,
                       input_species_offtarget_column: str,
-                      experiment_name: str,
                       num_mismatches: int,
                       seed_region_is_n_upstream_of_pam: int,
                       pam_length: int = 3):
+    
+    solution_path = os.path.join(output_directory, experiment_name + '.csv')
 
     background_source = 'genome' if 'genome' in input_species_offtarget_column else 'genes'
 
@@ -165,7 +172,6 @@ def report_offtargets(input_species_path: str,
     created_dfs: list[pandas.DataFrame] = list()  # For threads to deposit their results
     species_df = pandas.read_csv(input_species_path)
     output_library = pandas.read_csv(solution_path)
-    # len_species = len(output_library['target'].unique())
 
     # Pull back the start position of guides on negative strand
     # by PAM length -- to comply with bowtie hits and consider the PAM
@@ -173,7 +179,7 @@ def report_offtargets(input_species_path: str,
     
     # Get all the library guides
     seqs = list()
-    library_path = os.path.join(output_dir, experiment_name + '_library.txt')
+    library_path = os.path.join(output_directory, experiment_name + '_library.txt')
     with open(library_path, 'r') as f:
         for l in f.readlines():
             seqs.append(l.strip())
@@ -215,4 +221,4 @@ def report_offtargets(input_species_path: str,
     print()
 
     final_df = pandas.concat(created_dfs, ignore_index=True)
-    final_df.to_csv(f'{output_dir}/targets.csv', index=False)
+    final_df.to_csv(f'{output_directory}/targets.csv', index=False)
