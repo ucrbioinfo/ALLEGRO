@@ -21,8 +21,6 @@ namespace Kirschtorte
     {
         this->num_containers = num_containers; // A container may be a gene, species, or chromosome.
         this->guide_length = guide_length;     // Twenty (20) for cas9.
-        // this->num_trials = num_trials;         // The randomized rounding algorithm will restart this many times
-        //                                        // to find the smallest subset of the feasible solutions.
         this->early_stopping_patience_s = early_stopping_patience_s;
         this->output_directory = output_directory;
         this->bits_required_to_store_seq = guide_length * 2; // Each nucleotide A/C/T/G in a guide
@@ -317,8 +315,8 @@ namespace Kirschtorte
                                 // The actual objective value is a FLOAT value.
                                 // truncating the fractional part results in infeasible. One workaround is to add 1 to fix it.
                                 
-                                std::cout << BLUE "> " << RESET << "Increasing Beta to " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
-                                log_buffer << "Increasing Beta " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
+                                std::cout << BLUE "> " << RESET << "Increasing beta to " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
+                                log_buffer << "Increasing beta " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
                                 
                                 beta = min_beta;
                                 fixed_beta = true;
