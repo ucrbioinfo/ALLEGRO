@@ -33,7 +33,6 @@ def cluster_strings(strings: list[str], req_match_len: int, mm_allowed: int) -> 
             for idx, existing_string in enumerate(cluster):
                 if string[req_match_len:] == existing_string[req_match_len:] and hamming_distance(string, existing_string, req_match_len) <= mm_allowed:
                     agreement[idx] = True
-
                 else:
                     break
 
@@ -95,7 +94,6 @@ def find_targets(target_species: str,
                  num_mismatches: int,
                  seed_region_is_n_upstream_of_pam: int) -> None:
 
-    
     target_species_offtarget_dir = os.path.join(input_species_offtarget_dir, species_df[species_df['species_name'] == target_species][input_species_offtarget_column].values[0])
     
     # Create a Bowtie index for the target species if it doesn't exist (checks in the function)
@@ -193,6 +191,7 @@ def report_offtargets(input_species_path: str,
     
     print(f'{bcolors.BLUE}>{bcolors.RESET} Looking for off-targets...')
     print(f'Done with {count}/{len(output_library["target"].unique())} species...', end='\r')
+
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         # Prepare the partial function to include all necessary parameters except 'row'
         partial_find_targets = partial(find_targets,
