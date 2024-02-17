@@ -124,7 +124,8 @@ class Configurator:
             '-em',
             '--input_csv_path_with_guides',
             type=str,
-            help=help
+            help=help,
+            default=''
         )
         
 
@@ -133,6 +134,7 @@ class Configurator:
             '--input_directory',
             type=str,
             help=help,
+            default=''
         )
 
 
@@ -142,6 +144,7 @@ class Configurator:
             '--input_species_path',
             type=str,
             help=help,
+            default=''
         )
 
         help = "- The desired column name of the .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
@@ -150,6 +153,7 @@ class Configurator:
             '--input_species_path_column',
             type=str,
             help=help,
+            default=''
         )
 
         help = "- Which track to use?\n" + \
@@ -195,6 +199,7 @@ class Configurator:
             '--early_stopping_patience',
             type=int,
             help=help,
+            default=60
         )
 
         parser.add_argument(
@@ -206,13 +211,13 @@ class Configurator:
         parser.add_argument(
             '--gc_max',
             type=float,
-            default=0.7,
+            default=0.6,
         )
 
         parser.add_argument(
             '--gc_min',
             type=float,
-            default=0.3,
+            default=0.4,
         )
 
         help = "Supports up to 5 chained IUPAC codes; e.g., 'RYSN' ALLEGRO will output guides that do not contain any of the patterns in this list."
@@ -220,14 +225,15 @@ class Configurator:
             '--patterns_to_exclude',
             type=list[str],
             help=help,
-            default=['TTTT']
+            default=['']
         )
 
         help = "- True/False boolean, significantly affects running time. True generates a report of gRNA with off-targets."
         parser.add_argument(
             '--output_offtargets',
             type=bool,
-            help=help
+            help=help,
+            default=False,
         )
 
         help = "- Generate a report with gRNA with fewer <= N mismatches after the seed region.\n" + \
@@ -249,7 +255,8 @@ class Configurator:
         parser.add_argument(
             '--seed_region_is_n_upstream_of_pam',
             type=int,
-            help=help
+            help=help,
+            default=12
         )
 
         help = '- The directory in which the input csv file with the name of the background fastas to check off-targets against lives.'
@@ -257,6 +264,7 @@ class Configurator:
             '--input_species_offtarget_dir',
             type=str,
             help=help,
+            default=''
         )
 
         help = '- The column in the input csv file with the name of the background fasta to check off-targets against.'
@@ -264,6 +272,7 @@ class Configurator:
             '--input_species_offtarget_column',
             type=str,
             help=help,
+            default=''
         )
 
         help = "- A higher number increases running time while decreasing memory consumption.\n" + \
@@ -300,12 +309,12 @@ class Configurator:
             default="data/output/"
         )
 
-        help = "- Boolean: True or False. Default: False\n" + \
+        help = "- Boolean: True or False. Default: True\n" + \
         " - When a problem is deemed unsolvable by the LP solver (e.g., Status: MPSOLVER_INFEASIBLE), enabling diagnostics will attempt to relax each constraint and resolve the problem. If the new problem with the relaxed constraint is solvable, ALLEGRO outputs the internal name of the culprit gene/species. Currently, to stop this process, you need to find the PID of the python process running ALLEGRO using: $ top and kill it manually: $ kill -SIGKILL PID"
         parser.add_argument(
             '--enable_solver_diagnostics',
             type=bool,
-            default=False,
+            default=True,
             help=help
         )
 
@@ -338,6 +347,8 @@ class Configurator:
 
 
     def check_and_fix_configurations(self) -> tuple[argparse.Namespace, dict]:
+        species_df = None
+
         # ------------------------------------------------------------------------------
         #   experiment_name
         # ------------------------------------------------------------------------------
@@ -476,15 +487,24 @@ class Configurator:
                 sys.exit(1)
 
             if self.args.seed_region_is_n_upstream_of_pam < 0:
-                print(f'{bcolors.RED}> Warning{bcolors.RESET}: seed_region_is_n_upstream_of_pam ({self.args.seed_region_is_n_upstream_of_pam}) is set to negative. Auto adjusting to 0.')
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: seed_region_is_n_upstream_of_pam ({self.args.seed_region_is_n_upstream_of_pam}) is set to a negative value. Auto adjusting to 0.')
                 self.args.seed_region_is_n_upstream_of_pam = 0
 
             if not os.path.exists(f'{self.args.input_species_offtarget_dir}'):
                 print(f'{bcolors.RED}> Error{bcolors.RESET}: Path {self.args.input_species_offtarget_dir} does not exist. Exiting.')
                 sys.exit(1)
             elif len(os.listdir(f'{self.args.input_species_offtarget_dir}')) == 0:
-                print(f'{bcolors.RED}> Error{bcolors.RESET}: Path {self.args.input_species_offtarget_dir} exists but is empty. Exiting.')
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Directory {self.args.input_species_offtarget_dir} exists but is empty. Exiting.')
                 sys.exit(1)
+
+            base_path = os.getcwd()
+            for file_name in species_df[self.args.input_species_offtarget_column]:
+                if not os.path.exists(f'{base_path}/{self.args.input_species_offtarget_dir}/{file_name}'):
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: Using the given configuration in config.yaml under "output_offtargets: True," path {base_path}/{self.args.input_species_offtarget_dir}/{file_name} does not exist. Exiting.')
+                    sys.exit(1)
+                elif os.stat(f'{base_path}/{self.args.input_species_offtarget_dir}/{file_name}').st_size == 0:
+                    print(f'{bcolors.RED}> Error{bcolors.RESET}: Using the given configuration in config.yaml under "output_offtargets: True," path {base_path}/{self.args.input_species_offtarget_dir}/{file_name} exists, but is empty. Exiting.')
+                    sys.exit(1)
 
         # ------------------------------------------------------------------------------
         #   gc_max
@@ -497,7 +517,7 @@ class Configurator:
         #   gc_min
         # ------------------------------------------------------------------------------
         if self.args.gc_min < 0:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: gc_min ({self.args.gc_min}) is set to negative. Auto adjusting to 0.')
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: gc_min ({self.args.gc_min}) is set to a negative value. Auto adjusting to 0.')
             self.args.gc_min = 0
 
         # ------------------------------------------------------------------------------
@@ -506,7 +526,7 @@ class Configurator:
         self.args.report_up_to_n_mismatches = int(self.args.report_up_to_n_mismatches)
 
         if self.args.report_up_to_n_mismatches > 3:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: report_up_to_n_mismatches ({self.args.report_up_to_n_mismatches}) is set to a value higher than 3. It may only be between 0 to 3. Adjust this value in the config and try again.')
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: report_up_to_n_mismatches ({self.args.report_up_to_n_mismatches}) is set to a value higher than 3. It may only be in range [0-3]. Adjust this value in the config and try again. Exiting.')
 
         # ------------------------------------------------------------------------------
         #   mismatches_allowed_after_seed_region
@@ -514,7 +534,7 @@ class Configurator:
         self.args.mismatches_allowed_after_seed_region = int(self.args.mismatches_allowed_after_seed_region)
 
         if self.args.mismatches_allowed_after_seed_region < 0:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: mismatches_allowed_after_seed_region ({self.args.mismatches_allowed_after_seed_region}) is set to negative. Auto adjusting to 0.')
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: mismatches_allowed_after_seed_region ({self.args.mismatches_allowed_after_seed_region}) is set to a negative value. Auto adjusting to 0.')
             self.args.mismatches_allowed_after_seed_region = 0
 
         # ------------------------------------------------------------------------------
@@ -547,7 +567,7 @@ class Configurator:
         # ------------------------------------------------------------------------------
         if self.args.mp_threshold > 0 and self.args.mp_threshold < self.args.multiplicity:
             print(f'{bcolors.RED}> Warning{bcolors.RESET}: mp_threshold is set to {self.args.mp_threshold}, a positive value smaller than the multiplicity {self.args.multiplicity}.')
-            print(f'{bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot remove all but {self.args.mp_threshold} guides from each container and still ensure each container is targeted at least {self.args.multiplicity} times.')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot remove all but {self.args.mp_threshold} guides from each recprd record still ensure each record is targeted at least {self.args.multiplicity} times.')
             print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature. Refer to the manual for more details.')
             self.args.mp_threshold = self.args.multiplicity
 
@@ -557,12 +577,11 @@ class Configurator:
         self.args.beta = int(self.args.beta)
 
         if self.args.beta <= 0:
-            print(f'{bcolors.BLUE}>{bcolors.RESET} Beta is set to {self.args.beta} and thus disabled.')
-            print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will minimize the set size.')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Beta is disabled. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will minimize the set size.')
             self.args.beta = 0
 
             if self.args.scorer != 'dummy':
-                print(f'{bcolors.BLUE}>{bcolors.RESET} Scorer is set to {self.args.scorer}. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will score the guides for information only and will not use them in calculations.')
+                print(f'{bcolors.BLUE}>{bcolors.RESET} Scorer is set to {self.args.scorer} and beta disabled. {bcolors.ORANGE}ALLEGRO{bcolors.RESET} will score the guides for information only and will not use them in calculations.')
         
         if self.args.scorer == 'dummy' and self.args.beta > 0:
             # No feasible solutions if there are fewer guides than beta
@@ -590,9 +609,9 @@ class Configurator:
         # ------------------------------------------------------------------------------
         self.args.early_stopping_patience = int(self.args.early_stopping_patience)
 
-        if self.args.early_stopping_patience < 1:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: early_stopping_patience is {self.args.early_stopping_patience} < 1 second. Auto adjusting to 1. ALLEGRO may be able to find a smaller sized solution with a larger patience.')
-            self.args.early_stopping_patience = 1
+        if self.args.early_stopping_patience < 10:
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: early_stopping_patience is {self.args.early_stopping_patience} < 10 seconds. Auto adjusting to 10. ALLEGRO may be able to find a smaller sized solution with a larger patience.')
+            self.args.early_stopping_patience = 10
         
         # ------------------------------------------------------------------------------
         #   cas
