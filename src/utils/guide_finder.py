@@ -4,10 +4,19 @@
 import re
 import os
 import sys
+import time
+import pandas
+import subprocess
+from io import StringIO
+from itertools import product
 from Bio import SeqIO
 from Bio.Seq import Seq
 
 from utils.shell_colors import bcolors
+from utils.iupac_codes import iupac_dict
+
+def calculate_gc_content(sequence):
+    return (sequence.upper().count('G') + sequence.upper().count('C')) / len(sequence)
 
 
 def count_kmers(sequence, k):
@@ -19,10 +28,80 @@ def count_kmers(sequence, k):
     return kmers
 
 
+def align_guides_to_seq_bowtie(
+    name: str,
+    output_align_temp_path: str,
+    file_path: str,
+    output_directory: str,
+    ) -> tuple[list[str], list[str], list[str], list[str], list[str], float]:
+
+    base_path = os.getcwd()
+    index_basename = os.path.join(output_directory, name + '_idx')
+
+    bowtie_build_command = ['bowtie-build', '--quiet', '-f', base_path + '/' + file_path, base_path + '/' + index_basename]
+    bowtie_command = ['bowtie', '-a', '-v', '0', '--quiet', '--suppress', '5,6,7,8', '-f', base_path + '/' + index_basename, base_path + '/' + output_align_temp_path]
+
+    start_time = time.process_time()
+    process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    _, stderr = process.communicate()
+
+    # Check for any errors
+    if stderr:
+        print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie-build error: {stderr.decode()}')
+        print('Exiting.')
+        sys.exit(1)
+
+    if process.returncode != 0:
+        # Handle error: log or raise exception
+        error_message = f"Command failed with return code {process.returncode}. Error: {stderr.decode('utf-8')}"
+        raise RuntimeError(error_message)
+
+    process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+
+    # Check for any errors
+    if stderr:
+        print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie error: {stderr.decode()}')
+        print('Exiting.')
+        sys.exit(1)
+
+    if process.returncode != 0:
+        # Handle error: log or raise exception
+        error_message = f"Command failed with return code {process.returncode}. Error: {stderr.decode('utf-8')}"
+        raise RuntimeError(error_message)
+
+    end_time = time.process_time()
+    # Calculate the elapsed time in seconds
+    elapsed_seconds = end_time - start_time
+
+    df = pandas.read_csv(StringIO(stdout.decode()), sep='\t',
+                names=['query_name', 'strand', 'reference_name', 'start_position'])
+
+    records = list(SeqIO.parse(file_path, 'fasta'))
+
+    map_ref_id_to_ortho = dict()
+    for record in records:
+        match = re.search(r'\[orthologous_to_gene=(.*?)\]', record.description)
+        map_ref_id_to_ortho[record.id] = match.group(1) if match else 'N/A'
+
+    sequences = df['query_name'].tolist()
+    strands = df['strand'].tolist()
+    reference_names = df['reference_name'].tolist()
+    orthos = [map_ref_id_to_ortho[ref_id] for ref_id in reference_names]
+    start_positions = df['start_position'].tolist()
+
+    # for filename in os.listdir(output_directory):
+    #     if filename.endswith('.ebwt'):
+    #         file_path = os.path.join(output_directory, filename)
+    #         os.remove(file_path)
+
+    return sequences, strands, reference_names, orthos, start_positions, elapsed_seconds
+
+
 class GuideFinder:
     _self = None
     pam_dict = None
-    exclusion_list = None
+    exclusion_list = []
 
     # Singleton
     def __new__(self):
@@ -37,13 +116,49 @@ class GuideFinder:
                 'NGG': r'(?=([ACTG]GG))',
             }
 
-        if self.exclusion_list is None:
+        if self.exclusion_list == []:
             # Whether there are guides to exclude
             if os.path.exists('data/input/_the_blocklist_.txt'):
                 with open('data/input/_the_blocklist_.txt', 'r') as file:
                     self.exclusion_list = file.read().splitlines()
                     if len(self.exclusion_list) != 0:
                         print(f'{bcolors.BLUE}>{bcolors.RESET} Excluding the gRNA(s) in data/input/{bcolors.BLACK}_the_blocklist_.csv{bcolors.RESET}')
+
+
+    def contains_iupac_pattern(self, sequence: str, patterns: list[str]) -> bool:
+        sequence = sequence.strip().upper()
+
+        for pattern in patterns:
+            pattern = pattern.strip().upper()
+
+            if (len(pattern) == len(sequence)):
+                for i, p in enumerate(pattern):
+
+                    # seq: AAAAGGAAGTAGCGGAGCAG
+                    # pat: TAAAGGAAGTAGCGGAGCAG
+                    # p  : T
+                    # if T =/= A return False
+                    if not (sequence[i] in iupac_dict[p]):
+                        return False
+
+                return True
+
+            elif (len(pattern) < len(sequence)):
+                # For example, if pattern = 'MK', if any of the ['GA', 'GC', 'TA', 'TC'] 
+                # appear in sequence, return True
+                lists = [iupac_dict[code] for code in pattern]
+                if lists != []:
+                    combinations = [''.join(pair) for pair in product(*lists)]
+                    
+                    for combination in combinations:
+                        if combination in sequence:
+                            return True
+
+            else:
+                print(f'Dev warning in contains_iupac_pattern(). Pattern {pattern} is longer than {sequence}. Ignoring pattern.')
+                continue
+
+        return False
 
 
     def identify_guides_and_indicate_strand(
@@ -53,7 +168,10 @@ class GuideFinder:
         protospacer_length: int,
         context_toward_five_prime: int,
         context_toward_three_prime: int,
-        filter_repetitive: bool
+        gc_min: float,
+        gc_max: float,
+        filter_by_gc: bool = False,
+        patterns_to_exclude: list[str] = []
         ) -> tuple[list[str], list[str], list[str], list[int]]:
         '''
         ## Args:
@@ -64,8 +182,7 @@ class GuideFinder:
                 the 5-prime after the protospacer (to the left of the sequence).
             * context_toward_three_prime: The number of nucleotides to extract toward
                 the 3-prime after (and excluding) the PAM (to the right side of the sequence).
-            * filter_repetitive: Discards a guide if the protospace contains 2-mers
-                repeated 5 or more times.
+            * patterns_to_exclude: Discards a guide if the target contains any of the IUPAC patterns.
 
         ## Returns:
             A tuple of four lists:
@@ -110,39 +227,30 @@ class GuideFinder:
                 if (position - protospacer_length >= 0):
                     guide = seq[position-protospacer_length:position]
 
-                    # Skip guides with non-standard nucleotides.
+                    # Skip guides with non-standard nucleotides, or the gap delimiter: | 
                     if any(c not in ['A', 'C', 'G', 'T'] for c in guide):
                         continue
 
                     if guide in self.exclusion_list:
                         continue
 
-                    if filter_repetitive == True:
-                        # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
-                        # 7 times or GA is repeated 6 times.
-                        if max(count_kmers(guide, 2).values()) >= 5:
-                            # self.num_more_than_four_twomers_removed += 1
-                            # print(guide, 'contains more than 5 of the same 2-mer')
+                    # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
+                    # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
+                    if patterns_to_exclude:
+                        # ['NNNNNGNNNNNNNGNNNNNN', 'TTTT']
+                        if self.contains_iupac_pattern(guide, patterns_to_exclude):
                             continue
 
-                        # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
-                        if any(substr in guide for substr in ['AAAAA', 'CCCCC', 'GGGGG', 'TTTTT']):
-                            # self.num_containing_fivemers_removed += 1
-                            # print(guide, 'contains 5-mers')
-                            continue
-                        
-                        # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
-                        if any(substr in guide for substr in ['AAAA', 'CCCC', 'GGGG', 'TTTT']):
-                            # self.num_containing_fourmers_removed += 1
-                            # print(guide, 'contains 4-mers')
+                    if filter_by_gc:
+                        gc = calculate_gc_content(guide)
+                        if (gc > gc_max) or (gc < gc_min):
                             continue
 
                     guide_with_context = ''
 
                     # There is enough context on both sides of the PAM
-                    if position-protospacer_length-context_toward_five_prime >= 0 and position+len(pam)+context_toward_three_prime < len(seq) + 1:
+                    if (position-protospacer_length-context_toward_five_prime >= 0) and (position+len(pam)+context_toward_three_prime < len(seq) + 1):
                         guide_with_context = seq[position-protospacer_length-context_toward_five_prime:position+len(pam)+context_toward_three_prime]
-                    
                     else:
                         continue
 
@@ -156,7 +264,7 @@ class GuideFinder:
         find_matches(seq=sequence_rev_comp, strand='-')  # - is the reverse complement strand
 
         return guides_list, guides_context_list, strands_list, locations_list
-
+    
 
     def locate_guides_in_sequence(
         self,

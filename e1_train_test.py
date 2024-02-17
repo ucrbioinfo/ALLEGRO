@@ -6,7 +6,7 @@ from Bio import SeqIO
 import multiprocessing
 from sklearn.model_selection import KFold
 
-from src.utils.guide_finder import GuideFinder
+from src.utils.test_guide_finder import GuideFinder
 
 
 def find_all_matches(list1, list2):
@@ -32,7 +32,7 @@ def hamming_distance(str1: str, str2: str, length: int) -> int:
 def get_record_metadata(record):
     # This gene's own name -- Usually N/A for unannotated CDS files or chromosomes/scaffolds
     gene_match = re.search(gene_regex, record.description)
-    gene_name = gene_match.group(1) if gene_match is not None else 'N/A'
+    gene_name = gene_match.group(1) if gene_match is not None else record.id
 
     # This gene's own protein id e.g., XP_022674739.1
     protein_id_match = re.search(protein_id_regex, record.description)
@@ -57,52 +57,65 @@ orthologous_name_regex = r'\[orthologous_to_gene=(.*?)\]'
 orthologous_protein_regex = r'\[orthologous_to_ref_protein=(.*?)\]'
 
 config = '''
-# ---
+#================================================================
+# General Settings
+#================================================================
 experiment_name: {experiment_name}
 # ---
 
-# ---
+# ---------------------------------------------------------------
+# Path Settings
+# ---------------------------------------------------------------
 input_directory: {input_directory}
 input_species_path: {input_species_path}
 input_species_path_column: {input_species_path_column}
 # ---
 
-# ---
 track: {track}
 # ---
 
-# ---
 multiplicity: {mult}
 # ---
 
-# ---
 beta: {beta}
 # ---
-
-# ---
-scorer: {scorer}
+early_stopping_patience: 120
 # ---
 
-# ---
 filter_repetitive: {filter_repetitive}
 # ---
 
+filter_by_gc: True
+gc_max: 0.7
+gc_min: 0.3
 # ---
+
+#================================================================
+# Advanced Settings
+# ===============================================================
+
+output_offtargets: False
+report_up_to_n_mismatches: 3  # This may be 0, 1, 2, or 3
+seed_region_is_n_upstream_of_pam: 12
+
+input_species_offtarget_dir: 'data/input/cds/cds'
+input_species_offtarget_column: 'cds_file_name'
+# ---
+
+scorer: {scorer}
+# ---
+
 mp_threshold: {mp_threshold}
 # ---
 
-# ---
-num_trials: 10000
-# ---
+cluster_guides: False
+mismatches_allowed_after_seed_region: 2 
 
-# ---
-cluster_guides: True
-seed_region_is_n_from_pam: 10
-mismatches_allowed_after_seed_region: 2
+enable_solver_diagnostics: False
 # ---
 '''
 
-df = pd.read_csv('data/input/fourdbs_hi_input_species.csv')
+df = pd.read_csv('data/input/fourdbs_hi_gff_input_species.csv')
 
 # Set the random seed for reproducibility.
 seed = 42
@@ -126,12 +139,15 @@ def threaded_split(args):
 
     for run in run_range:
         new_exp_name = f'e1_cv_split_{split}_run_{run}'
+
+        if os.path.exists(f'data/output/test_{new_exp_name}_results.csv'):
+            return
         
         context = {
             'experiment_name': new_exp_name,
             'input_species_path': train_new_path,
             'input_species_path_column': 'cds_file_name',
-            'input_directory': 'data/input/cds/orthogroups/',
+            'input_directory': 'data/input/cds/ortho_from_gff/',
             'track': 'track_e',
             'scorer': 'dummy',
             'beta': 0,
@@ -147,9 +163,12 @@ def threaded_split(args):
         # Call ALLEGRO
         os.system('python src/main.py --config ' + config_name)
 
-        split_out = pd.read_csv(f'data/output/{new_exp_name}/{new_exp_name}.csv')
+        # split_out = pd.read_csv(f'data/output/{new_exp_name}/{new_exp_name}.csv')
 
-        library = split_out.sequence.unique()
+        library = list()
+        with open(f'data/output/{new_exp_name}/{new_exp_name}_library.txt', 'r') as f:
+            for line in f.readlines():
+                library.append(line.strip())
 
         test_df = pd.read_csv(f'data/input/test_e1_cv_split_{split}.csv')[['species_name', 'cds_file_name']]
 
@@ -211,6 +230,7 @@ def threaded_split(args):
                             if (lib_guide[req_match_len:] == test_guide[req_match_len:]) and \
                                 (distance_after_seed <= mm_allowed) and \
                                     (distance_after_seed > 0):
+                                
                                 df_species_name_list.append(species_name)
                                 df_covered_list.append(test_guide)
                                 df_locations.append(locations_list[idx])
@@ -252,7 +272,6 @@ def threaded_split(args):
                     df_ortho_gene_names.append(ortho_gene_name)
                     df_lib_partial_match.append('N/A')
                     df_mismatch.append('N/A')
-            
 
             # No exact or partial matches anywhere at all in this species.
             if species_is_covered_n_times == 0:
@@ -288,9 +307,10 @@ def threaded_split(args):
 split = 1
 args_list = list()
 
-runs = [[i for i in range(1 * n - 1, 1 * n)] for n in range(1, 101)]
+# runs = [[i for i in range(1 * n - 1, 1 * n)] for n in range(1, 101)]
+runs = [[0]]
 
-with multiprocessing.Pool(processes=80) as pool:
+with multiprocessing.Pool(processes=1) as pool:
     for train_index, test_index in kfold.split(df):
 
         for r in runs:
