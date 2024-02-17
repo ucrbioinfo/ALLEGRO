@@ -70,23 +70,21 @@ class OfftargetFinder:
         else:
             # print(f'{bcolors.BLUE}>{bcolors.RESET} Creating Bowtie index for {species_name}')
             bowtie_build_command = ['bowtie-build', '-q', f'{self._base_path}/{path_to_background_fasta}', f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx']
-            process = subprocess.Popen(bowtie_build_command, stderr=subprocess.PIPE)
+            process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             _, stderr = process.communicate()
             
             if stderr:
                     print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie-build encountered an error: {stderr.decode()}')
-                    print('Exiting.')
+                    print(f'{bcolors.RED}> Exiting. {bcolors.RESET}')
                     sys.exit(1)
-            
-            # os.system(f'bowtie-build -q {self._base_path}/{path_to_background_fasta} {self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx')
-
+                    
 
     def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, background_source: str, num_of_mismatches: int) -> None:
-        # print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
 
         for v in [num_of_mismatches]:
-            bowtie_command = ['bowtie', '-v', v, '-a', '--quiet', f'{self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx', f'{self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq', f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam']
-            process = subprocess.Popen(bowtie_command, stderr=subprocess.PIPE)
+            bowtie_command = ['bowtie', '-v', str(v), '-a', '--quiet', f'{self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx', f'{self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq', f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam']
+            process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             _, stderr = process.communicate()
             
             if stderr:
