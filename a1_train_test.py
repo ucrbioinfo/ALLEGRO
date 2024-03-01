@@ -65,10 +65,11 @@ experiment_name: {experiment_name}
 # ---------------------------------------------------------------
 # Path Settings
 # ---------------------------------------------------------------
+
 input_directory: {input_directory}
 input_species_path: {input_species_path}
 input_species_path_column: {input_species_path_column}
-# ---
+# ---------------------------------------------------------------
 
 track: {track}
 # ---
@@ -79,39 +80,35 @@ multiplicity: {mult}
 beta: {beta}
 # ---
 
+scorer: 'dummy'
+# ---
+
 early_stopping_patience: 60
 # ---
 
-filter_repetitive: {filter_repetitive}
-# ---
-
 filter_by_gc: True
-gc_max: 0.7
-gc_min: 0.3
+gc_max: 0.6
+gc_min: 0.4
 # ---
 
 #================================================================
 # Advanced Settings
 # ===============================================================
 
+patterns_to_exclude: {patterns_to_exclude}
+
 output_offtargets: False
 report_up_to_n_mismatches: 3  # This may be 0, 1, 2, or 3
 seed_region_is_n_upstream_of_pam: 12
 
-input_species_offtarget_dir: 'data/input/cds/cds'
+input_species_offtarget_dir: 'data/input/cds/cds_from_gff'
 input_species_offtarget_column: 'cds_file_name'
 # ---
 
-scorer: {scorer}
-# ---
-
-mp_threshold: {mp_threshold}
-# ---
-
 cluster_guides: False
-mismatches_allowed_after_seed_region: 2 
+mismatches_allowed_after_seed_region: 2  # Integer value, default: 2
 
-enable_solver_diagnostics: False
+enable_solver_diagnostics: True
 # ---
 '''
 
@@ -134,14 +131,12 @@ def threaded_split(args):
         context = {
             'experiment_name': new_exp_name,
             'input_species_path': train_new_path,
-            'input_species_path_column': 'cds_file_name',
             'input_directory': 'data/input/cds/ortho_from_gff/',
+            'input_species_path_column': 'ortho_file_name',
             'track': 'track_a',
-            'scorer': 'dummy',
             'beta': 0,
             'mult': '1',
-            'filter_repetitive': True,
-            'mp_threshold': 0
+            'patterns_to_exclude': ['TTTT'],
         }
 
         config_name = f'temp_config_a1_cv_{split}_{run}.yaml'
@@ -157,7 +152,7 @@ def threaded_split(args):
             for line in f.readlines():
                 library.append(line.strip())
 
-        test_df = pd.read_csv(f'data/input/test_a1_cv_split_{split}.csv')[['species_name', 'cds_file_name']]
+        test_df = pd.read_csv(f'data/input/test_a1_cv_split_{split}.csv')[['species_name', context['input_species_path_column']]]
 
         df_species_name_list = list()
         df_covered_list = list()
@@ -178,7 +173,7 @@ def threaded_split(args):
 
             species_is_covered_n_times = 0
             
-            records_path = base_path + row['cds_file_name']
+            records_path = base_path + row[context['input_species_path_column']]
             records = list(SeqIO.parse(open(records_path), 'fasta'))
 
             for record in records:
@@ -282,7 +277,7 @@ def threaded_split(args):
         os.remove(config_name)
 
 
-df = pd.read_csv('data/input/fourdbs_hi_gff_input_species.csv')
+df = pd.read_csv('data/input/fourdbs_input_species.csv')
 
 # Set the random seed for reproducibility.
 seed = 42

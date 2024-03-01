@@ -51,7 +51,10 @@ cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
         vector[GuideStruct] setup_and_solve(
             size_t monophonic_threshold,
             size_t cut_multiplicity,
-            size_t beta)
+            size_t beta,
+            size_t seed_length,
+            size_t mismatched_allowed_after_seed,
+            bool preclustering)
 
         # Encodes each seq into a boost::dynamic_bitset and saves it,
         # plus the species this seq hits.
@@ -69,6 +72,9 @@ cdef class KirschtorteCython:
         self,
         beta: int,
         track: str,
+        preclustering: bool,
+        seed_length: int,
+        mismatched_allowed_after_seed: int,
         early_stopping_patience: int,
         scorer_name: str,
         cas_variant: str,
@@ -85,10 +91,14 @@ cdef class KirschtorteCython:
 
         self.beta = beta
         self.cas_variant = cas_variant
-        self.input_directory = input_directory
-        self.input_species_path_column = input_species_path_column
+        self.preclustering = preclustering
+        self.seed_length = seed_length
+        self.mismatched_allowed_after_seed = mismatched_allowed_after_seed
         self.cut_multiplicity = cut_multiplicity
         self.monophonic_threshold = monophonic_threshold
+
+        self.input_directory = input_directory
+        self.input_species_path_column = input_species_path_column
         self.species_df = pandas.read_csv(input_species_csv_file_path)
 
         # Set how many clusters we need.
@@ -187,7 +197,7 @@ cdef class KirschtorteCython:
         del self.species_df
 
         # Interface with the C++ functions.
-        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
+        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta, self.preclustering, self.seed_length, self.mismatched_allowed_after_seed)
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:
@@ -283,7 +293,6 @@ cdef class KirschtorteCython:
                 f'Either remove this species from your input file, or reduce your multiplicity ' +
                 f'to at most the total available guides for this species ({total_available_guides_for_this_species}) and try again. Exiting.')
                 sys.exit(1)
-                
         print()
         print(f'{bcolors.BLUE}>{bcolors.RESET} Created coversets for all species containing a total of {total_number_of_guides} guides.')
         print(f'{bcolors.BLUE}>{bcolors.RESET} Setting up and solving the linear program...')
@@ -292,7 +301,7 @@ cdef class KirschtorteCython:
         del self.species_df
 
         # Interface with the C++ functions.
-        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta)
+        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta, self.preclustering, self.seed_length, self.mismatched_allowed_after_seed)
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:
@@ -418,7 +427,10 @@ cdef class EinfacherModusCython:
         guide_struct_vector = self.kirschtorte.setup_and_solve(
             self.monophonic_threshold,
             self.cut_multiplicity,
-            self.beta)
+            self.beta,
+            0,
+            0,
+            False)
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:
@@ -490,7 +502,10 @@ cdef class EinfacherModusCython:
         guide_struct_vector = self.kirschtorte.setup_and_solve(
             self.monophonic_threshold,
             self.cut_multiplicity,
-            self.beta)
+            self.beta,
+            0,
+            0,
+            False)
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:

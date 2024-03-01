@@ -27,7 +27,10 @@ namespace Kirschtorte
         std::vector<GuideStruct> setup_and_solve(
             std::size_t monophonic_threshold,
             std::size_t multiplicity,
-            std::size_t beta);
+            std::size_t beta,
+            std::size_t seed_length,
+            std::size_t mismatched_allowed_after_seed,
+            bool precluster);
 
         int encode_and_save_dna(
             std::string seq,

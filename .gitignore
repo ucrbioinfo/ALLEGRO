@@ -21,3 +21,6 @@ test.txt
 txt.txt
 .pytest_cache/
 data/
+test.ipynb
+test.cpp
+out

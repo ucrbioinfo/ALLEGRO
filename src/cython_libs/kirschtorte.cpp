@@ -98,7 +98,10 @@ namespace Kirschtorte
     std::vector<GuideStruct> Kirschtorte::setup_and_solve(
         std::size_t monophonic_threshold,
         std::size_t multiplicity,
-        std::size_t beta)
+        std::size_t beta,
+        std::size_t seed_length,
+        std::size_t mismatched_allowed_after_seed,
+        bool precluster)
     {
         ::google::InitGoogleLogging("ALLEGRO VON AMIR");
 
@@ -114,6 +117,28 @@ namespace Kirschtorte
             // Inside this function, guides deemed not needed have their scores set to 0.
             // These guides will be removed below where we have: if (score <= 0) {...}
             decorate_with_monophonic(multiplicity, monophonic_threshold, this->log_buffer, this->coversets);
+        }
+
+        if (precluster)
+        {
+            if (multiplicity == 1)
+            {
+                decorate_with_clustering(
+                    seed_length,
+                    multiplicity,
+                    mismatched_allowed_after_seed,
+                    this->log_buffer,
+                    this->coversets);
+            }
+            else
+            {
+                decorate_with_clustering_multiplicity(
+                    seed_length,
+                    multiplicity,
+                    mismatched_allowed_after_seed,
+                    this->log_buffer,
+                    this->coversets);
+            }
         }
 
         // --------------------------------------------------

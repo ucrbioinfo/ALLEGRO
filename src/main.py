@@ -37,6 +37,19 @@ def main() -> int:
             enable_solver_diagnostics=args.enable_solver_diagnostics
         )
 
+        solution_writer.output_solution_to_text(
+        species_names=coversets_obj.species_names,
+        solution=coversets_obj.solution,
+        experiment_name=args.experiment_name,
+        output_directory=args.output_directory
+        )
+
+        solution_writer.output_solution_to_library(
+            solution=coversets_obj.solution,
+            experiment_name=args.experiment_name,
+            output_directory=args.output_directory
+        )
+
         solution_writer.cross_reference_solution_to_input(
             solution=coversets_obj.solution,
             experiment_name=args.experiment_name,
@@ -47,6 +60,9 @@ def main() -> int:
         coversets_obj = coverset(
             beta=args.beta,
             track=args.track,
+            preclustering=args.preclustering,
+            seed_length=args.seed_region_is_n_upstream_of_pam,
+            mismatched_allowed_after_seed=args.mismatches_allowed_after_seed_region,
             early_stopping_patience=args.early_stopping_patience,
             scorer_name=args.scorer,
             cas_variant=args.cas,
@@ -61,6 +77,19 @@ def main() -> int:
             enable_solver_diagnostics=args.enable_solver_diagnostics
         )
 
+        solution_writer.output_solution_to_text(
+            species_names=coversets_obj.species_names,
+            solution=coversets_obj.solution,
+            experiment_name=args.experiment_name,
+            output_directory=args.output_directory
+        )
+
+        solution_writer.output_solution_to_library(
+            solution=coversets_obj.solution,
+            experiment_name=args.experiment_name,
+            output_directory=args.output_directory
+        )
+
         solution_writer.align_solution_to_input_bowtie(
             pam=args.pam,
             solution=coversets_obj.solution,
@@ -71,21 +100,8 @@ def main() -> int:
             paths_csv_column_name=args.input_species_path_column,
             species_names_csv_column_name='species_name'
         )
-    
-    solution_writer.output_solution_to_text(
-        species_names=coversets_obj.species_names,
-        solution=coversets_obj.solution,
-        experiment_name=args.experiment_name,
-        output_directory=args.output_directory
-        )
 
-    solution_writer.output_solution_to_library(
-        solution=coversets_obj.solution,
-        experiment_name=args.experiment_name,
-        output_directory=args.output_directory
-        )
-
-    if args.cluster_guides:
+    if args.postclustering:
         postprocessing.cluster_solution(
             output_directory=args.output_directory,
             experiment_name=args.experiment_name,
@@ -105,7 +121,6 @@ def main() -> int:
             pam_length=3
         )
     
-    # configurator.cleanup(output_dir=args.output_directory)
     configurator.log_time()
 
     return 0

@@ -1,7 +1,36 @@
+
+# minorg threads!
+
+# e1 ran with 2074 species for *7 hours*: 2757 guides vs. 2761 for 1 minute
+# check how many guides these sets share WHATS GOING ON
+
+# showed on monday that the number for 2434 species was 2569 for 1 minute. This was
+# with repetitive guides allowed: bigortho_bowtie_timelimit_sat_1
+# filter_repetitive: False
+# filter_by_gc: True
+# gc_max: 0.7
+# gc_min: 0.3
+# ran again with 2434 1 minute: 2577 guides
+
+# for ascomycetes, which part of allegro is taking up the most memory?
+# memory profiling? for a python + cpp program?
+# Solve the problem in two parts? SetHint?
+# low complexity exclude 
+# # tighten gc
+
+# check on laptop benchmark
+
+# figure log scale -- time vs minorg lib size and time
+# test crispys with smaller data
+
+# for offtarget, need to make two datasets that have the same species for ortho_from_gff and cds_from_gff
+
+# 10 full subsolvers: [default_lp, no_lp, max_lp, core, reduced_costs, pseudo_costs, quick_restart, quick_restart_no_lp, lb_tree_search, probing]
+# Interleaved subsolvers: [feasibility_pump, rnd_var_lns_default, rnd_cst_lns_default, graph_var_lns_default, graph_cst_lns_default, rins_lns_default, rens_lns_default]
 #================================================================
 # General Settings
 #================================================================
-experiment_name: 'e1'
+experiment_name: 'preclustering'
 # ---
 
 # ---------------------------------------------------------------
@@ -13,20 +42,17 @@ input_csv_path_with_guides: ''  # Default: ''
 # Path Settings - Ignored if Easy Mode has a value
 # ---------------------------------------------------------------
 
-# Ignored if Easy Mode input_csv_file_with_guides above has a value
-input_directory: 'data/input/cds/ortho_from_gff'
-input_species_path: 'data/input/fourdbs_hi_gff_input_species.csv'
-
-# input_directory: 'data/input/cds/'
-# input_species_path: 'data/input/big_ortho.csv'
-# input_directory: 'data/input/cds/orthogroups'
-# input_species_path: 'data/input/half.csv'
-input_species_path_column: 'cds_file_name'
+# Ignored if Easy Mode input_csv_path_with_guides above has a value
+# input_directory: 'data/input/cds/ortho_from_gff'
+# input_species_path: 'data/input/fourdbs_input_species.csv'
+# input_species_path_column: 'ortho_file_name'
+input_directory: 'data/input/cds/'
+input_species_path: 'data/input/one.csv'
+input_species_path_column: 'filename'
 # ---------------------------------------------------------------
 
 # String value, default: 'track_e'
-# track_a: any of the fasta records can be targeted.
-# There will be multiplicity targets per fasta record.
+# track_a: any of the fasta records can be targeted.There will be multiplicity targets per fasta record.
 # track_e: each fasta record has to be targeted at least multiplicity times,
 track: 'track_e'
 # ---
@@ -34,7 +60,7 @@ track: 'track_e'
 # Integer value, default: 1
 # In track_a, each species needs to be targeted at least this many times ANYWHERE.
 # In track_e, EACH gene/record needs to be targeted at least this many times in that gene/record.
-multiplicity: 1
+multiplicity: 2
 # ---
 
 # Integer value, default: 0
@@ -56,27 +82,28 @@ scorer: 'dummy'
 # Only used in solving the ILP if there are remaining feasible guides with
 # fractional values after solving the LP.
 # Stop searching for an optimal solution after this many seconds.
-early_stopping_patience: 10
+early_stopping_patience: 60
 # ---
 
 # Possible values: True or False. Default: True
 # Remove guides with > gc_max and < gc_min from consideration?
-# gc_max and gc_min only work if filter_by_gc is True.
-filter_by_gc: True
-gc_max: 0.6
-gc_min: 0.4
+filter_by_gc: False
+gc_max: 0.6  # Only works if filter_by_gc is True.
+gc_min: 0.4  # Only works if filter_by_gc is True.
 # ---
 
 #================================================================
 # Advanced Settings
 # ===============================================================
 
-# List of strings, Default: ['TTTT']
-# To exclude nothing, enter ['']
-# Supports up to 5 chained IUPAC codes; e.g., 'RYSN'
-# Supports individual nucleotides; e.g., 'TTTT'
+# List of strings, Default: ['TTTT'] -- To exclude nothing, set to ['']
 # ALLEGRO will output guides that do not contain any of the patterns in this list.
-# Be careful not to place common nucleotides or IUPAC codes here such as 'A' or 'AG'
+# Supports up to 5 chained IUPAC codes; e.g., 'RYSN'
+# Exception to the 5 rule above is when positional nucleotides are used 
+# in conjunction with 'N's. E.g., NNNNNNNCNNNNGNNNN will exclude guides
+# with C and G in those positions.
+# Supports individual nucleotides; e.g., 'TTTT' excludes guides with quad-T in their seq.
+# Be careful not to place common nucleotides or IUPAC codes here such as just 'A' or 'AG'
 # You may end up excluding most or all guides from the calculation.
 
 # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3568203/#:~:text=For%20vertebrates%2C%20as,of%20these%20species.
@@ -87,15 +114,24 @@ patterns_to_exclude: ['TTTT']
 # Significantly affects running time.
 # True reports gRNA with off-targets.
 # report_up_to_n_mismatches reports gRNA with fewer <= N mismatches after the seed region.
-output_offtargets: False
-report_up_to_n_mismatches: 3  # This may be 0, 1, 2, or 3
-seed_region_is_n_upstream_of_pam: 12
+output_offtargets: True
+report_up_to_n_mismatches: 3  # This may be [0-3]
 
 # The column in the input csv file with the name of the 
 # background fasta to check off-targets against
-input_species_offtarget_dir: 'data/input/cds/cds_from_gff'
-input_species_offtarget_column: 'cds_file_name'
+input_species_offtarget_dir: 'data/input/cds/'
+input_species_offtarget_column: 'filename'
 # ---
+
+preclustering: True
+
+# Boolean: True or False. Default: False
+# Significantly affects running time performance.
+# Compresses the output gRNA set by clustering similar gRNAs.
+# Adds a new column called 'cluster' to output/EXPERIMENT_NAME/EXPERIMENT_NAME.csv
+postclustering: False
+seed_region_is_n_upstream_of_pam: 12 
+mismatches_allowed_after_seed_region: 3  # Integer value, default: 2
 
 # Integer value, default: 5
 # Affects running time and memory performance.
@@ -103,15 +139,8 @@ input_species_offtarget_column: 'cds_file_name'
 # especially when you have millions of gRNAs.
 # Pre-select gRNAs that hit only up to this number of species to act as representatives
 # for these species. Set to 0 to disable and save all gRNAs to memory.
-mp_threshold: 0
+# mp_threshold: 0
 # ---
-
-# Boolean: True or False. Default: False
-# Significantly affects running time performance.
-# Compresses the output gRNA set by clustering similar gRNAs.
-# Adds a new column called 'cluster' to output/EXPERIMENT_NAME/EXPERIMENT_NAME.csv
-cluster_guides: False
-mismatches_allowed_after_seed_region: 2  # Integer value, default: 2
 
 # Boolean: True or False. Default: True
 # When a problem is deemed unsolvable (e.g., Status: MPSOLVER_INFEASIBLE)

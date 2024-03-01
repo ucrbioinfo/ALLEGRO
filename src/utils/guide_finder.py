@@ -1,19 +1,17 @@
-# Functions imported by ALLEGRO. No need to run it manually.
-# You can import this .py file separately, instantiate GuideFinder,
-# and check for guides in your custom sequence by calling identify_guides_and_indicate_strand(...).
 import re
 import os
 import sys
 import time
 import pandas
 import subprocess
-from io import StringIO
-from itertools import product
 from Bio import SeqIO
 from Bio.Seq import Seq
+from io import StringIO
+from itertools import product
 
 from utils.shell_colors import bcolors
 from utils.iupac_codes import iupac_dict
+
 
 def calculate_gc_content(sequence):
     return (sequence.upper().count('G') + sequence.upper().count('C')) / len(sequence)
@@ -52,7 +50,6 @@ def align_guides_to_seq_bowtie(
         sys.exit(1)
 
     if process.returncode != 0:
-        # Handle error: log or raise exception
         error_message = f"Command failed with return code {process.returncode}. Error: {stderr.decode('utf-8')}"
         raise RuntimeError(error_message)
 
@@ -66,7 +63,6 @@ def align_guides_to_seq_bowtie(
         sys.exit(1)
 
     if process.returncode != 0:
-        # Handle error: log or raise exception
         error_message = f"Command failed with return code {process.returncode}. Error: {stderr.decode('utf-8')}"
         raise RuntimeError(error_message)
 
@@ -75,7 +71,8 @@ def align_guides_to_seq_bowtie(
     elapsed_seconds = end_time - start_time
 
     df = pandas.read_csv(StringIO(stdout.decode()), sep='\t',
-                names=['query_name', 'strand', 'reference_name', 'start_position'])
+                names=['query_name', 'strand', 'reference_name', 'start_position'],
+                dtype={'reference_name': str, 'query_name': str})
 
     records = list(SeqIO.parse(file_path, 'fasta'))
 
@@ -89,11 +86,6 @@ def align_guides_to_seq_bowtie(
     reference_names = df['reference_name'].tolist()
     orthos = [map_ref_id_to_ortho[ref_id] for ref_id in reference_names]
     start_positions = df['start_position'].tolist()
-
-    # for filename in os.listdir(output_directory):
-    #     if filename.endswith('.ebwt'):
-    #         file_path = os.path.join(output_directory, filename)
-    #         os.remove(file_path)
 
     return sequences, strands, reference_names, orthos, start_positions, elapsed_seconds
 
