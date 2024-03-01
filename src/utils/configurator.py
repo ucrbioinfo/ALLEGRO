@@ -121,7 +121,7 @@ class Configurator:
         "'reference_name' with gene names in it. Enabling this mode " + \
         "ignores input_directory, input_species_path, and input_species_path_column."
         parser.add_argument(
-            '-em',
+            '-easy',
             '--input_csv_path_with_guides',
             type=str,
             help=help,
@@ -284,10 +284,18 @@ class Configurator:
             default=0
         )
 
+        help = ""
+        parser.add_argument(
+            '--preclustering',
+            type=bool,
+            default=False,
+            help=help,
+        )
+
         help = "- (Affects performance) Post-processing. Default: False\n" + \
         "Compresses the output guide set by clustering similar guides; adds a new column to output.csv"
         parser.add_argument(
-            '--cluster_guides',
+            '--postclustering',
             type=bool,
             default=False,
             help=help,
@@ -559,7 +567,7 @@ class Configurator:
         self.args.mp_threshold = int(self.args.mp_threshold)
 
         if self.args.mp_threshold <= 0:
-            print(f'{bcolors.BLUE}>{bcolors.RESET} mp_threshold is set to {self.args.mp_threshold} and thus disabled. Saving all guides to memory.')
+            # print(f'{bcolors.BLUE}>{bcolors.RESET} mp_threshold is set to {self.args.mp_threshold} and thus disabled. Saving all guides to memory.')
             self.args.mp_threshold = 0
 
         # ------------------------------------------------------------------------------
