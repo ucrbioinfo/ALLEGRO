@@ -5,16 +5,41 @@ import pandas as pd
 
 from utils.shell_colors import bcolors
 
-
 def reverse_complement(string):
     s = ''
-    for c in string:
+    for c in string.upper():
         if c == 'A': s += 'T'
         elif c == 'C': s += 'G'
         elif c == 'G': s += 'C'
         elif c == 'T': s += 'A'
     return s[::-1]
 
+def check_if_file_with_cached_index_was_modified(cache_index_dir: str, index_base_name: str, file_path: str) -> bool | str:
+    if os.path.exists(file_path):
+        creation_record_file_path = os.path.join(cache_index_dir, f'{index_base_name}_last_modified_date.txt')
+
+        if os.path.exists(creation_record_file_path):
+            # Check if file has been modified since its recorded creation date
+            with open(creation_record_file_path, 'r') as record_file:
+                recorded_creation_date = record_file.readline().strip()
+            
+            last_modified_time = os.path.getmtime(file_path)
+            
+            if last_modified_time != float(recorded_creation_date):
+                print(last_modified_time, recorded_creation_date)
+                return True
+        else:
+            return 'N/A'
+    return False
+
+def record_creation_date(cache_index: str, index_base_name: str, file_path: str) -> None:
+    creation_record_file_path = os.path.join(cache_index, f'{index_base_name}_last_modified_date.txt')
+
+    # Get the modified time of the file
+    modified_time = os.path.getmtime(file_path)
+
+    with open(creation_record_file_path, 'w') as record_file:
+        record_file.write(str(modified_time))
 
 class OfftargetFinder:
     _self = None
@@ -28,18 +53,32 @@ class OfftargetFinder:
         return self._self
     
     def __init__(self) -> None:
-        if not os.path.exists('data/cache/bowtie/index'):
-            os.makedirs('data/cache/bowtie/index')
-        if not os.path.exists('data/cache/bowtie/reads'):
-            os.makedirs('data/cache/bowtie/reads')
-        if not os.path.exists('data/cache/bowtie/alignments'):
-            os.makedirs('data/cache/bowtie/alignments')
-        
         if self._base_path is None:
             self._base_path = os.getcwd()
         
         if self._cache_path is None:
             self._cache_path = 'data/cache/bowtie'
+
+        if not os.path.exists(f'{self._cache_path}/index'):
+            os.makedirs(f'{self._cache_path}/index')
+        if not os.path.exists(f'{self._cache_path}/reads'):
+            os.makedirs(f'{self._cache_path}/reads')
+        if not os.path.exists(f'{self._cache_path}/alignments'):
+            os.makedirs(f'{self._cache_path}/alignments')
+    
+    def purge_cached_index(self, index_base_name: str) -> None:
+        if os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.1.ebwt'):
+            os.remove(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.1.ebwt')
+        if os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.2.ebwt'):
+            os.remove(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.2.ebwt')
+        if os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.3.ebwt'):
+            os.remove(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.3.ebwt')
+        if os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.4.ebwt'):
+            os.remove(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.4.ebwt')
+        if os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.rev.1.ebwt'):
+            os.remove(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.rev.1.ebwt')
+        if os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.rev.2.ebwt'):
+            os.remove(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.rev.2.ebwt')
 
     
     def write_guides_as_reads(self, species_name: str, guide_seqs_list: list[str]) -> None:
@@ -56,28 +95,40 @@ class OfftargetFinder:
             for idx, guide in enumerate(guides_w_pam.keys()):
                 f.write(f'@READ_{idx+1}\n{guide}\n+\nIIIIIIIIIIIIIIIIIIIIIII\n')
 
-
     def run_bowtie_build(self, species_name: str, path_to_background_fasta: str, background_source: str) -> str:
-        one_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx.1.ebwt')
-        two_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx.2.ebwt')
-        three_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx.3.ebwt')
-        four_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx.4.ebwt')
-        rev_one_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx.rev.1.ebwt')
-        rev_two_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx.rev.2.ebwt')
+        index_base_name = f'{species_name}_{background_source}_idx'
+        one_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.1.ebwt')
+        two_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.2.ebwt')
+        three_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.3.ebwt')
+        four_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.4.ebwt')
+        rev_one_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.rev.1.ebwt')
+        rev_two_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.rev.2.ebwt')
 
         if one_exists and two_exists and three_exists and four_exists and rev_one_exists and rev_two_exists:
-            return
-        else:
-            # print(f'{bcolors.BLUE}>{bcolors.RESET} Creating Bowtie index for {species_name}')
-            bowtie_build_command = ['bowtie-build', '-q', f'{self._base_path}/{path_to_background_fasta}', f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx']
-            process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            _, stderr = process.communicate()
+            modified = check_if_file_with_cached_index_was_modified(f'{self._base_path}/{self._cache_path}/index/', index_base_name, f'{self._base_path}/{path_to_background_fasta}')
             
-            if stderr:
-                    print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie-build encountered an error: {stderr.decode()}')
-                    print(f'{bcolors.RED}> Exiting. {bcolors.RESET}')
-                    sys.exit(1)
+            if modified:
+                if modified != 'N/A':
+                    print(f'{bcolors.BLUE}>{bcolors.RESET} {self._base_path}/{path_to_background_fasta} was modified since it was last cached. It will be recreated.')
                     
+                self.purge_cached_index(index_base_name)
+            else:
+                # Use cached indices.
+                return
+
+        # Rebuild indices.
+        print(f'{bcolors.BLUE}>{bcolors.RESET} Creating Bowtie indices for {species_name}', end='\r')
+        bowtie_build_command = ['bowtie-build', '-q', f'{self._base_path}/{path_to_background_fasta}', f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx']
+        process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _, stderr = process.communicate()
+        
+        if stderr:
+            print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie-build encountered an error: {stderr.decode()}')
+            print(f'{bcolors.RED}> Exiting. {bcolors.RESET}')
+            sys.exit(1)
+
+        record_creation_date(f'{self._base_path}/{self._cache_path}/index/', index_base_name, f'{self._base_path}/{path_to_background_fasta}')
+        print()
 
     def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, background_source: str, num_of_mismatches: int) -> None:
         print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
@@ -88,9 +139,9 @@ class OfftargetFinder:
             _, stderr = process.communicate()
             
             if stderr:
-                    print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie encountered an error: {stderr.decode()}')
-                    print('Exiting.')
-                    sys.exit(1)
+                print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie encountered an error: {stderr.decode()}')
+                print('Exiting.')
+                sys.exit(1)
 
             # os.system(f'bowtie -v {v} -a --quiet {self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx {self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq {self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
 
