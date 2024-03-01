@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import pandas
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -88,30 +89,37 @@ def find_targets(target_species: str,
                  experiment_name: str,
                  species_df: pandas.DataFrame,
                  output_library: pandas.DataFrame,
-                 background_source: str,
+                 background_source: str,  # 'genome' or 'gene'
                  input_species_offtarget_dir: str,
                  input_species_offtarget_column: str,
                  num_mismatches: int,
                  seed_region_is_n_upstream_of_pam: int) -> None:
 
-    target_species_offtarget_dir = os.path.join(input_species_offtarget_dir, species_df[species_df['species_name'] == target_species][input_species_offtarget_column].values[0])
+    target_species_offtarget_file = os.path.join(input_species_offtarget_dir, species_df[species_df['species_name'] == target_species][input_species_offtarget_column].values[0])
     
     # Create a Bowtie index for the target species if it doesn't exist (checks in the function)
     OTF = OfftargetFinder()
-    OTF.run_bowtie_build(target_species, target_species_offtarget_dir, background_source)
+    OTF.run_bowtie_build(target_species, target_species_offtarget_file, background_source)
     
     # Get all hits -- Needs to wait for index creation in the previous line
     all_targets = OTF.run_bowtie_against_other(f'{experiment_name}_output_lib', target_species, background_source, num_mismatches)
-    
+
+    if len(all_targets) == 0:
+        print(f'{bcolors.RED}> Error{bcolors.RESET}: Problem in postprocessing.py -- Failed to find off-targets because Bowtie has output an empty alignment file. Please delete the cache directory and try again.' + \
+              f'If this error persists, open an issue on the GitHub page for ALLEGRO for assistance. Exiting.')
+        sys.exit(1)
+
     all_targets['target_species'] = target_species
     all_targets['is_off_target'] = '1'  # initially, all hits are off-targets until proven otherwise
     all_targets['self_off_targets'] = '0'
 
+    output_library = output_library.rename(columns={'sequence': 'seq_with_pam'})
+    output_library['sequence'] = output_library['seq_with_pam'].str[:-3]
+
     # These are on-targets -- everything else is off-target
     on_targets = pandas.merge(output_library[output_library['target'] == target_species],
                             all_targets,
-                            left_on=['sequence', 'reference_name', 'strand', 'start_position'],
-                            right_on=['sequence', 'reference_name', 'strand', 'start_position'])
+                            on=['sequence', 'reference_name', 'strand', 'start_position'])
     
     cols = ['is_off_target', 'self_off_targets', 'sequence', 'pam', 'mismatch', 'aligned_seq',
             'target_species', 'strand', 'reference_name', 'orthologous_to', 'start_position']
