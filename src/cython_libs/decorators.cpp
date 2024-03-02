@@ -125,7 +125,7 @@ void decorate_with_clustering(
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets)
 {
     std::size_t left_side_bits_length;
-    std::size_t seed_bits_length = seed_length * 2;
+    std::size_t seed_bits_length = seed_length * 2;  // Each nucleotide is represented with 2 bits.
     std::map<boost::dynamic_bitset<>, std::vector<boost::dynamic_bitset<>>> seed_to_vec;
 
     auto it = coversets.begin();
@@ -150,7 +150,7 @@ void decorate_with_clustering(
         // Left side bits -        Seed bits
         // AAAAAAGC        T T G C T C T T T G C C
         // 0000000000000110111101101110111111011110
-        std::size_t left_side_bits_length = new_guide.size() - seed_bits_length;
+        left_side_bits_length = new_guide.size() - seed_bits_length;
         boost::dynamic_bitset<> seed_bits(seed_bits_length, new_guide.to_ulong() & ((1 << seed_bits_length) - 1));
         boost::dynamic_bitset<> new_guide_left_side_bits(left_side_bits_length, new_guide.to_ulong() >> (new_guide.size() - left_side_bits_length));
 
@@ -160,6 +160,7 @@ void decorate_with_clustering(
             bool found_an_heir = false;
             std::size_t fewest_mismatches = mismatched_allowed_after_seed + 1;
             boost::dynamic_bitset<> reigning_guide_w_fewest_mismatches(new_guide.size());
+            boost::dynamic_bitset<> left_side_of_reigning_guide_w_fewest_mismatches(left_side_bits_length);
             std::vector<boost::dynamic_bitset<>> left_sides_with_same_seed = it_seed_to_vec->second;
 
             // Iterate over the vector in seed_to_vec and find the sequence
@@ -175,25 +176,7 @@ void decorate_with_clustering(
 
                     // New fewest matches
                     fewest_mismatches = mismatches_after_seed;
-
-                    //
-                    // Reconstruct the reigning guide
-                    //
-                    
-                    // Copy reigning
-                    boost::dynamic_bitset<> reigning_guide_left_side_extended(reigning_guide_left_side);
-                    // Extend it
-                    reigning_guide_left_side_extended.resize(reigning_guide_left_side.size() + seed_bits.size());
-                    // Make room for seed_bits
-                    reigning_guide_left_side_extended <<= seed_bits.size();
-
-                    // Copy seed_bits
-                    boost::dynamic_bitset<> seed_bits_extended(seed_bits);
-                    // Extend it
-                    seed_bits_extended.resize(reigning_guide_left_side_extended.size());
-
-                    // Reconstruct the reigning guide by concatenating left and seed
-                    reigning_guide_w_fewest_mismatches = reigning_guide_left_side_extended | seed_bits_extended; 
+                    left_side_of_reigning_guide_w_fewest_mismatches = reigning_guide_left_side; 
                 }
             }
 
@@ -208,6 +191,25 @@ void decorate_with_clustering(
             {
                 // Mark the new guide for deletion.
                 coversets[new_guide].first = 0;
+
+                //
+                // Reconstruct the reigning guide
+                //
+                
+                // Copy left side of reigning.
+                boost::dynamic_bitset<> reigning_guide_left_side_extended(left_side_of_reigning_guide_w_fewest_mismatches);
+                // Extend it.
+                reigning_guide_left_side_extended.resize(new_guide.size());
+                // Make room for seed_bits.
+                reigning_guide_left_side_extended <<= seed_bits.size();
+
+                // Copy seed_bits.
+                boost::dynamic_bitset<> seed_bits_extended(seed_bits);
+                // Extend it.
+                seed_bits_extended.resize(reigning_guide_left_side_extended.size());
+
+                // Reconstruct the reigning guide by concatenating left and seed.
+                reigning_guide_w_fewest_mismatches = reigning_guide_left_side_extended | seed_bits_extended;
 
                 // The reigning guide inherits the targets of the new guide.
                 coversets[reigning_guide_w_fewest_mismatches].second |= coversets[new_guide].second;
