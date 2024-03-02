@@ -25,7 +25,6 @@ namespace Kirschtorte
         this->output_directory = output_directory;
         this->bits_required_to_store_seq = guide_length * 2; // Each nucleotide A/C/T/G in a guide
                                                              // can be represented by 2 bits.
-        this->all_containers_bitset = boost::dynamic_bitset<>(num_containers);
         this->enable_solver_diagnostics = enable_solver_diagnostics;
     }
 
@@ -85,13 +84,6 @@ namespace Kirschtorte
             this->coversets[encoded_bitset] = std::pair<double, boost::dynamic_bitset<>>(score, bitset);
         }
 
-        // Keep a record of which species should be hit. We compare against this later in randomized_rounding
-        // to determine if a set of feasible solutions hits all the required species or not.
-        // We do this record keeping here instead of in the constructor because some species
-        // may not contain any guides and should be excluded from consideration (so we don't set those bits).
-        // Additionally, not every species will have the same number of containers.
-        this->all_containers_bitset.set(container_id);
-
         return 0;
     }
 
@@ -114,7 +106,7 @@ namespace Kirschtorte
         // --------------------------------------------------
         if (monophonic_threshold > 0)
         {
-            // Inside this function, guides deemed not needed have their scores set to 0.
+            // Within this function, guides deemed not needed have their scores set to 0.
             // These guides will be removed below where we have: if (score <= 0) {...}
             decorate_with_monophonic(multiplicity, monophonic_threshold, this->log_buffer, this->coversets);
         }
@@ -419,7 +411,6 @@ namespace Kirschtorte
                 // SAT solver with time limit
                 solution_set = sat_solver(
                     feasible_solutions,
-                    this->all_containers_bitset,
                     this->coversets,
                     multiplicity,
                     beta,
