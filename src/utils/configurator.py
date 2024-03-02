@@ -29,8 +29,10 @@ def sanitize_filename(filename, max_length=255):
 
     # Böse böse...
     if sanitized == '.':
+        print(f'{bcolors.ORANGE}> Böse böse...{bcolors.RESET}')
         sanitized = '._'
     elif sanitized == '..':
+        print(f'{bcolors.ORANGE}> Böse böse...{bcolors.RESET}')
         sanitized = '.._'
     
     # Shorten the filename to comply with filesystem limits
@@ -188,7 +190,6 @@ class Configurator:
             default=0,
             help=help,
         )
-
 
         help = "- Which scoring method to use? Default: 'dummy'\n" + \
         "- Options are 'chopchop_METHOD', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
