@@ -95,8 +95,8 @@ class OfftargetFinder:
             for idx, guide in enumerate(guides_w_pam.keys()):
                 f.write(f'@READ_{idx+1}\n{guide}\n+\nIIIIIIIIIIIIIIIIIIIIIII\n')
 
-    def run_bowtie_build(self, species_name: str, path_to_background_fasta: str, background_source: str) -> str:
-        index_base_name = f'{species_name}_{background_source}_idx'
+    def run_bowtie_build(self, species_name: str, path_to_background_fasta: str, gene_or_genome_str: str) -> str:
+        index_base_name = f'{species_name}_{gene_or_genome_str}_idx'
         one_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.1.ebwt')
         two_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.2.ebwt')
         three_exists = os.path.exists(f'{self._base_path}/{self._cache_path}/index/{index_base_name}.3.ebwt')
@@ -117,8 +117,8 @@ class OfftargetFinder:
                 return
 
         # Rebuild indices.
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Creating Bowtie indices for {species_name}', end='\r')
-        bowtie_build_command = ['bowtie-build', '-q', f'{self._base_path}/{path_to_background_fasta}', f'{self._base_path}/{self._cache_path}/index/{species_name}_{background_source}_idx']
+        # print(f'{bcolors.BLUE}>{bcolors.RESET} Creating Bowtie indices for {species_name}', end='\r')
+        bowtie_build_command = ['bowtie-build', '-q', f'{self._base_path}/{path_to_background_fasta}', f'{self._base_path}/{self._cache_path}/index/{species_name}_{gene_or_genome_str}_idx']
         process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         _, stderr = process.communicate()
         
@@ -130,47 +130,47 @@ class OfftargetFinder:
         record_creation_date(f'{self._base_path}/{self._cache_path}/index/', index_base_name, f'{self._base_path}/{path_to_background_fasta}')
         print()
 
-    def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, background_source: str, num_of_mismatches: int) -> None:
-        print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
+    def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, gene_or_genome_str: str, num_of_mismatches: int) -> None:
+        # print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
 
-        for v in [num_of_mismatches]:
-            bowtie_command = ['bowtie', '-v', str(v), '-a', '--quiet', f'{self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx', f'{self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq', f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam']
-            process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            _, stderr = process.communicate()
-            
-            if stderr:
-                print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie encountered an error: {stderr.decode()}')
-                print('Exiting.')
-                sys.exit(1)
+        num_of_mismatches = str(max(num_of_mismatches, 3))
 
-            # os.system(f'bowtie -v {v} -a --quiet {self._base_path}/{self._cache_path}/index/{that_species_name}_{background_source}_idx {self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq {self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
-
-            df_mm_genomic = pd.read_csv(f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam', sep='\t',
-                    names=['query_name', 'strand', 'reference_name', 'start_position', 'aligned_seq', 'mapping_quality', 'idk', 'mismatch'])
-
-            if len(df_mm_genomic) == 0:
-                continue
-            
-            guide_w_pam = list()
-
-            for _, row in df_mm_genomic.iterrows():
-                if row['strand'] == '-':
-                    guide_w_pam.append(reverse_complement(row['aligned_seq']))
-                else:
-                    guide_w_pam.append(row['aligned_seq'])
-
-            df_mm_genomic['pam'] = [s[-3:] for s in guide_w_pam]
-            df_mm_genomic['sequence'] = [s[:-3] for s in guide_w_pam]
-            
-            # Remove mismatches occuring at the N base of the NGG PAM
-            df_mm_genomic['mismatch'] = df_mm_genomic['mismatch'].astype(str)
-            df_mm_genomic['mismatch'].replace('nan', 'N/A', inplace=True)
-            df_mm_genomic = df_mm_genomic[~df_mm_genomic['mismatch'].str.contains('20:')]
-
-            # df_mm_genomic['num_mutations'] = df_mm_genomic['num_mutations'].astype(int)
-            df_mm_genomic.drop(columns=['idk', 'mapping_quality'], inplace=True)
-
-            os.remove(f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
-            
-            return df_mm_genomic.reset_index(drop=True)
+        bowtie_command = ['bowtie', '-v', num_of_mismatches, '-a', '--quiet', f'{self._base_path}/{self._cache_path}/index/{that_species_name}_{gene_or_genome_str}_idx', f'{self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq', f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{num_of_mismatches}mm_alignment.sam']
+        process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _, stderr = process.communicate()
         
+        if stderr:
+            print(f'{bcolors.RED}>{bcolors.RESET} offtarget_finder.py: bowtie encountered an error: {stderr.decode()}')
+            print('Exiting.')
+            sys.exit(1)
+
+        # os.system(f'bowtie -v {v} -a --quiet {self._base_path}/{self._cache_path}/index/{that_species_name}_{gene_or_genome_str}_idx {self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq {self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{v}mm_alignment.sam')
+
+        df_mm_genomic = pd.read_csv(f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{num_of_mismatches}mm_alignment.sam', sep='\t',
+                names=['query_name', 'strand', 'reference_name', 'start_position', 'aligned_seq', 'mapping_quality', 'idk', 'mismatch'])
+
+        if len(df_mm_genomic) == 0:
+            return df_mm_genomic  # Empty (len == 0)
+        
+        guide_w_pam = list()
+
+        for _, row in df_mm_genomic.iterrows():
+            if row['strand'] == '-':
+                guide_w_pam.append(reverse_complement(row['aligned_seq']))
+            else:
+                guide_w_pam.append(row['aligned_seq'])
+
+        df_mm_genomic['pam'] = [s[-3:] for s in guide_w_pam]
+        df_mm_genomic['sequence'] = [s[:-3] for s in guide_w_pam]
+        
+        # Remove mismatches occuring at the N base of the NGG PAM
+        df_mm_genomic['mismatch'] = df_mm_genomic['mismatch'].astype(str)
+        df_mm_genomic['mismatch'].replace('nan', 'N/A', inplace=True)
+        df_mm_genomic = df_mm_genomic[~df_mm_genomic['mismatch'].str.contains('20:')]
+
+        # df_mm_genomic['num_mutations'] = df_mm_genomic['num_mutations'].astype(int)
+        df_mm_genomic.drop(columns=['idk', 'mapping_quality'], inplace=True)
+
+        os.remove(f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{num_of_mismatches}mm_alignment.sam')
+        
+        return df_mm_genomic.reset_index(drop=True)
