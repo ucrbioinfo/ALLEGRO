@@ -197,7 +197,7 @@ cdef class KirschtorteCython:
         del self.species_df
 
         # Interface with the C++ functions.
-        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta, self.preclustering, self.seed_length, self.mismatched_allowed_after_seed)
+        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta, self.seed_length, self.mismatched_allowed_after_seed, self.preclustering)
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:
@@ -301,7 +301,7 @@ cdef class KirschtorteCython:
         del self.species_df
 
         # Interface with the C++ functions.
-        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta, self.preclustering, self.seed_length, self.mismatched_allowed_after_seed)
+        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta, self.seed_length, self.mismatched_allowed_after_seed, self.preclustering)
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:
@@ -317,7 +317,7 @@ cdef class KirschtorteCython:
             binary_hits = binary_hits.decode('utf-8')[::-1]  # e.g., '0111'
             seq = seq.decode('utf-8')  # e.g., 'ACCTGAG...'
             
-            # e.g., ['saccharomyces_cerevisiae, LYS2', 'yarrowia_lipolytica, URA3', 'kluyveromyces_marxianus, LYS3', ...]
+            # e.g., ['saccharomyces_cerevisiae', 'yarrowia_lipolytica', 'kluyveromyces_marxianus', ...]
             names_hits: list[str] = list()
             
             # Find all the indices where you have a '1' and transform back to actual species names.
@@ -325,7 +325,7 @@ cdef class KirschtorteCython:
                 names_hits.append(self.guide_origin[idx])
                 # -- need to know exactly where the guide came from. not just its species
             
-            # E.g., ('ACCTGAG...', 6, ['saccharomyces, LYS2', 'yarrowia, URA3', 'kmarx, LYS3']).
+            # E.g., ('ACCTGAG...', 6, ['saccharomyces', 'yarrowia', 'kmarx']).
             self.solution.append((seq, score, names_hits))
             
         return self.solution
