@@ -1,54 +1,17 @@
-
-# minorg threads!
-
-# e1 ran with 2074 species for *7 hours*: 2757 guides vs. 2761 for 1 minute
-# check how many guides these sets share WHATS GOING ON
-
-# showed on monday that the number for 2434 species was 2569 for 1 minute. This was
-# with repetitive guides allowed: bigortho_bowtie_timelimit_sat_1
-# filter_repetitive: False
-# filter_by_gc: True
-# gc_max: 0.7
-# gc_min: 0.3
-# ran again with 2434 1 minute: 2577 guides
-
-# for ascomycetes, which part of allegro is taking up the most memory?
-# memory profiling? for a python + cpp program?
-# Solve the problem in two parts? SetHint?
-# low complexity exclude 
-# # tighten gc
-
-# check on laptop benchmark
-
-# figure log scale -- time vs minorg lib size and time
-# test crispys with smaller data
-
-# for offtarget, need to make two datasets that have the same species for ortho_from_gff and cds_from_gff
-
-# 10 full subsolvers: [default_lp, no_lp, max_lp, core, reduced_costs, pseudo_costs, quick_restart, quick_restart_no_lp, lb_tree_search, probing]
-# Interleaved subsolvers: [feasibility_pump, rnd_var_lns_default, rnd_cst_lns_default, graph_var_lns_default, graph_cst_lns_default, rins_lns_default, rens_lns_default]
 #================================================================
 # General Settings
 #================================================================
-experiment_name: 'preclustering'
+experiment_name: 'ALLEGRO_EXAMPLE_RUN'
 # ---
-
-# ---------------------------------------------------------------
-# Easy Mode - Has priority over Path Settings below
-# ---------------------------------------------------------------
-input_csv_path_with_guides: ''  # Default: ''
 
 # ---------------------------------------------------------------
 # Path Settings - Ignored if Easy Mode has a value
 # ---------------------------------------------------------------
 
 # Ignored if Easy Mode input_csv_path_with_guides above has a value
-# input_directory: 'data/input/cds/ortho_from_gff'
-# input_species_path: 'data/input/fourdbs_input_species.csv'
-# input_species_path_column: 'ortho_file_name'
-input_directory: 'data/input/cds/'
-input_species_path: 'data/input/one.csv'
-input_species_path_column: 'filename'
+input_directory: 'data/input/example_input'
+input_species_path: 'data/input/fifty_example_input_species.csv'
+input_species_path_column: 'ortho_file_name'
 # ---------------------------------------------------------------
 
 # String value, default: 'track_e'
@@ -60,7 +23,7 @@ track: 'track_e'
 # Integer value, default: 1
 # In track_a, each species needs to be targeted at least this many times ANYWHERE.
 # In track_e, EACH gene/record needs to be targeted at least this many times in that gene/record.
-multiplicity: 2
+multiplicity: 1
 # ---
 
 # Integer value, default: 0
@@ -71,6 +34,22 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
           # the number of species you have (worst case, one gRNA per species).
           # If set to a number HIGHER than the number of species, finds the best #beta gRNAs.
 # ---
+
+# Possible values: True or False. Default: True
+# Remove guides with > gc_max and < gc_min from consideration?
+filter_by_gc: False
+gc_max: 0.6  # Only works if filter_by_gc is True.
+gc_min: 0.4  # Only works if filter_by_gc is True.
+# ---
+
+# ---------------------------------------------------------------
+# Easy Mode - Has priority over Path Settings
+# ---------------------------------------------------------------
+input_csv_path_with_guides: ''  # Default: ''
+
+#================================================================
+# Advanced Settings
+# ===============================================================
 
 # Possible choices: 'dummy' (default), 'ucrispr'
 # scorer: 'ucrispr' uses a faster implementation of zhang2019
@@ -85,17 +64,6 @@ scorer: 'dummy'
 early_stopping_patience: 60
 # ---
 
-# Possible values: True or False. Default: True
-# Remove guides with > gc_max and < gc_min from consideration?
-filter_by_gc: False
-gc_max: 0.6  # Only works if filter_by_gc is True.
-gc_min: 0.4  # Only works if filter_by_gc is True.
-# ---
-
-#================================================================
-# Advanced Settings
-# ===============================================================
-
 # List of strings, Default: ['TTTT'] -- To exclude nothing, set to ['']
 # ALLEGRO will output guides that do not contain any of the patterns in this list.
 # Supports up to 5 chained IUPAC codes; e.g., 'RYSN'
@@ -108,30 +76,38 @@ gc_min: 0.4  # Only works if filter_by_gc is True.
 
 # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3568203/#:~:text=For%20vertebrates%2C%20as,of%20these%20species.
 patterns_to_exclude: ['TTTT']
-
+# ---
 
 # Boolean: True or False. Default: False
 # Significantly affects running time.
 # True reports gRNA with off-targets.
 # report_up_to_n_mismatches reports gRNA with fewer <= N mismatches after the seed region.
-output_offtargets: True
+output_offtargets: False
 report_up_to_n_mismatches: 3  # This may be [0-3]
 
 # The column in the input csv file with the name of the 
 # background fasta to check off-targets against
-input_species_offtarget_dir: 'data/input/cds/'
-input_species_offtarget_column: 'filename'
+input_species_offtarget_dir: 'data/input/example_input/'
+input_species_offtarget_column: 'ortho_file_name'
 # ---
 
-preclustering: True
+# Boolean: True or False. Default: False
+# Affects running time performance.
+# Allows a guide within up to the set number of mismatches (after the seed region) of another guide
+# to "inherit" the second guide's targets, essentially rendering the second guide useless
+# and reducing the total guides needed.
+# Works best when unscored guides are present as it does not consider scores.
+# Uses seed_region_is_n_upstream_of_pam and mismatches_allowed_after_seed_region
+preclustering: False
 
 # Boolean: True or False. Default: False
-# Significantly affects running time performance.
+# Affects running time performance.
 # Compresses the output gRNA set by clustering similar gRNAs.
 # Adds a new column called 'cluster' to output/EXPERIMENT_NAME/EXPERIMENT_NAME.csv
+# Uses seed_region_is_n_upstream_of_pam and mismatches_allowed_after_seed_region
 postclustering: False
-seed_region_is_n_upstream_of_pam: 12 
-mismatches_allowed_after_seed_region: 3  # Integer value, default: 2
+seed_region_is_n_upstream_of_pam: 12
+mismatches_allowed_after_seed_region: 2  # Integer value, default: 2
 
 # Integer value, default: 5
 # Affects running time and memory performance.
