@@ -69,7 +69,6 @@ class Configurator:
 
     def begruessung(self) -> None:
         print(f'{bcolors.BLUE}>{bcolors.RESET} Welcome to {bcolors.ORANGE}ALLEGRO{bcolors.RESET}.')
-        print(f'{bcolors.BLUE}>{bcolors.RESET} All unspecified command-line arguments default to the values in config.yaml.')
 
 
     # To use CHOPCHOP, ALLEGRO needs a conda environment called 'chopchop' with all the appropriate
@@ -105,6 +104,13 @@ class Configurator:
             epilog="For more info, visit https://github.com/AmirUCR/allegro",
             parents=[config_parser],
             formatter_class=argparse.RawTextHelpFormatter
+        )
+
+        help='Check if the program can execute successfully.'
+        parser.add_argument(
+            '--soundcheck',
+            action='store_true',
+            help=help
         )
 
         help = "- Name of the experiment. Output directory and file will be labeled with this."
@@ -381,6 +387,12 @@ class Configurator:
 
 
     def check_and_fix_configurations(self) -> tuple[argparse.Namespace, dict]:
+        if self.args.soundcheck:
+            print(f'{bcolors.BLUE}> {bcolors.RESET}{bcolors.ORANGE}ALLEGRO{bcolors.RESET} is ready to shred.')
+            sys.exit(0)
+
+        print(f'{bcolors.BLUE}>{bcolors.RESET} All unspecified command-line arguments default to the values in config.yaml.')
+
         species_df = None
 
         # ------------------------------------------------------------------------------
@@ -683,7 +695,8 @@ class Configurator:
         with open(output_txt_path, 'w') as f:
             f.write(f'Config used for experiment {self.args.experiment_name}\n')
             for key, value in vars(self.args).items():
-                f.writelines(f'{key}: {value}\n')
+                if key != 'soundcheck':
+                    f.writelines(f'{key}: {value}\n')
 
         self.output_txt_path = output_txt_path
         return output_txt_path
