@@ -131,6 +131,7 @@ class Configurator:
 
         help = "- Files in this directory must end with .fna."
         parser.add_argument(
+            '-id',
             '--input_directory',
             type=str,
             help=help,
@@ -141,6 +142,7 @@ class Configurator:
         help = "- The .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
         "- Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds."
         parser.add_argument(
+            '-isp',
             '--input_species_path',
             type=str,
             help=help,
@@ -150,6 +152,7 @@ class Configurator:
         help = "- The desired column name of the .csv file that includes three columns: species_name, genome_file_name, cds_file_name. genome_file_name rows start with species_name + _genomic.fna. cds_file_name rows start with species_name + _cds.fna.\n" + \
         "- Genome files must be placed in data/input/genomes while cds files must be placed in data/input/cds."
         parser.add_argument(
+            '-ispc',
             '--input_species_path_column',
             type=str,
             help=help,
@@ -161,6 +164,7 @@ class Configurator:
         "- track_a: any of the genes in container_names can be targeted. There will be multiplicity targets per guide container (species or genes).\n" + \
         "- track_e: each species/gene has to be targeted at least multiplicity times."
         parser.add_argument(
+            '-t',
             '--track',
             type=str,
             help=help,
@@ -168,6 +172,7 @@ class Configurator:
 
         help = "- Ensures to cut each species/gene at least this many times. Default: 1"
         parser.add_argument(
+            '-m',
             '--multiplicity',
             type=int,
             default=1,
@@ -177,6 +182,7 @@ class Configurator:
         help = "- Beta represents a loose budge or threshold for the maximum number of guides you would like in the final covering set.\n" + \
         "- This is *not* a guaranteed maximum due to the hardness of the problem. See the topic on Integrality Gap."
         parser.add_argument(
+            '-b',
             '--beta',
             type=int,
             default=0,
@@ -187,6 +193,7 @@ class Configurator:
         help = "- Which scoring method to use? Default: 'dummy'\n" + \
         "- Options are 'chopchop_METHOD', 'ucrispr', 'dummy' where 'dummy' assigns a score of 1.0 to all guides."
         parser.add_argument(
+            '-s',
             '--scorer',
             type=str,
             default='dummy',
@@ -196,6 +203,7 @@ class Configurator:
         help = "- Only used in solving the ILP if there are remaining feasible guides with fractional values after solving the LP.\n" + \
         "- Stop searching for an optimal solution when the size of the set has stopped improving after this many seconds."
         parser.add_argument(
+            '-esp',
             '--early_stopping_patience',
             type=int,
             help=help,
@@ -203,18 +211,21 @@ class Configurator:
         )
 
         parser.add_argument(
+            '-gc',
             '--filter_by_gc',
             type=bool,
             default=True,
         )
 
         parser.add_argument(
+            '-gcmax',
             '--gc_max',
             type=float,
             default=0.6,
         )
 
         parser.add_argument(
+            '-gcmin',
             '--gc_min',
             type=float,
             default=0.4,
@@ -222,6 +233,7 @@ class Configurator:
 
         help = "Supports up to 5 chained IUPAC codes; e.g., 'RYSN' ALLEGRO will output guides that do not contain any of the patterns in this list."
         parser.add_argument(
+            '-pte',
             '--patterns_to_exclude',
             type=list[str],
             help=help,
@@ -230,6 +242,7 @@ class Configurator:
 
         help = "- True/False boolean, significantly affects running time. True generates a report of gRNA with off-targets."
         parser.add_argument(
+            '-off',
             '--output_offtargets',
             type=bool,
             help=help,
@@ -239,6 +252,7 @@ class Configurator:
         help = "- Generate a report with gRNA with fewer <= N mismatches after the seed region.\n" + \
         "- May be 0, 1, 2, or 3."
         parser.add_argument(
+            '-reportmm',
             '--report_up_to_n_mismatches',
             type=int,
             help=help,
@@ -253,6 +267,7 @@ class Configurator:
         "                             ^\n" + \
         "- Since A and T mismatch in the seed region."
         parser.add_argument(
+            '-seed',
             '--seed_region_is_n_upstream_of_pam',
             type=int,
             help=help,
@@ -261,6 +276,7 @@ class Configurator:
 
         help = '- The directory in which the input csv file with the name of the background fastas to check off-targets against lives.'
         parser.add_argument(
+            '-isod',
             '--input_species_offtarget_dir',
             type=str,
             help=help,
@@ -269,6 +285,7 @@ class Configurator:
 
         help = '- The column in the input csv file with the name of the background fasta to check off-targets against.'
         parser.add_argument(
+            '-isoc',
             '--input_species_offtarget_column',
             type=str,
             help=help,
@@ -284,8 +301,12 @@ class Configurator:
             default=0
         )
 
-        help = ""
+        help = "- Boolean: True or False. Default: False, Affects running time performance.\n" + \
+            "- Allows a guide within up to the set number of mismatches (after the seed region) of another guide to inherit the second guide's targets, essentially rendering the second guide useless and reducing the total guides needed.\n" + \
+            "- Works best when unscored guides are present as it does not consider scores.\n" + \
+            "- Uses seed_region_is_n_upstream_of_pam and mismatches_allowed_after_seed_region."
         parser.add_argument(
+            '-prec',
             '--preclustering',
             type=bool,
             default=False,
@@ -295,6 +316,7 @@ class Configurator:
         help = "- (Affects performance) Post-processing. Default: False\n" + \
         "Compresses the output guide set by clustering similar guides; adds a new column to output.csv"
         parser.add_argument(
+            '-postc',
             '--postclustering',
             type=bool,
             default=False,
@@ -305,6 +327,7 @@ class Configurator:
         "- Choose how many mismatches after the seed region is allowed for placing guides with an identical seed region in the same cluster.\n" + \
         "- For example, guides AAACTGGTACTGACTGACCG and AAACCCCTACTGACTGACCG are placed in the same cluster when this number is 3 or higher."
         parser.add_argument(
+            '-mmafterseed',
             '--mismatches_allowed_after_seed_region',
             type=int,
             default=2,
@@ -312,6 +335,7 @@ class Configurator:
         )
 
         parser.add_argument(
+            '-od',
             '--output_directory',
             type=str,
             default="data/output/"
@@ -320,6 +344,7 @@ class Configurator:
         help = "- Boolean: True or False. Default: True\n" + \
         " - When a problem is deemed unsolvable by the LP solver (e.g., Status: MPSOLVER_INFEASIBLE), enabling diagnostics will attempt to relax each constraint and resolve the problem. If the new problem with the relaxed constraint is solvable, ALLEGRO outputs the internal name of the culprit gene/species. Currently, to stop this process, you need to find the PID of the python process running ALLEGRO using: $ top and kill it manually: $ kill -SIGKILL PID"
         parser.add_argument(
+            '-esd',
             '--enable_solver_diagnostics',
             type=bool,
             default=True,
@@ -417,14 +442,14 @@ class Configurator:
             #   input_species_path_column
             # ------------------------------------------------------------------------------
             if self.args.input_species_path_column not in species_df.columns:
-                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "{self.args.input_species_path_column}" in {self.args.input_species_path}. Did you spell the column name (input_species_path_column) correctly? Exiting.')
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column the specified "{self.args.input_species_path_column}" in {self.args.input_species_path}. Did you spell the column name (input_species_path_column) correctly? Exiting.')
                 sys.exit(1)
             
             # ------------------------------------------------------------------------------
             #   species_name
             # ------------------------------------------------------------------------------
             if "species_name" not in species_df.columns:
-                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find column "species_name" in {self.args.input_species_path}. Did you format the CSV file correctly? Exiting.')
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot find the required column "species_name" in {self.args.input_species_path}. Did you format the CSV file correctly? Exiting.')
                 sys.exit(1)
 
             # ------------------------------------------------------------------------------
@@ -464,11 +489,11 @@ class Configurator:
             for pattern in self.args.patterns_to_exclude:
                 for character in pattern:
                     if character not in iupac_dict:
-                        print(f'{bcolors.RED}> Warning{bcolors.RESET}: patterns_to_exclude pattern "{pattern}" contains the letter "{character}" which is not an IUPAC code. Ignoring pattern.')
+                        print(f'{bcolors.RED}> Warning{bcolors.RESET}: patterns_to_exclude pattern "{pattern}" contains the letter "{character}" which is not an IUPAC code. Ignoring this pattern.')
                         patterns_to_remove.append(pattern)
 
                 if len(pattern) > self.target_lengths[self.args.cas]:
-                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Pattern {pattern} is longer than the length of your guides ({self.target_lengths[self.args.cas]}). Ignoring pattern.')
+                    print(f'{bcolors.RED}> Warning{bcolors.RESET}: Pattern {pattern} is longer than the length of your guides ({self.target_lengths[self.args.cas]}). Ignoring this pattern.')
                     patterns_to_remove.append(pattern)
 
             for pattern in patterns_to_remove:
@@ -518,7 +543,7 @@ class Configurator:
         #   gc_max
         # ------------------------------------------------------------------------------
         if self.args.gc_max < self.args.gc_min:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: gc_max ({self.args.gc_max}) is set to be lower than gc_min ({self.args.gv_min}). Edit these values in the config. Exiting.')
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: gc_max ({self.args.gc_max}) is set to be lower than gc_min ({self.args.gv_min}). Fix these values in your config. Exiting.')
             sys.exit(1)
 
         # ------------------------------------------------------------------------------
@@ -533,8 +558,9 @@ class Configurator:
         # ------------------------------------------------------------------------------
         self.args.report_up_to_n_mismatches = int(self.args.report_up_to_n_mismatches)
 
-        if self.args.report_up_to_n_mismatches > 3:
+        if (self.args.report_up_to_n_mismatches > 3) and (self.args.output_offtargets == True):
             print(f'{bcolors.RED}> Error{bcolors.RESET}: report_up_to_n_mismatches ({self.args.report_up_to_n_mismatches}) is set to a value higher than 3. It may only be in range [0-3]. Adjust this value in the config and try again. Exiting.')
+            sys.exit(1)
 
         # ------------------------------------------------------------------------------
         #   mismatches_allowed_after_seed_region
@@ -542,14 +568,20 @@ class Configurator:
         self.args.mismatches_allowed_after_seed_region = int(self.args.mismatches_allowed_after_seed_region)
 
         if self.args.mismatches_allowed_after_seed_region < 0:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: mismatches_allowed_after_seed_region ({self.args.mismatches_allowed_after_seed_region}) is set to a negative value. Auto adjusting to 0.')
-            self.args.mismatches_allowed_after_seed_region = 0
+            if self.args.preclustering == False:
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: mismatches_allowed_after_seed_region is set to a negative value ({self.args.mismatches_allowed_after_seed_region}). Auto adjusting to 0.')
+                self.args.mismatches_allowed_after_seed_region = 0
+            else:
+                print(f'{bcolors.RED}> Warning{bcolors.RESET}: mismatches_allowed_after_seed_region is set to a negative value ({self.args.mismatches_allowed_after_seed_region}) with preclustering enabled. Auto adjusting to 1.')
+                self.args.mismatches_allowed_after_seed_region = 1
+        elif (self.args.mismatches_allowed_after_seed_region > 3) and (self.args.preclustering):
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: preclustering is enabled and mismatches_allowed_after_seed_region is set to a value higher than 3 ({self.args.mismatches_allowed_after_seed_region}). Beware that Bowtie can only report alignments with 3 mismatches. ALLEGRO will allow mismatches in the output guides, but in the targets.csv report, they may not be aligned to their mismatching intended targets.')
 
         # ------------------------------------------------------------------------------
         #   track
         # ------------------------------------------------------------------------------
         if self.args.track not in ['track_a', 'track_e']:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown track "{self.args.track}" selected in config.yaml. Exiting.')
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown track "{self.args.track}" selected in config.yaml. Options are: "track_a" and "track_e". Exiting.')
             sys.exit(1)
 
         # ------------------------------------------------------------------------------
@@ -618,14 +650,14 @@ class Configurator:
         self.args.early_stopping_patience = int(self.args.early_stopping_patience)
 
         if self.args.early_stopping_patience < 10:
-            print(f'{bcolors.RED}> Warning{bcolors.RESET}: early_stopping_patience is {self.args.early_stopping_patience} < 10 seconds. Auto adjusting to 10. ALLEGRO may be able to find a smaller sized solution with a larger patience.')
+            print(f'{bcolors.RED}> Warning{bcolors.RESET}: early_stopping_patience is {self.args.early_stopping_patience} < 10 seconds. Auto adjusting to 10. ALLEGRO may be able to find a smaller sized solution with a higher patience.')
             self.args.early_stopping_patience = 10
         
         # ------------------------------------------------------------------------------
         #   cas
         # ------------------------------------------------------------------------------
         if self.args.cas != 'cas9':
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: No cas endonuclease other than Cas9 is currently supported. Do not specify this parameter. Exiting.')
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: No Cas endonuclease other than Cas9 is currently supported. Do not specify this parameter. Exiting.')
             sys.exit(1)
 
         # ------------------------------------------------------------------------------
@@ -670,7 +702,12 @@ class Configurator:
         minutes = (time_elapsed.seconds // 60) % 60
         seconds = time_elapsed.total_seconds() % 60 
 
-        print(f'{bcolors.BLUE}> {bcolors.ORANGE}ALLEGRO{bcolors.RESET} experiment took {hours} hours, {minutes} minutes, {seconds:.2f} seconds.')
+        if hours == 0 and minutes == 0:
+            print(f'{bcolors.BLUE}> {bcolors.RESET}{bcolors.ORANGE}ALLEGRO{bcolors.RESET} experiment took {seconds:.2f} seconds.')
+        elif hours == 0:
+            print(f'{bcolors.BLUE}> {bcolors.RESET}{bcolors.ORANGE}ALLEGRO{bcolors.RESET} experiment took {minutes} minutes, {seconds:.2f} seconds.')
+        else:
+            print(f'{bcolors.BLUE}> {bcolors.RESET}{bcolors.ORANGE}ALLEGRO{bcolors.RESET} experiment took {hours} hours, {minutes} minutes, {seconds:.2f} seconds.')
         
         with open(self.output_txt_path, 'a') as f:
             f.write(f'ALLEGRO experiment took {hours} hours, {minutes} minutes, {seconds:.2f} seconds.')
