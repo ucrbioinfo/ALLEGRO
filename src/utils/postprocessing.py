@@ -89,7 +89,7 @@ def find_targets(target_species: str,
                  experiment_name: str,
                  species_df: pandas.DataFrame,
                  output_library: pandas.DataFrame,
-                 background_source: str,  # 'genome' or 'gene'
+                 gene_or_genome_str: str,  # 'genome' or 'gene'
                  input_species_offtarget_dir: str,
                  input_species_offtarget_column: str,
                  num_mismatches: int,
@@ -99,15 +99,16 @@ def find_targets(target_species: str,
     
     # Create a Bowtie index for the target species if it doesn't exist (checks in the function)
     OTF = OfftargetFinder()
-    OTF.run_bowtie_build(target_species, target_species_offtarget_file, background_source)
+    OTF.run_bowtie_build(target_species, target_species_offtarget_file, gene_or_genome_str)
     
     # Get all hits -- Needs to wait for index creation in the previous line
-    all_targets = OTF.run_bowtie_against_other(f'{experiment_name}_output_lib', target_species, background_source, num_mismatches)
+    all_targets = OTF.run_bowtie_against_other(f'{experiment_name}_output_lib', target_species, gene_or_genome_str, num_mismatches)
 
     if len(all_targets) == 0:
-        print(f'{bcolors.RED}> Error{bcolors.RESET}: Problem in postprocessing.py -- Failed to find off-targets because Bowtie has output an empty alignment file. Please delete the cache directory and try again.' + \
-              f'If this error persists, open an issue on the GitHub page for ALLEGRO for assistance. Exiting.')
-        sys.exit(1)
+        return all_targets
+        # print(f'{bcolors.RED}> Error{bcolors.RESET}: Problem in postprocessing.py -- Failed to find off-targets because Bowtie has output an empty alignment file. Please delete the cache directory and try again.' + \
+        #       f' If this error persists, open an issue on the GitHub page for ALLEGRO for assistance. Exiting.')
+        # sys.exit(1)
 
     all_targets['target_species'] = target_species
     all_targets['is_off_target'] = '1'  # initially, all hits are off-targets until proven otherwise
@@ -171,7 +172,7 @@ def report_offtargets(input_species_path: str,
     
     solution_path = os.path.join(output_directory, experiment_name + '.csv')
 
-    background_source = 'genome' if 'genome' in input_species_offtarget_column else 'genes'
+    gene_or_genome_str = 'genome' if 'genome' in input_species_offtarget_column else 'genes'
 
     OTF = OfftargetFinder()
     final_df = pandas.DataFrame()
@@ -198,7 +199,7 @@ def report_offtargets(input_species_path: str,
     max_workers = num_cpus - 1 if num_cpus is not None else 1  # Ensure at least 1 worker is used
     
     print(f'{bcolors.BLUE}>{bcolors.RESET} Looking for off-targets...')
-    print(f'Done with {count}/{len(output_library["target"].unique())} species...', end='\r')
+    print(f'Done with {count}/{len(species_df["species_name"].unique())} species...', end='\r')
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         # Prepare the partial function to include all necessary parameters except 'row'
@@ -206,7 +207,7 @@ def report_offtargets(input_species_path: str,
                        experiment_name=experiment_name,
                        species_df=species_df,
                        output_library=output_library,
-                       background_source=background_source,
+                       gene_or_genome_str=gene_or_genome_str,
                        input_species_offtarget_dir=input_species_offtarget_dir,
                        input_species_offtarget_column=input_species_offtarget_column,
                        num_mismatches=num_mismatches,
@@ -214,18 +215,19 @@ def report_offtargets(input_species_path: str,
                        )
         
         # Submit tasks
-        futures = [executor.submit(partial_find_targets, target_species) for target_species in output_library['target'].unique()]
+        futures = [executor.submit(partial_find_targets, target_species) for target_species in species_df['species_name'].unique()]
 
         # Collect results as tasks complete
         for future in as_completed(futures):
             result = future.result()
 
-            created_dfs.append(result)
+            if len(result) != 0:
+                created_dfs.append(result)
 
-            # time_elapsed += result["time_elapsed"]
             count += 1
-            print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {count}/{len(output_library["target"].unique())} species...', end='\r')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {count}/{len(species_df["species_name"].unique())} species...', end='\r') 
     print()
 
     final_df = pandas.concat(created_dfs, ignore_index=True)
     final_df.to_csv(f'{output_directory}/targets.csv', index=False)
+    print(f'{bcolors.BLUE}>{bcolors.RESET} Done. Check {output_directory}/targets.csv for your off-targets report.') 
