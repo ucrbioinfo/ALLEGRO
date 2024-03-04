@@ -1,4 +1,4 @@
-![5d50a61a-c56f-476f-98d9-5142f8b8ac98](https://github.com/AmirUCR/allegro/assets/46543443/318e022e-c613-4bf4-8204-4a7fdf4a4a4f | width = 300)
+<img width="200" alt="ALLEGRO Logo" src="https://github.com/AmirUCR/allegro/assets/46543443/318e022e-c613-4bf4-8204-4a7fdf4a4a4f">
 
 # Introduction
 ALLEGRO is a synthetic biology tool leveraging linear programming to design the smallest possible gRNA library which satisfies certain constraints.
