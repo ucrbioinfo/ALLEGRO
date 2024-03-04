@@ -6,6 +6,7 @@ ALLEGRO is a synthetic biology tool leveraging linear programming to design the 
 - Design a Cas9 gRNA library for thousands of species simultaneously
 - Flexible library design using an ensemble of options such as tracks, multiplicity, pre- and post-clustering, and more
 - Extremely fast and computationally efficient
+- Written in Python, Cython, and C++
 
 # Documentation
 You may find the documentation for ALLEGRO at its [GitHub Wiki](https://github.com/AmirUCR/allegro/wiki).
