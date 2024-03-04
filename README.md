@@ -8,7 +8,7 @@ ALLEGRO is a synthetic biology tool leveraging linear programming to design the 
 - Extremely fast and computationally efficient
 
 # Documentation
-You may find the documentation for ALLEGRO at the GitHub Wiki.
+You may find the documentation for ALLEGRO at its [GitHub Wiki](https://github.com/AmirUCR/allegro/wiki).
 
 # Support
 If you run into any issues or have suggestions for ALLEGRO, please report them on our GitHub Issues tracker. It's the fastest way to get support and helps us improve ALLEGRO for everyone.
