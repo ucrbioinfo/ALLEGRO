@@ -556,7 +556,7 @@ class Configurator:
         #   gc_max
         # ------------------------------------------------------------------------------
         if self.args.gc_max < self.args.gc_min:
-            print(f'{bcolors.RED}> Error{bcolors.RESET}: gc_max ({self.args.gc_max}) is set to be lower than gc_min ({self.args.gv_min}). Fix these values in your config. Exiting.')
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: gc_max ({self.args.gc_max}) is set to be lower than gc_min ({self.args.gc_min}). Fix these values in your config. Exiting.')
             sys.exit(1)
 
         # ------------------------------------------------------------------------------
@@ -593,9 +593,16 @@ class Configurator:
         # ------------------------------------------------------------------------------
         #   track
         # ------------------------------------------------------------------------------
-        if self.args.track not in ['track_a', 'track_e']:
+        self.args.track = self.args.track.lower()
+
+        if self.args.track not in ['track_a', 'a', 'track_e', 'e']:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown track "{self.args.track}" selected in config.yaml. Options are: "track_a" and "track_e". Exiting.')
             sys.exit(1)
+        
+        if self.args.track == 'a':
+            self.args.track = 'track_a'
+        elif self.args.track == 'e':
+            self.args.track = 'track_e'
 
         # ------------------------------------------------------------------------------
         #   multiplicity
