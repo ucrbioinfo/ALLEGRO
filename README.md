@@ -1,7 +1,7 @@
 <img width="200" alt="ALLEGRO Logo" src="https://github.com/AmirUCR/allegro/assets/46543443/318e022e-c613-4bf4-8204-4a7fdf4a4a4f">
 
 # Introduction
-ALLEGRO is a synthetic biology tool leveraging linear programming to design the smallest possible gRNA library which satisfies certain constraints.
+ALLEGRO is a synthetic biology tool leveraging linear programming to design the smallest possible gRNA library to satisfy user-specified constraints.
 
 - Design a Cas9 gRNA library for thousands of species simultaneously
 - Flexible library design using an ensemble of options such as tracks, multiplicity, pre- and post-clustering, guide cutting efficacy prediction, and more
