@@ -93,7 +93,7 @@ def find_targets(target_species: str,
                  input_species_offtarget_dir: str,
                  input_species_offtarget_column: str,
                  num_mismatches: int,
-                 seed_region_is_n_upstream_of_pam: int) -> None:
+                 seed_region_is_n_upstream_of_pam: int) -> pandas.DataFrame:
 
     target_species_offtarget_file = os.path.join(input_species_offtarget_dir, species_df[species_df['species_name'] == target_species][input_species_offtarget_column].values[0])
     
@@ -110,11 +110,13 @@ def find_targets(target_species: str,
         #       f' If this error persists, open an issue on the GitHub page for ALLEGRO for assistance. Exiting.')
         # sys.exit(1)
 
+    all_targets['reference_name'] = all_targets['reference_name'].astype(str)
     all_targets['target_species'] = target_species
     all_targets['is_off_target'] = '1'  # initially, all hits are off-targets until proven otherwise
     all_targets['self_off_targets'] = '0'
 
     output_library = output_library.rename(columns={'sequence': 'seq_with_pam'})
+    output_library['reference_name'] = output_library['reference_name'].astype(str)
     output_library['sequence'] = output_library['seq_with_pam'].str[:-3]
 
     # These are on-targets -- everything else is off-target
