@@ -1,5 +1,5 @@
 #================================================================
-# General Settings
+# Basic Settings
 #================================================================
 experiment_name: 'ALLEGRO_EXAMPLE_RUN'
 # ---
@@ -15,7 +15,7 @@ input_species_path_column: 'ortho_file_name'
 # ---------------------------------------------------------------
 
 # String value, default: 'track_e'
-# track_a: any of the fasta records can be targeted.There will be multiplicity targets per fasta record.
+# track_a: any of the fasta records can be targeted. There will be multiplicity targets per fasta record.
 # track_e: each fasta record has to be targeted at least multiplicity times,
 track: 'track_e'
 # ---
@@ -26,20 +26,11 @@ track: 'track_e'
 multiplicity: 1
 # ---
 
-# Integer value, default: 0
-beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as your budget.
-          # Setting to 0 disables beta and causes ALLEGRO to find the smallest gRNA set IGNORING scores
-          # (treats all of the gRNAs as equals).
-          # If set to the number of input species, the final size of the set may be up to
-          # the number of species you have (worst case, one gRNA per species).
-          # If set to a number HIGHER than the number of species, finds the best #beta gRNAs.
-# ---
-
 # Possible values: True or False. Default: True
 # Remove guides with > gc_max and < gc_min from consideration?
 filter_by_gc: False
-gc_max: 0.6  # Only works if filter_by_gc is True.
-gc_min: 0.4  # Only works if filter_by_gc is True.
+gc_max: 0.7  # Only works if filter_by_gc is True.
+gc_min: 0.3  # Only works if filter_by_gc is True.
 # ---
 
 # ---------------------------------------------------------------
@@ -57,14 +48,16 @@ input_csv_path_with_guides: ''  # Default: ''
 scorer: 'dummy'
 # ---
 
-# Integer value, measured in seconds, default: 60
-# Only used in solving the ILP if there are remaining feasible guides with
-# fractional values after solving the LP.
-# Stop searching for an optimal solution after this many seconds.
-early_stopping_patience: 60
+# Integer value, default: 0
+beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as your budget.
+          # Setting to 0 disables beta and causes ALLEGRO to find the smallest gRNA set IGNORING scores
+          # (treats all of the gRNAs as equals).
+          # If set to the number of input species, the final size of the set may be up to
+          # the number of species you have (worst case, one gRNA per species).
+          # If set to a number HIGHER than the number of species, finds the best #beta gRNAs.
 # ---
 
-# List of strings, Default: ['TTTT'] -- To exclude nothing, set to ['']
+# List of strings, Default: ['']
 # ALLEGRO will output guides that do not contain any of the patterns in this list.
 # Supports up to 5 chained IUPAC codes; e.g., 'RYSN'
 # Exception to the 5 rule above is when positional nucleotides are used 
@@ -107,15 +100,13 @@ preclustering: False
 # Uses seed_region_is_n_upstream_of_pam and mismatches_allowed_after_seed_region
 postclustering: False
 seed_region_is_n_upstream_of_pam: 12
-mismatches_allowed_after_seed_region: 2  # Integer value, default: 2
+mismatches_allowed_after_seed_region: 3  # Integer value, default: 2
 
-# Integer value, default: 5
-# Affects running time and memory performance.
-# A higher number decreases running time and reduces memory consumption,
-# especially when you have millions of gRNAs.
-# Pre-select gRNAs that hit only up to this number of species to act as representatives
-# for these species. Set to 0 to disable and save all gRNAs to memory.
-# mp_threshold: 0
+# Integer value, measured in seconds, default: 60
+# Only used in solving the ILP if there are remaining feasible guides with
+# fractional values after solving the LP.
+# Stop searching for an optimal solution after this many seconds.
+early_stopping_patience: 60
 # ---
 
 # Boolean: True or False. Default: True
