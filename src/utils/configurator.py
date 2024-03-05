@@ -220,7 +220,6 @@ class Configurator:
         parser.add_argument(
             '-gc',
             '--filter_by_gc',
-            type=bool,
             default=True,
         )
 
@@ -251,7 +250,6 @@ class Configurator:
         parser.add_argument(
             '-off',
             '--output_offtargets',
-            type=bool,
             help=help,
             default=False,
         )
@@ -315,7 +313,6 @@ class Configurator:
         parser.add_argument(
             '-prec',
             '--preclustering',
-            type=bool,
             default=False,
             help=help,
         )
@@ -325,7 +322,6 @@ class Configurator:
         parser.add_argument(
             '-postc',
             '--postclustering',
-            type=bool,
             default=False,
             help=help,
         )
@@ -353,7 +349,6 @@ class Configurator:
         parser.add_argument(
             '-esd',
             '--enable_solver_diagnostics',
-            type=bool,
             default=True,
             help=help
         )
@@ -393,6 +388,18 @@ class Configurator:
 
         print(f'{bcolors.BLUE}>{bcolors.RESET} All unspecified command-line arguments default to the values in config.yaml.')
 
+        if self.args.output_offtargets == 'False' or False:
+            self.args.output_offtargets = False
+
+        if self.args.filter_by_gc == 'False' or False:
+            self.args.filter_by_gc = False
+
+        if self.args.preclustering == 'False' or False:
+            self.args.preclustering = False
+
+        if self.args.enable_solver_diagnostics == 'False' or False:
+            self.args.enable_solver_diagnostics = False
+        
         species_df = None
 
         # ------------------------------------------------------------------------------
@@ -521,7 +528,8 @@ class Configurator:
         # ------------------------------------------------------------------------------
         #   output_offtargets
         # ------------------------------------------------------------------------------
-        if self.args.output_offtargets:
+                    
+        elif self.args.output_offtargets:
             try:
                 species_df[self.args.input_species_offtarget_column]
             except KeyError:
