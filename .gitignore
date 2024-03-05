@@ -1,7 +1,8 @@
 .vscode/
 __pycache__
 unused/
-archive
+archive/
+archive_copy/
 data/cache/
 data/archive/
 data/input/cds/
@@ -11,4 +12,3 @@ data/output_archive/
 .pytest_cache/
 test.*
 out
-test_guide_finder.py
