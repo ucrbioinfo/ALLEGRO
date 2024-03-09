@@ -26,7 +26,6 @@ def check_if_file_with_cached_index_was_modified(cache_index_dir: str, index_bas
             last_modified_time = os.path.getmtime(file_path)
             
             if last_modified_time != float(recorded_creation_date):
-                print(last_modified_time, recorded_creation_date)
                 return True
         else:
             return 'N/A'
