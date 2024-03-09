@@ -388,17 +388,30 @@ class Configurator:
 
         print(f'{bcolors.BLUE}>{bcolors.RESET} All unspecified command-line arguments default to the values in config.yaml.')
 
-        if self.args.output_offtargets == 'False' or False:
+        if self.args.output_offtargets == 'False' or self.args.output_offtargets == False:
             self.args.output_offtargets = False
+        else:
+            self.args.output_offtargets = True
 
-        if self.args.filter_by_gc == 'False' or False:
+        if self.args.filter_by_gc == 'False' or self.args.filter_by_gc == False:
             self.args.filter_by_gc = False
+        else:
+            self.args.filter_by_gc = True
 
-        if self.args.preclustering == 'False' or False:
+        if self.args.preclustering == 'False' or self.args.preclustering == False:
             self.args.preclustering = False
+        else:
+            self.args.preclustering = True
 
-        if self.args.enable_solver_diagnostics == 'False' or False:
+        if self.args.postclustering == 'False' or self.args.postclustering == False:
+            self.args.postclustering = False
+        else:
+            self.args.postclustering = True
+
+        if self.args.enable_solver_diagnostics == 'False' or self.args.enable_solver_diagnostics == False:
             self.args.enable_solver_diagnostics = False
+        else:
+            self.args.enable_solver_diagnostics = True
         
         species_df = None
 
