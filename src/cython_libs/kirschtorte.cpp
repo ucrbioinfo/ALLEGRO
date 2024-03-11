@@ -95,6 +95,7 @@ namespace Kirschtorte
         std::size_t mismatched_allowed_after_seed,
         bool precluster)
     {
+        std::size_t old_beta = beta;
         beta = 0;
         
         ::google::InitGoogleLogging("ALLEGRO VON AMIR");
@@ -415,7 +416,7 @@ namespace Kirschtorte
                     feasible_solutions,
                     this->coversets,
                     multiplicity,
-                    beta,
+                    old_beta,
                     this->early_stopping_patience_s,
                     this->enable_solver_diagnostics,
                     this->output_directory,
