@@ -95,6 +95,8 @@ namespace Kirschtorte
         std::size_t mismatched_allowed_after_seed,
         bool precluster)
     {
+        beta = 0;
+        
         ::google::InitGoogleLogging("ALLEGRO VON AMIR");
 
         // Create a linear solver with the GLOP backend.
