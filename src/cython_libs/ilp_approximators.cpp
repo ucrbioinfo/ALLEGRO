@@ -11,7 +11,7 @@
 #include "absl/time/time.h"
 #include "ortools/linear_solver/linear_solver.h"
 
-std::vector<GuideStruct> sat_solver(
+void sat_solver(
     std::vector<operations_research::MPVariable *> &feasible_solutions,
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
     std::size_t multiplicity,
@@ -19,7 +19,8 @@ std::vector<GuideStruct> sat_solver(
     int early_stopping_patience_s,
     bool enable_solver_diagnostics,
     std::string output_directory,
-    std::ostringstream &log_buffer
+    std::ostringstream &log_buffer,
+    std::vector<GuideStruct> &solution_set
     )
 {
     std::cout << BLUE << "> " << RESET << "Setting up the ILP problem..." << std::endl;
@@ -220,7 +221,7 @@ std::vector<GuideStruct> sat_solver(
             {
                 std::cout << RED << "> Exiting. Retrying with a larger patience may result in a solved problem." << RESET << std::endl;
                 log_info(log_buffer, output_directory);
-                return std::vector<GuideStruct>();
+                return;
             }
         }
         else
@@ -289,7 +290,7 @@ std::vector<GuideStruct> sat_solver(
                             {
                                 std::cout << BLUE "> " << RESET << "Exiting." << std::endl; 
                                 log_info(log_buffer, output_directory);
-                                return std::vector<GuideStruct>();
+                                return;
                             }
                         }
                         counter++;
@@ -300,14 +301,14 @@ std::vector<GuideStruct> sat_solver(
                     std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constraint is defective. The ILP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
                     log_buffer << "Relaxing each constraint and resolving did not find the issue. The ILP problem cannot be solved. Exiting." << std::endl;
                     log_info(log_buffer, output_directory);
-                    return std::vector<GuideStruct>();
+                    return;
                 }
             }
             else
             {
                 std::cout << RED << "> Exiting. Enable diagnostics in config.yaml to iteratively look for a possibly bad constraint." << RESET << std::endl;
                 log_info(log_buffer, output_directory);
-                return std::vector<GuideStruct>();
+                return;
             }
         }
     }
@@ -316,7 +317,7 @@ std::vector<GuideStruct> sat_solver(
     {
         std::cout << RED << "> Exiting after 10 failed diagnostic retries." << RESET << std::endl;
         log_info(log_buffer, output_directory);
-        return std::vector<GuideStruct>();
+        return;
     }
 
     std::vector<operations_research::MPVariable *> sat_feasible_solutions;
@@ -339,8 +340,6 @@ std::vector<GuideStruct> sat_solver(
     std::size_t len_solutions = sat_feasible_solutions.size();
     std::cout << BLUE << "> " << RESET << "The final set consists of: " << len_solutions << " guides." << std::endl;
 
-    std::vector<GuideStruct> decoded_winners;
-
     log_buffer << "The final set consists of:" << std::endl;
     for (auto var_ptr : sat_feasible_solutions)
     {
@@ -359,14 +358,12 @@ std::vector<GuideStruct> sat_solver(
         guide.score = score;
         guide.species_hit = buffer;
 
-        decoded_winners.push_back(guide);
+        solution_set.push_back(guide);
 
         log_buffer << decoded_bitset << std::endl;
     }
 
-    log_buffer << "Size of the final set: " << decoded_winners.size() << std::endl;
-
-    return decoded_winners;
+    log_buffer << "Size of the final set: " << solution_set.size() << std::endl;
 }
 
 // DO NOT DELETE.
