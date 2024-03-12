@@ -13,7 +13,7 @@
 #include "allegro/decode_bitset.h"
 #include "ortools/linear_solver/linear_solver.h"
 
-std::vector<GuideStruct> sat_solver(
+void sat_solver(
     std::vector<operations_research::MPVariable *> &feasible_solutions,
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
     std::size_t multiplicity,
@@ -21,6 +21,7 @@ std::vector<GuideStruct> sat_solver(
     int early_stopping_patience_s,
     bool enable_solver_diagnostics,
     std::string output_directory,
-    std::ostringstream &log_buffer);
+    std::ostringstream &log_buffer,
+    std::vector<GuideStruct> &solution_set);
 
 #endif
