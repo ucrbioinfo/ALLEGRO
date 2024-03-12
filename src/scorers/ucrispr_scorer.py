@@ -16,6 +16,7 @@ class uCRISPR_scorer(Scorer):
         self.gc_min: float = settings['gc_min']
         self.gc_max: float = settings['gc_max']
         self.filter_by_gc: bool = settings['filter_by_gc']
+        self.score_threshold: int = settings['guide_score_threshold']
         self.patterns_to_exclude: list[str] = settings['patterns_to_exclude']
         self.protospacer_length: int = settings['protospacer_length']
         self.use_secondary_memory: bool = settings['use_secondary_memory']
@@ -109,6 +110,18 @@ class uCRISPR_scorer(Scorer):
             if self.use_secondary_memory == True:
                 with open(f'data/cache/{guide_container.species_name}.pickle', 'wb') as f:
                     pickle.dump(saved_guides, f)
+        
+        marked_for_removal = list()
+        for idx, score in enumerate(scores):
+            if score < self.score_threshold:
+                marked_for_removal.append(idx)
 
+        guides_list = [guide for idx, guide in enumerate(guides_list) if idx not in marked_for_removal]
+        guides_context_list = [guide for idx, guide in enumerate(guides_context_list) if idx not in marked_for_removal]
+        strands_list = [strand for idx, strand in enumerate(strands_list) if idx not in marked_for_removal]
+        locations_list = [loc for idx, loc in enumerate(locations_list) if idx not in marked_for_removal]
+        # Get rid of decimals. Don't want 24.423871381236. Just take the 24
+        scores = [int(s) for idx, s in enumerate(scores) if idx not in marked_for_removal]
+        
         return guides_list, guides_context_list, strands_list, locations_list, scores
     

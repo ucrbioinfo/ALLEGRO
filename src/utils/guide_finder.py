@@ -243,6 +243,9 @@ class GuideFinder:
                     # There is enough context on both sides of the PAM
                     if (position-protospacer_length-context_toward_five_prime >= 0) and (position+len(pam)+context_toward_three_prime < len(seq) + 1):
                         guide_with_context = seq[position-protospacer_length-context_toward_five_prime:position+len(pam)+context_toward_three_prime]
+
+                        if '|' in guide_with_context:
+                            continue
                     else:
                         continue
 

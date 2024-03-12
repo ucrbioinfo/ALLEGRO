@@ -207,6 +207,15 @@ class Configurator:
             help=help,
         )
 
+        help = "Integer value and only used when scorer: 'ucrispr'. ALLEGRO will discard any guide with an efficacy score under this value."
+        parser.add_argument(
+            '-sthresh',
+            '--guide_score_threshold',
+            type=int,
+            default=0,
+            help=help,
+        )
+
         help = "- Only used in solving the ILP if there are remaining feasible guides with fractional values after solving the LP.\n" + \
         "- Stop searching for an optimal solution when the size of the set has stopped improving after this many seconds."
         parser.add_argument(
@@ -806,6 +815,7 @@ class Configurator:
                         'gc_min': self.args.gc_min,
                         'gc_max': self.args.gc_max,
                         'filter_by_gc': self.args.filter_by_gc,
+                        'guide_score_threshold': self.args.guide_score_threshold,
                         'use_secondary_memory': True,
                         'protospacer_length': self.target_lengths['cas9'],
                         'patterns_to_exclude': self.args.patterns_to_exclude,

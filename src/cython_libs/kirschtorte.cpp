@@ -94,7 +94,7 @@ namespace Kirschtorte
         std::size_t seed_length,
         std::size_t mismatched_allowed_after_seed,
         bool precluster)
-    {
+    {        
         ::google::InitGoogleLogging("ALLEGRO VON AMIR");
 
         // Create a linear solver with the GLOP backend.
@@ -133,23 +133,13 @@ namespace Kirschtorte
             }
         }
 
-        // --------------------------------------------------
-        // -------------- VARIABLE CREATION -----------------
-        // --------------------------------------------------
-        operations_research::MPObjective *const objective = solver->MutableObjective();
-        operations_research::MPConstraint *beta_constraint;
-
-        if (beta > 0)
-        {
-            beta_constraint = solver->MakeRowConstraint(-infinity, beta, "BETA");
-        }
-
         // Maps a bitset (representing a target container (gene or species) to
         // a set of bitsets (representing a target sequence).
         std::map<boost::dynamic_bitset<>, std::set<boost::dynamic_bitset<>>> hit_containers;
 
         // Maps a bitset (representing a target sequence) to an OR-TOOLS variable.
         std::map<boost::dynamic_bitset<>, operations_research::MPVariable *> map_seq_to_vars;
+        std::map<operations_research::MPVariable *, std::size_t> map_var_to_score;
 
         auto it = this->coversets.begin();
         while (it != this->coversets.end())
@@ -194,16 +184,7 @@ namespace Kirschtorte
             operations_research::MPVariable *const var = solver->MakeNumVar(0.0, 1.0, buffer);
 
             map_seq_to_vars[guide_seq_bitset] = var;
-
-            if (beta > 0)
-            {
-                objective->SetCoefficient(var, score);
-                beta_constraint->SetCoefficient(var, 1);
-            }
-            else
-            {
-                objective->SetCoefficient(var, 1);
-            }
+            map_var_to_score[var] = score;
 
             it++;
         }
@@ -212,9 +193,148 @@ namespace Kirschtorte
         this->log_buffer << "Number of variables (guides): " << solver->NumVariables() << std::endl;
         // --------------------------------------------------
 
+        create_lp_constraints(solver, hit_containers, map_seq_to_vars, multiplicity);
+        hit_containers.clear(); // Mark memory as free
+
+        LOG(INFO) << "Number of constraints: " << solver->NumConstraints();
+        LOG(INFO) << "Cut multiplicity: " << multiplicity << std::endl;
+        this->log_buffer << "Number of constraints: " << solver->NumConstraints() << std::endl;
+        this->log_buffer << "Cut multiplicity: " << multiplicity << std::endl;
+
+        // vector of guide structs [guide sequence, score, container bit vector that it cuts]
+        std::vector<GuideStruct> solution_set;
+        std::string ok_or_error_str = "ERROR";
+        std::size_t len_solutions = 0;
+        std::size_t num_have_fractional_vars = 0;
+        std::vector<operations_research::MPVariable *> feasible_solutions;
+
+        // Define an objective.
+        operations_research::MPObjective *const objective = solver->MutableObjective();
+        // Save the solve status.
+        operations_research::MPSolver::ResultStatus result_status;
+
+        // Solve without beta first.
+        result_status = setup_and_solve_without_beta(solver, objective);
+        ok_or_error_str = diagnose_lp(
+            result_status,
+            enable_solver_diagnostics,
+            solver,
+            objective,
+            beta,
+            log_buffer,
+            output_directory);
+        if (ok_or_error_str == "ERROR")
+        {
+            return solution_set;
+        }
+
+        // Get feasible solutions.
+        get_feasible_solutions(map_seq_to_vars, feasible_solutions, num_have_fractional_vars);
+        // Get the size of feasible solution set.
+        len_solutions = feasible_solutions.size();
+
+        // If there is a beta, and we can afford more guides, solve maximization
+        if (len_solutions < beta)
+        {
+            std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
+            std::cout << BLUE << "> " << RESET << "Resolving with maximization since we can afford more guides..." << std::endl;
+
+            len_solutions = 0;
+            num_have_fractional_vars = 0;
+            feasible_solutions.clear();
+
+            result_status = setup_and_solve_with_beta(solver, objective, beta, map_var_to_score);
+            ok_or_error_str = diagnose_lp(
+                result_status,
+                enable_solver_diagnostics,
+                solver,
+                objective,
+                beta,
+                log_buffer,
+                output_directory);
+            if (ok_or_error_str == "EXIT")
+            {
+                return solution_set;
+            }
+
+            get_feasible_solutions(map_seq_to_vars, feasible_solutions, num_have_fractional_vars);
+            len_solutions = feasible_solutions.size();
+        }
+
+        // --------------------------------------------------
+        // ---------------------- ILP -----------------------
+        // --------------------------------------------------
+        if (len_solutions > 0)
+        {
+            if (num_have_fractional_vars > 0)
+            {
+                std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
+                std::cout << BLUE << "> " << RESET << "Switching to the ILP solver as " << num_have_fractional_vars << " residual guides remain." << std::endl;
+                this->log_buffer << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
+                
+                // SAT solver with time limit
+                sat_solver(
+                    feasible_solutions,
+                    this->coversets,
+                    multiplicity,
+                    beta,
+                    this->early_stopping_patience_s,
+                    this->enable_solver_diagnostics,
+                    this->output_directory,
+                    this->log_buffer,
+                    solution_set);
+            }
+            else
+            {
+                std::cout << BLUE << "> " << RESET <<  "Your library includes " << len_solutions << " guides." << std::endl;
+                this->log_buffer << "The final set consists of:" << std::endl;
+
+                for (auto var_ptr : feasible_solutions)
+                {
+                    boost::dynamic_bitset<> bitset(var_ptr->name());
+
+                    double score = this->coversets[bitset].first;
+                    boost::dynamic_bitset<> species_hit_by_this_guide = this->coversets[bitset].second;
+
+                    std::string buffer;
+                    boost::to_string(species_hit_by_this_guide, buffer);
+
+                    std::string decoded_bitset = decode_bitset(var_ptr->name());
+
+                    GuideStruct guide;
+                    guide.sequence = decoded_bitset;  // This will be in binary and NOT "ACTGTG..."
+                    guide.score = score;
+                    guide.species_hit = buffer;
+
+                    solution_set.push_back(guide);
+
+                    log_buffer << decoded_bitset << std::endl;
+                }
+            }
+        }
+        else
+        {
+            std::cout << RED << "> " << RESET << "No feasible solutions. Exiting." << std::endl;
+            this->log_buffer << "No feasible solutions. Exiting." << std::endl;
+        }
+
+        // Write all buffer messages to disk
+        log_info(this->log_buffer, this->output_directory);
+
+        return solution_set;
+    }
+
+    void Kirschtorte::create_lp_constraints(
+        std::unique_ptr<operations_research::MPSolver> &solver,
+        std::map<boost::dynamic_bitset<>, std::set<boost::dynamic_bitset<>>> const &hit_containers,
+        std::map<boost::dynamic_bitset<>, operations_research::MPVariable *> &map_seq_to_vars,
+        std::size_t const &multiplicity)
+    {
         // --------------------------------------------------
         // ------------- CONSTRAINT CREATION ----------------
         // --------------------------------------------------
+        const double infinity = solver->infinity();
+
         for (auto i : hit_containers)
         {
             std::vector<operations_research::MPVariable *> vars_for_this_container;
@@ -232,63 +352,95 @@ namespace Kirschtorte
                 constraint->SetCoefficient(k, 1);
             }
         }
+    }
 
-        hit_containers.clear(); // Mark memory as free
-
-        if (beta > 0)
+    void Kirschtorte::get_feasible_solutions(
+        std::map<boost::dynamic_bitset<>, operations_research::MPVariable *> const &map_seq_to_vars,
+        std::vector<operations_research::MPVariable *> &feasible_solutions,
+        std::size_t &num_have_fractional_vars)
+    {
+        for (auto i : map_seq_to_vars)
         {
-            LOG(INFO) << "Number of constraints + 1 (beta): " << solver->NumConstraints();
-            this->log_buffer << "Number of constraints + 1 (beta): " << solver->NumConstraints() << std::endl;
+            boost::dynamic_bitset<> seq_bitset = i.first;
+            operations_research::MPVariable *var = i.second;
+
+            if (var->solution_value() > 0.0)
+            {
+                if (var->solution_value() < 1.0)
+                {
+                    num_have_fractional_vars++;
+                }
+
+                feasible_solutions.push_back(var);
+            }
         }
-        else
+    }
+
+    operations_research::MPSolver::ResultStatus Kirschtorte::setup_and_solve_with_beta(
+        std::unique_ptr<operations_research::MPSolver> const &solver,
+        operations_research::MPObjective *const &objective,
+        std::size_t const &beta,
+        std::map<operations_research::MPVariable *, std::size_t> const &map_var_to_score)
+    {
+        const double infinity = solver->infinity();
+
+        operations_research::MPConstraint *beta_constraint;
+        beta_constraint = solver->MakeRowConstraint(-infinity, beta, "BETA");
+    
+        for (auto i : map_var_to_score)
         {
-            LOG(INFO) << "Number of constraints: " << solver->NumConstraints();
-            this->log_buffer << "Number of constraints: " << solver->NumConstraints() << std::endl;
+            operations_research::MPVariable *const var = i.first;
+            std::size_t score = i.second;
+            
+            objective->SetCoefficient(var, score);
+            beta_constraint->SetCoefficient(var, 1);
         }
-        // --------------------------------------------------
 
-        LOG(INFO) << "Cut multiplicity: " << multiplicity << std::endl;
-        this->log_buffer << "Cut multiplicity: " << multiplicity << std::endl;
+        objective->SetMaximization();
+        return solver->Solve();
+    }
 
-        // Set the appropriate objective.
-        if (beta > 0)
+    operations_research::MPSolver::ResultStatus Kirschtorte::setup_and_solve_without_beta(
+        std::unique_ptr<operations_research::MPSolver> const &solver,
+        operations_research::MPObjective *const &objective)
+    {
+        for (auto var : solver->variables())
         {
-            LOG(INFO) << "Beta: " << beta << " - Maximizing the the set size considering beta." << std::endl;
-            this->log_buffer << "Beta: " << beta << " - Maximizing the the set size considering beta." << std::endl;
-
-            objective->SetMaximization();
-        }
-        else
-        {
-            LOG(INFO) << "Beta: " << beta << " - Minimizing the the set size. Disregarding scores and beta." << std::endl;
-            this->log_buffer << "Beta: " << beta << " - Minimizing the the set size. Disregarding scores and beta." << std::endl;
-
-            objective->SetMinimization();
+            objective->SetCoefficient(var, 1);
         }
 
-        // Solve the linear program
-        operations_research::MPSolver::ResultStatus result_status = solver->Solve();
+        objective->SetMinimization();
+        return solver->Solve();
+    }
 
+
+    std::string Kirschtorte::diagnose_lp(
+        operations_research::MPSolver::ResultStatus result_status,
+        bool const &enable_solver_diagnostics,
+        std::unique_ptr<operations_research::MPSolver> const &solver,
+        operations_research::MPObjective *const &objective,
+        std::size_t &beta,
+        std::ostringstream &log_buffer,
+        std::string const &output_directory)
+    {
         // Check that the problem has a solution.
         if (result_status == operations_research::MPSolver::OPTIMAL)
         {
-            // std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
             std::cout << BLUE << "> " << RESET << "The LP problem has an " << BLUE << "optimal" << RESET << " solution!" << std::endl;
-            this->log_buffer << "The LP problem has an optimal solution." << std::endl;
+            log_buffer << "The LP problem has an optimal solution." << std::endl;
         }
         else if (result_status == operations_research::MPSolver::FEASIBLE)
         {
-            // std::cout << BLUE << "> Status: " << result_status << RESET << std::endl;
             std::cout << BLUE << "> " << RESET << "The LP problem has a " << BLUE << "feasible" << RESET << " solution." << std::endl;
-            this->log_buffer << "The LP problem has a feasible solution." << std::endl;
+            log_buffer << "The LP problem has a feasible solution." << std::endl;
         }
         else
         {
             std::cout << RED << "> Status: " << result_status << RESET << std::endl;
             std::cout << RED << "> The LP problem cannot be solved." << RESET << std::endl;
-            this->log_buffer << "The LP problem cannot be solved. Status: " << result_status << std::endl;
+            log_buffer << "The LP problem cannot be solved. Status: " << result_status << std::endl;
 
-            if (this->enable_solver_diagnostics)
+            if (enable_solver_diagnostics)
             {
                 std::size_t counter = 1;
                 bool fixed_beta = false;
@@ -297,6 +449,8 @@ namespace Kirschtorte
                 
                 for (auto constraint : solver->constraints())
                 {
+                    const double infinity = solver->infinity();
+
                     // Temporarily relax the constraint
                     std::cout << BLUE "\r> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
                     constraint->SetBounds(-infinity, infinity);
@@ -308,7 +462,7 @@ namespace Kirschtorte
                     if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
                     {
                         std::cout << BLUE "\n> " << RESET << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
-                        this->log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
+                        log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
 
                         // Was Beta the bad constraint? Binary search for the best Beta
                         if (constraint->name() == "BETA")
@@ -343,8 +497,8 @@ namespace Kirschtorte
                         else
                         {
                             std::cout << BLUE "> " << RESET << "Exiting." << std::endl; 
-                            log_info(this->log_buffer, this->output_directory);
-                            return std::vector<GuideStruct>();
+                            log_info(log_buffer, output_directory);
+                            return "ERROR";
                         }
                     }
                     counter++;
@@ -353,109 +507,19 @@ namespace Kirschtorte
                 if (fixed_beta == false)
                 {
                     std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
-                    this->log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
-                    log_info(this->log_buffer, this->output_directory);
-                    return std::vector<GuideStruct>();
+                    log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
+                    log_info(log_buffer, output_directory);
+                    return "ERROR";
                 }
             }
             else
             {
                 std::cout << RED << "> Exiting. Enable diagnostics in config.yaml to iteratively look for a possibly bad constraint." << RESET << std::endl;
-                log_info(this->log_buffer, this->output_directory);
-                return std::vector<GuideStruct>();
+                log_info(log_buffer, output_directory);
+                return "ERROR";
             }
         }
 
-        // Save the feasible variables.
-        // A feasible variable is any variable with a solution value greater than 0.
-        // It has a chance to be in the final solution.
-        std::vector<operations_research::MPVariable *> feasible_solutions;
-        std::size_t num_have_fractional_vars = 0;
-
-        for (auto i : map_seq_to_vars)
-        {
-            boost::dynamic_bitset<> seq_bitset = i.first;
-            operations_research::MPVariable *var = i.second;
-
-            if (var->solution_value() > 0.0)
-            {
-                if (var->solution_value() < 1.0)
-                {
-                    num_have_fractional_vars++;
-                }
-
-                this->log_buffer << decode_bitset(seq_bitset) << " with solution value: " << var->solution_value() << std::endl;
-
-                feasible_solutions.push_back(var);
-            }
-        }
-
-        map_seq_to_vars.clear();
-
-        std::size_t len_solutions = feasible_solutions.size();
-        // --------------------------------------------------
-        // ---------------------- ILP -----------------------
-        // --------------------------------------------------
-
-        // vector of guide structs [guide sequence, score, container bit vector that it cuts]
-        std::vector<GuideStruct> solution_set;
-
-        if (len_solutions > 0)
-        {
-            if (num_have_fractional_vars > 0)
-            {
-                std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
-                std::cout << BLUE << "> " << RESET << "Switching to the ILP solver as " << num_have_fractional_vars << " residual guides remain." << std::endl;
-                this->log_buffer << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
-                
-                // SAT solver with time limit
-                solution_set = sat_solver(
-                    feasible_solutions,
-                    this->coversets,
-                    multiplicity,
-                    beta,
-                    this->early_stopping_patience_s,
-                    this->enable_solver_diagnostics,
-                    this->output_directory,
-                    this->log_buffer);
-            }
-            else
-            {
-                std::cout << BLUE << "> " << RESET <<  "The final set consists of " << len_solutions << " guides." << std::endl;
-                this->log_buffer << "The final set consists of:" << std::endl;
-
-                for (auto var_ptr : feasible_solutions)
-                {
-                    boost::dynamic_bitset<> bitset(var_ptr->name());
-
-                    double score = this->coversets[bitset].first;
-                    boost::dynamic_bitset<> species_hit_by_this_guide = this->coversets[bitset].second;
-
-                    std::string buffer;
-                    boost::to_string(species_hit_by_this_guide, buffer);
-
-                    std::string decoded_bitset = decode_bitset(var_ptr->name());
-
-                    GuideStruct guide;
-                    guide.sequence = decoded_bitset;  // This will be in binary and NOT "ACTGTG..."
-                    guide.score = score;
-                    guide.species_hit = buffer;
-
-                    solution_set.push_back(guide);
-
-                    log_buffer << decoded_bitset << std::endl;
-                }
-            }
-        }
-        else
-        {
-            std::cout << "No feasible solutions." << len_solutions << std::endl;
-            this->log_buffer << "No feasible solutions." << len_solutions << std::endl;
-        }
-
-        // Write all buffer messages to disk
-        log_info(this->log_buffer, this->output_directory);
-
-        return solution_set;
+        return "OK";
     }
 }
