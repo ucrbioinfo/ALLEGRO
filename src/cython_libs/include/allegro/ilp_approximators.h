@@ -16,11 +16,11 @@
 void sat_solver(
     std::vector<operations_research::MPVariable *> &feasible_solutions,
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
-    std::size_t multiplicity,
-    std::size_t beta,
-    int early_stopping_patience_s,
-    bool enable_solver_diagnostics,
-    std::string output_directory,
+    std::size_t const &multiplicity,
+    std::size_t &beta,
+    std::size_t &early_stopping_patience,
+    bool const &enable_solver_diagnostics,
+    std::string const &output_directory,
     std::ostringstream &log_buffer,
     std::vector<GuideStruct> &solution_set);
 

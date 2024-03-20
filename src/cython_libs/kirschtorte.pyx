@@ -36,11 +36,17 @@ cdef extern from "allegro/guide_struct.h":
 cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
     cdef cppclass Kirschtorte:
         Kirschtorte(
-            size_t num_containers,
+            bool precluster,
+            size_t beta,
+            size_t seed_length,
             size_t guide_length,
+            size_t multiplicity,
+            size_t num_containers,
+            size_t monophonic_threshold,
             size_t early_stopping_patience,
-            string output_directory,
-            bool enable_solver_diagnostics) except +
+            size_t mismatched_allowed_after_seed,
+            bool enable_solver_diagnostics,
+            string output_directory) except +
         
         # Google OR-Tools solver code
         # Returns a python-iterable list of tuples. tuple[0] is a plain-text sequence
@@ -48,13 +54,7 @@ cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
         # that shows which species this sequence hits, e.g., '1110'.
         # The width of the bitset is equal to the number of input species found in
         # species_df .csv normally found in data/input/species.csv.
-        vector[GuideStruct] setup_and_solve(
-            size_t monophonic_threshold,
-            size_t cut_multiplicity,
-            size_t beta,
-            size_t seed_length,
-            size_t mismatched_allowed_after_seed,
-            bool preclustering)
+        vector[GuideStruct] setup_and_solve()
 
         # Encodes each seq into a boost::dynamic_bitset and saves it,
         # plus the species this seq hits.
@@ -72,7 +72,7 @@ cdef class KirschtorteCython:
         self,
         beta: int,
         track: str,
-        preclustering: bool,
+        precluster: bool,
         seed_length: int,
         mismatched_allowed_after_seed: int,
         early_stopping_patience: int,
@@ -83,7 +83,7 @@ cdef class KirschtorteCython:
         scorer_settings: dict,
         output_directory: str,
         input_species_path_column: str,
-        cut_multiplicity: int,
+        multiplicity: int,
         monophonic_threshold: int,
         input_species_csv_file_path: str,
         enable_solver_diagnostics: bool
@@ -91,10 +91,10 @@ cdef class KirschtorteCython:
 
         self.beta = beta
         self.cas_variant = cas_variant
-        self.preclustering = preclustering
+        self.precluster = precluster
         self.seed_length = seed_length
         self.mismatched_allowed_after_seed = mismatched_allowed_after_seed
-        self.cut_multiplicity = cut_multiplicity
+        self.multiplicity = multiplicity
         self.monophonic_threshold = monophonic_threshold
 
         self.input_directory = input_directory
@@ -108,7 +108,18 @@ cdef class KirschtorteCython:
         self.clusters = self.species_df.shape[0] if track == 'track_a' else records_count_finder.count_records(self.input_directory, self.species_df[self.input_species_path_column].tolist())
 
         # Instantiate a C++ class. The linear programming part of ALLEGRO is done here
-        self.kirschtorte = new Kirschtorte(self.clusters, guide_length, early_stopping_patience, output_directory.encode('utf-8'), enable_solver_diagnostics)
+        self.kirschtorte = new Kirschtorte(
+            precluster,
+            beta,
+            seed_length,
+            guide_length,
+            multiplicity,
+            self.clusters,
+            monophonic_threshold,
+            early_stopping_patience,
+            mismatched_allowed_after_seed,
+            enable_solver_diagnostics,
+            output_directory.encode('utf-8'))
 
         # To translate indices back to legible names later.
         self.guide_origin: dict[int, str] = dict()
@@ -153,8 +164,7 @@ cdef class KirschtorteCython:
                 name=row.species_name,
                 records_path=records_path,
                 guide_scorer=self.scorer,
-                guide_container_factory=self.guide_container_factory
-            )
+                guide_container_factory=self.guide_container_factory)
 
             guide_objects_list: list[Guide] = list()
 
@@ -181,10 +191,10 @@ cdef class KirschtorteCython:
                 # interact with C++ -- encode and pass the sequence string, score, and index.
                 self.kirschtorte.encode_and_save_dna(guide_sequence.encode('utf-8'), guide_object.score, idx)
                 
-            if total_available_guides_for_this_species < self.cut_multiplicity:
+            if total_available_guides_for_this_species < self.multiplicity:
                 print(f'{bcolors.RED}> Error{bcolors.RESET}: The genes in species {row.species_name} ' +
                 f'contain fewer total guides ({total_available_guides_for_this_species}) than ' +
-                f'the requested multiplicity {self.cut_multiplicity} for Track A. ' +
+                f'the requested multiplicity {self.multiplicity} for Track A. ' +
                 f'Either remove this species from your input file, or reduce your multiplicity ' +
                 f'to at most the total available guides for this species ({total_available_guides_for_this_species}) and try again. Exiting.')
                 sys.exit(1)
@@ -197,7 +207,7 @@ cdef class KirschtorteCython:
         del self.species_df
 
         # Interface with the C++ functions.
-        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta, self.seed_length, self.mismatched_allowed_after_seed, self.preclustering)
+        guide_struct_vector = self.kirschtorte.setup_and_solve()
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:
@@ -239,8 +249,7 @@ cdef class KirschtorteCython:
                 name=row.species_name,
                 records_path=records_path,
                 guide_scorer=self.scorer,
-                guide_container_factory=self.guide_container_factory,
-            )
+                guide_container_factory=self.guide_container_factory)
 
             guide_containers_list: list[GuideContainer] = list()
 
@@ -261,9 +270,9 @@ cdef class KirschtorteCython:
             for guide_container in guide_containers_list:
                 guide_objects_list: list[Guide] = guide_container.get_cas9_guides()
 
-                if len(guide_objects_list) < self.cut_multiplicity:
+                if len(guide_objects_list) < self.multiplicity:
                     print(f'{bcolors.RED}> Warning{bcolors.RESET}: In species {row.species_name}, gene {guide_container.string_id} ' +
-                    f'contains fewer {self.cas_variant} guides ({len(guide_objects_list)}) than the requested multiplicity ({self.cut_multiplicity}) for Track E. Discarding this gene.')
+                    f'contains fewer {self.cas_variant} guides ({len(guide_objects_list)}) than the requested multiplicity ({self.multiplicity}) for Track E. Discarding this gene.')
                     continue
                 
                 total_number_of_guides += len(guide_objects_list)
@@ -276,8 +285,7 @@ cdef class KirschtorteCython:
                     status = self.kirschtorte.encode_and_save_dna(
                         guide_sequence.encode('utf-8'),
                         guide_object.score,
-                        container_idx,
-                        )
+                        container_idx)
 
                     if status == 0:
                         self.guide_origin[container_idx] = row.species_name # + ', ' + container_target_name
@@ -286,10 +294,10 @@ cdef class KirschtorteCython:
                 
                 print(f'{bcolors.BLUE}>{bcolors.RESET} Done with {container_idx}/{self.clusters} genes...', end='\r')
 
-            if total_available_guides_for_this_species < self.cut_multiplicity:
+            if total_available_guides_for_this_species < self.multiplicity:
                 print(f'{bcolors.RED}> Error{bcolors.RESET}: The genes in species {row.species_name} ' +
                 f'contain fewer total guides ({total_available_guides_for_this_species}) than ' +
-                f'the requested multiplicity {self.cut_multiplicity} for Track E. ' +
+                f'the requested multiplicity {self.multiplicity} for Track E. ' +
                 f'Either remove this species from your input file, or reduce your multiplicity ' +
                 f'to at most the total available guides for this species ({total_available_guides_for_this_species}) and try again. Exiting.')
                 sys.exit(1)
@@ -301,7 +309,7 @@ cdef class KirschtorteCython:
         del self.species_df
 
         # Interface with the C++ functions.
-        guide_struct_vector = self.kirschtorte.setup_and_solve(self.monophonic_threshold, self.cut_multiplicity, self.beta, self.seed_length, self.mismatched_allowed_after_seed, self.preclustering)
+        guide_struct_vector = self.kirschtorte.setup_and_solve()
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:
@@ -343,7 +351,7 @@ cdef class EinfacherModusCython:
         cas_variant: str,
         guide_length: int,
         output_directory: str,
-        cut_multiplicity: int,
+        multiplicity: int,
         monophonic_threshold: int,
         input_csv_path_with_guides: str,
         enable_solver_diagnostics: bool
@@ -351,7 +359,7 @@ cdef class EinfacherModusCython:
 
         self.beta = beta
         self.cas_variant = cas_variant
-        self.cut_multiplicity = cut_multiplicity
+        self.multiplicity = multiplicity
         self.monophonic_threshold = monophonic_threshold
         self.input_csv_path_with_guides = pandas.read_csv(input_csv_path_with_guides).drop_duplicates().reset_index(drop=True)
 
@@ -362,7 +370,18 @@ cdef class EinfacherModusCython:
         self.clusters = len(self.input_csv_path_with_guides['target'].unique()) if track == 'track_a' else len(self.input_csv_path_with_guides['reference_name'].unique())
 
         # Instantiate a C++ class. The linear programming part of ALLEGRO is done here
-        self.kirschtorte = new Kirschtorte(self.clusters, guide_length, early_stopping_patience, output_directory.encode('utf-8'), enable_solver_diagnostics)
+        self.kirschtorte = new Kirschtorte(
+            False,
+            beta,
+            0,
+            guide_length,
+            multiplicity,
+            self.clusters,
+            monophonic_threshold,
+            early_stopping_patience,
+            0,
+            enable_solver_diagnostics,
+            output_directory.encode('utf-8'))
 
         # To translate indices back to legible names later.
         self.guide_origin: dict[int, str] = dict()
@@ -398,10 +417,10 @@ cdef class EinfacherModusCython:
 
             total_number_of_guides += len(guides_list)
 
-            if len(guides_list) < self.cut_multiplicity:
+            if len(guides_list) < self.multiplicity:
                 print(f'{bcolors.RED}> Warning{bcolors.RESET}: The species {species_name} ' +
                 f'contains fewer total guides ({len(guides_list)}) than ' +
-                f'the requested multiplicity {self.cut_multiplicity} for Track A. ' +
+                f'the requested multiplicity {self.multiplicity} for Track A. ' +
                 f'Either remove this species from your input file, or reduce your multiplicity ' +
                 f'to at most the total available guides for this species ({len(guides_list)}) and try again. Skipping.')
                 continue
@@ -424,13 +443,7 @@ cdef class EinfacherModusCython:
         del self.input_csv_path_with_guides
 
         # Interface with the C++ functions.
-        guide_struct_vector = self.kirschtorte.setup_and_solve(
-            self.monophonic_threshold,
-            self.cut_multiplicity,
-            self.beta,
-            0,
-            0,
-            False)
+        guide_struct_vector = self.kirschtorte.setup_and_solve()
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:
@@ -471,10 +484,10 @@ cdef class EinfacherModusCython:
             guides_list: list[str] = view['sequence'].tolist()
             scores_list: list[float] = view['score'].tolist() if 'score' in view.columns else [1.0] * len(view)
 
-            if len(guides_list) < self.cut_multiplicity:
+            if len(guides_list) < self.multiplicity:
                 print(
                     f'{bcolors.RED}> Warning{bcolors.RESET}: Reference name {reference_name} ' +
-                    f'contains fewer {self.cas_variant} guides ({len(guides_list)}) than the requested multiplicity ({self.cut_multiplicity}) for Track E. Discarding this gene.')
+                    f'contains fewer {self.cas_variant} guides ({len(guides_list)}) than the requested multiplicity ({self.multiplicity}) for Track E. Discarding this gene.')
                 continue
 
             total_number_of_guides += len(guides_list)
@@ -499,13 +512,7 @@ cdef class EinfacherModusCython:
         del self.input_csv_path_with_guides
 
         # Interface with the C++ functions.
-        guide_struct_vector = self.kirschtorte.setup_and_solve(
-            self.monophonic_threshold,
-            self.cut_multiplicity,
-            self.beta,
-            0,
-            0,
-            False)
+        guide_struct_vector = self.kirschtorte.setup_and_solve()
 
         # Nichts zu tun
         if guide_struct_vector.size() == 0:

@@ -25,8 +25,8 @@ class uCRISPR_scorer(Scorer):
 
         self.guide_finder: GuideFinder = GuideFinder()
 
-        self.cpp_program_path = 'src/scorers/uCRISPR/uCRISPR_scorer'  # Relative path from root to 
-                                                                      # uCRISPR C++ program executable.
+        # Relative path from root to uCRISPR C++ program executable.
+        self.cpp_program_path = 'src/scorers/uCRISPR/uCRISPR_scorer'  
 
         if self.use_secondary_memory == True:
             if not os.path.exists('data/cache/'):
@@ -91,13 +91,14 @@ class uCRISPR_scorer(Scorer):
 
                 output, stderr = process.communicate(payload)
 
-                # Check for any errors
+                # Check for any errors.
                 if stderr:
                     print(f'{bcolors.RED}>{bcolors.RESET} ucrispr_scorer.py: ucrispr_scorer encountered an error: {stderr.decode()}')
                     print('Exiting.')
                     sys.exit(1)
 
-                output = output.decode().strip().split('\n')      # Split the output into a list of strings.
+                # Split the output into a list of strings.
+                output = output.decode().strip().split('\n')
 
                 # Calculation method taken from CHOPCHOP's code.
                 uncached_scores = [scipy.stats.norm.cdf(float(s), loc=11.92658, scale=0.2803797) * 100 for s in output]
@@ -111,6 +112,7 @@ class uCRISPR_scorer(Scorer):
                 with open(f'data/cache/{guide_container.species_name}.pickle', 'wb') as f:
                     pickle.dump(saved_guides, f)
         
+        # Remove guides with score < threshold.
         marked_for_removal = list()
         for idx, score in enumerate(scores):
             if score < self.score_threshold:
@@ -120,7 +122,7 @@ class uCRISPR_scorer(Scorer):
         guides_context_list = [guide for idx, guide in enumerate(guides_context_list) if idx not in marked_for_removal]
         strands_list = [strand for idx, strand in enumerate(strands_list) if idx not in marked_for_removal]
         locations_list = [loc for idx, loc in enumerate(locations_list) if idx not in marked_for_removal]
-        # Get rid of decimals. Don't want 24.423871381236. Just take the 24
+        # Truncate decimals. Don't want 24.423871381236. Just take the 24.
         scores = [int(s) for idx, s in enumerate(scores) if idx not in marked_for_removal]
         
         return guides_list, guides_context_list, strands_list, locations_list, scores

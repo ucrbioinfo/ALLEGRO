@@ -31,7 +31,7 @@ def main() -> int:
             cas_variant=args.cas,
             guide_length=20,
             output_directory=args.output_directory,
-            cut_multiplicity=args.multiplicity,
+            multiplicity=args.multiplicity,
             monophonic_threshold=args.mp_threshold,
             input_csv_path_with_guides=args.input_csv_path_with_guides,
             enable_solver_diagnostics=args.enable_solver_diagnostics
@@ -60,7 +60,7 @@ def main() -> int:
         coversets_obj = coverset(
             beta=args.beta,
             track=args.track,
-            preclustering=args.preclustering,
+            precluster=args.preclustering,
             seed_length=args.seed_region_is_n_upstream_of_pam,
             mismatched_allowed_after_seed=args.mismatches_allowed_after_seed_region,
             early_stopping_patience=args.early_stopping_patience,
@@ -72,7 +72,7 @@ def main() -> int:
             output_directory=args.output_directory,
             input_species_csv_file_path=args.input_species_path,
             input_species_path_column=args.input_species_path_column,
-            cut_multiplicity=args.multiplicity,
+            multiplicity=args.multiplicity,
             monophonic_threshold=args.mp_threshold,
             enable_solver_diagnostics=args.enable_solver_diagnostics
         )
