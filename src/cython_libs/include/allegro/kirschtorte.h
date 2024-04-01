@@ -50,6 +50,7 @@ namespace Kirschtorte
         bool enable_solver_diagnostics;
         std::string output_directory;
 
+        double infinity;
         operations_research::MPSolver *solver;
         operations_research::MPObjective *objective;
 
@@ -79,9 +80,12 @@ namespace Kirschtorte
             operations_research::MPSolver::ResultStatus result_status,
             std::size_t &beta);
 
+        std::string fix_beta(std::size_t &beta);
+
         void get_feasible_solutions(
             std::vector<operations_research::MPVariable *> &feasible_solutions,
             std::size_t &num_have_fractional_vars);
+
     };
 }
 

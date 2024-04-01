@@ -159,7 +159,7 @@ void sat_solver(
     operations_research::MPSolver::ResultStatus result_status = solver->Solve();
     
     bool solved = false;
-    unsigned char num_retries = 1;
+    std::size_t num_retries = 1;
     std::size_t auto_time_lim = 120;
 
     while (!solved && (num_retries < 10))
@@ -181,7 +181,7 @@ void sat_solver(
         // Time limit issue - NOT_SOLVED means not **yet** solved
         else if (result_status == operations_research::MPSolver::NOT_SOLVED)
         {
-            std::cout << RED << "> The ILP problem cannot be solved within the given time limit of " << time_limit << "." << RESET << std::endl;
+            std::cout << RED << "> The ILP problem cannot be solved within the given time limit of " << time_limit << " seconds." << RESET << std::endl;
 
             if (enable_solver_diagnostics)
             {
@@ -198,7 +198,7 @@ void sat_solver(
                 solver->SetTimeLimit(time_limit_ms);
                 early_stopping_patience = time_limit;
                 
-                std::cout << BLUE << "> " << RESET << "Retrying with a time limit of " << early_stopping_patience << " seconds (attempt " << num_retries << "/10)." << std::endl;
+                std::cout << BLUE << "> " << RESET << "Retrying with a time limit of " << early_stopping_patience << " seconds (attempt " << num_retries << "/10)..." << std::endl;
 
                 if (beta > 0)
                 {

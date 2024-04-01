@@ -24,14 +24,12 @@ from classes.guide_container import GuideContainer
 from classes.guide_container_factory import GuideContainerFactory
 import utils.records_count_finder as records_count_finder
 
-
 # Declare a C++ class with cdef.
 cdef extern from "allegro/guide_struct.h":
     cdef cppclass GuideStruct:
         string sequence
         double score
         string species_hit
-
 
 cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
     cdef cppclass Kirschtorte:
@@ -62,7 +60,6 @@ cdef extern from "allegro/kirschtorte.h" namespace "Kirschtorte":
             string seq,
             double score,
             size_t container_id)
-
 
 cdef class KirschtorteCython:
     cdef dict __dict__  # Enable cython self.attribute binding.
@@ -140,15 +137,12 @@ cdef class KirschtorteCython:
         elif track == 'track_e':
             self.track_e()
 
-
     @property
     def species_names(self) -> list[str]:
         return list(self.guide_origin.values())
 
-
     def __dealloc__(self):
         del self.kirschtorte
-
 
     def track_a(self) -> list[tuple[str, float, list[str]]]:
         total_number_of_guides: int = 0
@@ -235,7 +229,6 @@ cdef class KirschtorteCython:
 
         return self.solution
     
-
     def track_e(self) -> list[tuple[str, float, list[str]]]:
         container_idx: int = 0
         total_number_of_guides: int = 0
@@ -338,7 +331,6 @@ cdef class KirschtorteCython:
             
         return self.solution
 
-
 cdef class EinfacherModusCython:
     cdef dict __dict__  # Enable cython self.attribute binding.
     cdef Kirschtorte *kirschtorte  # Pointer to C++ class instance.
@@ -392,15 +384,12 @@ cdef class EinfacherModusCython:
         elif track == 'track_e':
             self.track_e()
 
-
     @property
     def species_names(self) -> list[str]:
         return list(self.guide_origin.values())
 
-
     def __dealloc__(self):
         del self.kirschtorte
-
 
     def track_a(self) -> list[tuple[str, float, list[str]]]:
         total_number_of_guides: int = 0
@@ -471,7 +460,6 @@ cdef class EinfacherModusCython:
 
         return self.solution
     
-
     def track_e(self) -> list[tuple[str, float, list[str]]]:
         total_number_of_guides = 0
         

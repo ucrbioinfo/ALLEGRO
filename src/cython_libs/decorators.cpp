@@ -103,7 +103,8 @@ void decorate_with_monophonic(
 }
 
 // Function to XOR every two bits and count mismatches
-int xor_and_count_mismatches(const boost::dynamic_bitset<>& bitset1, const boost::dynamic_bitset<>& bitset2) {
+int xor_and_count_mismatches(const boost::dynamic_bitset<>& bitset1, const boost::dynamic_bitset<>& bitset2)
+{
     int mismatches = 0;
 
     for (size_t i = 0; i < bitset1.size(); i += 2) {
@@ -116,6 +117,95 @@ int xor_and_count_mismatches(const boost::dynamic_bitset<>& bitset1, const boost
     }
     return mismatches;
 }
+
+
+// void decorate_with_clustering_median(
+//     std::size_t seed_length,
+//     std::size_t cut_multiplicity,  // aka m guides required per container
+//     std::size_t mismatched_allowed_after_seed,
+//     std::ostringstream &log_buffer,
+//     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets)
+// {
+//     std::size_t left_side_bits_length;
+//     std::size_t seed_bits_length = seed_length * 2;  // Each nucleotide is represented with 2 bits.
+//     std::map<boost::dynamic_bitset<>, std::set<boost::dynamic_bitset<>>> seed_to_set;
+
+//     auto it = coversets.begin();
+//     while (it != coversets.end())
+//     {
+//         double new_score = it->second.first;
+
+//         // Guide already marked for removal. Don't bother.
+//         if (new_score <= 0)
+//         {
+//             it++;
+//             continue;
+//         }
+
+//         boost::dynamic_bitset<> new_guide = it->first;
+
+//         //  {'A', "00"}, {'G', "01"}, {'C', "10"}, {'T', "11"}
+//         // AAAAAAGCTTGCTCTTTGCC 
+//         // 0000000000000110111101101110111111011010
+//         //
+//         // Left side bits -        Seed bits
+//         // AAAAAAGC         T T G C T C T T T G C C
+//         // 0000000000000110 111101101110111111011110
+//         left_side_bits_length = new_guide.size() - seed_bits_length;
+//         boost::dynamic_bitset<> seed_bits(seed_bits_length, new_guide.to_ulong() & ((1 << seed_bits_length) - 1));
+//         boost::dynamic_bitset<> new_guide_left_side_bits(left_side_bits_length, new_guide.to_ulong() >> (new_guide.size() - left_side_bits_length));
+
+//         const auto it_seed_to_set = seed_to_set.find(seed_bits);
+//         if (it_seed_to_set != seed_to_set.end())
+//         {
+//             seed_to_set[seed_bits].insert(new_guide_left_side_bits);
+//         }
+//         // First in line.
+//         else
+//         {
+//             seed_to_set[seed_bits] = std::set<boost::dynamic_bitset<>>{new_guide_left_side_bits};
+//         }
+
+//         it++;
+//     }
+
+//     for (const auto map_it : seed_to_set)
+//     {
+//         std::set<boost::dynamic_bitset<>> left_sides_with_same_seed = map_it->second;
+
+//         // Find the median string
+//         // Variable to store bitsets with mismatched_allowed_after_seed or fewer mismatches to each other bitset
+//         std::vector<boost::dynamic_bitset<>> candidates;
+//         boost::dynamic_bitset<> left_side_of_candidate_guide(new_guide_left_side_bits.size());
+
+//         bool found_a_median = false;
+
+//         // Iterate through each bitset and compare it with every other bitset
+//         for (const auto& bitset_outer : left_sides_with_same_seed)
+//         {
+//             bool valid_candidate = true;
+
+//             for (const auto& bitset_inner : left_sides_with_same_seed)
+//             {
+//                 if ((bitset_outer != bitset_inner) && (xor_and_count_mismatches(bitset_outer, bitset_inner) > mismatched_allowed_after_seed))
+//                 {
+//                     valid_candidate = false;
+//                     break;
+//                 }
+//             }
+//             if (valid_candidate)
+//             {
+//                 found_a_median = true;
+//                 left_side_of_candidate_guide = bitset_outer;
+//             }
+//         }
+
+//         // if found a median
+//         // else if not found a median
+        
+//     }
+
+// }
 
 void decorate_with_clustering(
     std::size_t seed_length,

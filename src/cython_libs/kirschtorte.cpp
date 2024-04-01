@@ -8,7 +8,13 @@
 #include "allegro/ilp_approximators.h"
 
 #include "absl/time/time.h"
+#include "ortools/util/sigint.h"
 #include "ortools/linear_solver/linear_solver.h"
+
+static void sigint_ciao()
+{
+    std::cout << BLUE "\n> " << RESET << "Interrupting " << ORANGE << "ALLEGRO" << RESET << ". Ciao.\n";
+}
 
 namespace Kirschtorte
 {
@@ -38,6 +44,17 @@ namespace Kirschtorte
         this->early_stopping_patience = early_stopping_patience;
         this->enable_solver_diagnostics = enable_solver_diagnostics;
         this->mismatched_allowed_after_seed = mismatched_allowed_after_seed;
+
+        ::google::InitGoogleLogging("ALLEGRO VON AMIR");
+
+        operations_research::SigintHandler sigintHandler;
+        sigintHandler.Register(sigint_ciao);  // Allow CTRL + C.
+
+        // Create a linear solver with the GLOP backend.
+        this->solver = operations_research::MPSolver::CreateSolver("GLOP");
+        this->infinity = this->solver->infinity(); // Used for constraints to denote >= 1 and <= 1.
+        // Define an objective.
+        this->objective = this->solver->MutableObjective();
     }
 
     Kirschtorte::~Kirschtorte() {}
@@ -101,12 +118,6 @@ namespace Kirschtorte
 
     std::vector<GuideStruct> Kirschtorte::setup_and_solve()
     {
-        ::google::InitGoogleLogging("ALLEGRO VON AMIR");
-
-        // Create a linear solver with the GLOP backend.
-        this->solver = operations_research::MPSolver::CreateSolver("GLOP");
-        const double infinity = this->solver->infinity(); // Used for constraints to denote >= 1 and <= 1
-
         // --------------------------------------------------
         // ----------------- DECORATORS ---------------------
         // --------------------------------------------------
@@ -206,9 +217,6 @@ namespace Kirschtorte
         std::size_t len_solutions = 0;
         std::size_t num_fractional_vars = 0;
         std::vector<operations_research::MPVariable *> feasible_solutions;
-
-        // Define an objective.
-        this->objective = this->solver->MutableObjective();
         // Save the solve status.
         operations_research::MPSolver::ResultStatus result_status;
 
@@ -296,8 +304,6 @@ namespace Kirschtorte
 
     void Kirschtorte::create_lp_constraints()
     {
-        const double infinity = this->solver->infinity();
-
         for (auto i : this->hit_containers)
         {
             std::vector<operations_research::MPVariable *> vars_for_this_container;
@@ -309,7 +315,7 @@ namespace Kirschtorte
             }
 
             // All species/genes must be covered by at least multiplicity guide(s)
-            operations_research::MPConstraint *const constraint = this->solver->MakeRowConstraint(this->multiplicity, infinity);
+            operations_research::MPConstraint *const constraint = this->solver->MakeRowConstraint(this->multiplicity, this->infinity);
             for (auto k : vars_for_this_container)
             {
                 constraint->SetCoefficient(k, 1);
@@ -341,9 +347,7 @@ namespace Kirschtorte
     operations_research::MPSolver::ResultStatus Kirschtorte::setup_and_solve_with_beta(
         std::size_t const &beta)
     {
-        const double infinity = this->solver->infinity();
-
-        operations_research::MPConstraint *beta_constraint = this->solver->MakeRowConstraint(-infinity, beta, "BETA");
+        operations_research::MPConstraint *beta_constraint = this->solver->MakeRowConstraint(-(this->infinity), beta, "BETA");
     
         for (auto i : this->map_var_to_score)
         {
@@ -393,73 +397,25 @@ namespace Kirschtorte
             if (this->enable_solver_diagnostics)
             {
                 std::size_t counter = 1;
-
                 std::cout << BLUE << "> " << RESET << "Diagnosing constraints by iteratively relaxing them and resolving..." << std::endl;
-                
-                for (auto constraint : this->solver->constraints())
+
+                if (fix_beta(this->beta) == "OK")
                 {
-                    const double infinity = this->solver->infinity();
-
-                    // Is Beta the bad constraint? Search for the best Beta.
-                    if (constraint->name() == "BETA")
-                    {
-                        std::cout << BLUE "> " << RESET << "Looking for the lowest feasible beta..." << std::endl;
-                        
-                        // Remove all scores from guides and resolve with minimization.
-                        // The objective value of the minimization will be the new (smallest) beta.
-                        for (auto var : this->solver->variables())
-                        {
-                            this->objective->SetCoefficient(var, 1);
-                        }
-
-                        // Save old bounds.
-                        double old_lb = constraint->lb();
-                        double old_ub = constraint->ub();
-
-                        constraint->SetBounds(-infinity, infinity);
-                        this->objective->SetMinimization();
-
-                        result_status = this->solver->Solve();  // Resolve with relaxed beta.
-
-                        if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
-                        {
-                            // The actual objective value is a floating value.
-                            // truncating the fractional part results in infeasible. One workaround is to add 1 to fix it.
-                            std::size_t min_beta = this->objective->Value() + 1;
-                            
-                            std::cout << BLUE "> " << RESET << "Increasing beta to " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
-                            log_buffer << "Increasing beta " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
-                            
-                            beta = min_beta;  // Slack beta. To allow some breathing room for the ILP.
-                            return "OK";
-                        }
-                        else
-                        {
-                            // Grenzen zurücksetzen.
-                            constraint->SetBounds(old_lb, old_ub);
-
-                            for (auto i : this->map_var_to_score)
-                            {
-                                operations_research::MPVariable *const var = i.first;
-                                std::size_t score = i.second;
-                                
-                                this->objective->SetCoefficient(var, score);
-                            }
-
-                            this->objective->SetMaximization();
-                        }
-                    }
-                    else
+                    return "OK";
+                }
+                else
+                {
+                    for (auto constraint : this->solver->constraints())
                     {
                         // Die grenzen vorübergehen zurücksetzen.
-                        std::cout << BLUE "> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
+                        std::cout << BLUE "\r> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
                         
                         // Save old bounds.
                         double old_lb = constraint->lb();
                         double old_ub = constraint->ub();
 
                         // ENTSPANN DICH.
-                        constraint->SetBounds(-infinity, infinity);
+                        constraint->SetBounds(-(this->infinity), this->infinity);
                         result_status = solver->Solve();  // Resolve with relaxed constraint.
 
                         // Check feasibility.
@@ -481,7 +437,7 @@ namespace Kirschtorte
                     counter++;
                 }
 
-                std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
+                std::cout << RED << "> Unfortunately " << ORANGE << "ALLEGRO" << RED << " could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
                 log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
                 log_info(log_buffer, output_directory);
                 return "ERROR";
@@ -493,7 +449,64 @@ namespace Kirschtorte
                 return "ERROR";
             }
         }
+        return "ERROR";
+    }
 
+    std::string Kirschtorte::fix_beta(std::size_t &beta)
+    {
+        for (auto constraint : this->solver->constraints())
+        {
+            // Is Beta the bad constraint? Search for the best Beta.
+            if (constraint->name() == "BETA")
+            {
+                std::cout << BLUE "> " << RESET << "Looking for the lowest feasible beta..." << std::endl;
+                
+                // Remove all scores from guides and resolve with minimization.
+                // The objective value of the minimization will be the new (smallest) beta.
+                for (auto var : this->solver->variables())
+                {
+                    this->objective->SetCoefficient(var, 1);
+                }
+
+                // Save old bounds.
+                double old_lb = constraint->lb();
+                double old_ub = constraint->ub();
+
+                constraint->SetBounds(-(this->infinity), this->infinity);
+                this->objective->SetMinimization();
+                operations_research::MPSolver::ResultStatus result_status = this->solver->Solve();  // Resolve with relaxed beta.
+
+                if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+                {
+                    // The actual objective value is a floating value.
+                    // truncating the fractional part results in infeasible. One workaround is to add 1 to fix it.
+                    std::size_t min_beta = this->objective->Value() + 1;
+                    
+                    std::cout << BLUE "> " << RESET << "Increasing beta to " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
+                    log_buffer << "Increasing beta " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
+                    
+                    beta = min_beta;
+                    return "OK";
+                }
+                else
+                {
+                    // Grenzen zurücksetzen.
+                    constraint->SetBounds(old_lb, old_ub);
+
+                    for (auto i : this->map_var_to_score)
+                    {
+                        operations_research::MPVariable *const var = i.first;
+                        std::size_t score = i.second;
+                        
+                        this->objective->SetCoefficient(var, score);
+                    }
+
+                    this->objective->SetMaximization();
+
+                    return "ERROR";
+                }
+            }
+        }
         return "ERROR";
     }
 }
