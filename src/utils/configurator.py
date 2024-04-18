@@ -381,6 +381,12 @@ class Configurator:
             default='NGG',
             help=help,
         )
+
+        parser.add_argument(
+            '--align_solution_to_input',
+            type=str,
+            default='True'
+        )
         
         parser.set_defaults(**config_arg_dict)
         args = parser.parse_args(remaining_args)

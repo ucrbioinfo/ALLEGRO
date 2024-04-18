@@ -147,7 +147,7 @@ class GuideFinder:
                             return True
 
             else:
-                print(f'Dev warning in contains_iupac_pattern(). Pattern {pattern} is longer than {sequence}. Ignoring pattern.')
+                print(f'{bcolors.RED}>{bcolors.RESET} Dev warning in contains_iupac_pattern(). Pattern {pattern} is longer than {sequence}. Ignoring pattern.')
                 continue
 
         return False
@@ -174,6 +174,9 @@ class GuideFinder:
                 the 5-prime after the protospacer (to the left of the sequence).
             * context_toward_three_prime: The number of nucleotides to extract toward
                 the 3-prime after (and excluding) the PAM (to the right side of the sequence).
+            * gc_min: float, discard less than this value.
+            * gc_max: float, discard more than this value.
+            * filter_by_gc: bool = False
             * patterns_to_exclude: Discards a guide if the target contains any of the IUPAC patterns.
 
         ## Returns:
@@ -181,7 +184,7 @@ class GuideFinder:
             * The first list[str] is a list of the protospacers (WITHOUT PAM) found in `sequence`.
             * The second list[str] is a list of the protospacers with their context around them.
             This includes the PAM by default.
-            * The third list[str] is a list of 'F's and 'RC's indicating on
+            * The third list[str] is a list of '+'s and '-'s indicating on
                 which strand, Forward or Reverse Complement, each respective guide resides.
             * The fourth list[int] shows the location of the start of the PAM of each guide in `sequence`.
 
@@ -238,12 +241,14 @@ class GuideFinder:
                         if (gc > gc_max) or (gc < gc_min):
                             continue
 
-                    guide_with_context = ''
-
                     # There is enough context on both sides of the PAM
+                    guide_with_context = ''
                     if (position-protospacer_length-context_toward_five_prime >= 0) and (position+len(pam)+context_toward_three_prime < len(seq) + 1):
                         guide_with_context = seq[position-protospacer_length-context_toward_five_prime:position+len(pam)+context_toward_three_prime]
 
+                        # If we're not using uCRISPR, or a scorer that doesn't need a context, context_toward_five_prime and 
+                        # context_toward_three_prime should be set to 0 by the configurator in settings. That way, 
+                        # guides with | around them (but not in them) won't be discarded.
                         if '|' in guide_with_context:
                             continue
                     else:

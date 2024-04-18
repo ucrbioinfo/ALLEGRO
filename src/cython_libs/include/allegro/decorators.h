@@ -2,6 +2,7 @@
 #define DECORATORS_H
 
 #include <map>
+#include <set>
 #include <sstream>
 #include <algorithm>
 #include <boost/dynamic_bitset.hpp>

@@ -13,8 +13,7 @@ class GuideContainer:
         'species_name',
         'guide_scorer',
         'orthologous_to_gene',
-        'orthologous_to_prot'
-        ]
+        'orthologous_to_prot']
     
     sequence: str
     gene_name: str
@@ -70,9 +69,7 @@ class GuideContainer:
                 sequence=guides_list[i],
                 genomic_location=locations_list[i],
                 # sequence_with_context=guides_context_list[i],
-                guide_container_metadata_dict=self.get_attributes_dict(),
-                )
-            )
+                guide_container_metadata_dict=self.get_attributes_dict()))
         
         return cas9_guide_objects
         
@@ -86,5 +83,5 @@ class GuideContainer:
             'record_ref_species': self.ref_species,
             'record_species_name': self.species_name,
             'record_orthologous_to': self.orthologous_to_gene,
-            'record_orthologous_to_ref_prot_id': self.orthologous_to_prot,
-        })
+            'record_orthologous_to_ref_prot_id': self.orthologous_to_prot})
+    

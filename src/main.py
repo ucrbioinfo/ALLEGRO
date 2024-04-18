@@ -1,5 +1,11 @@
 import sys
 
+try:
+    import setproctitle
+    setproctitle.setproctitle('ALLEGRO')
+except ModuleNotFoundError:
+    pass
+
 from utils.configurator import Configurator
 import utils.postprocessing as postprocessing
 import utils.write_solution_to_file as solution_writer
@@ -31,36 +37,32 @@ def main() -> int:
             cas_variant=args.cas,
             guide_length=20,
             output_directory=args.output_directory,
-            cut_multiplicity=args.multiplicity,
+            multiplicity=args.multiplicity,
             monophonic_threshold=args.mp_threshold,
             input_csv_path_with_guides=args.input_csv_path_with_guides,
-            enable_solver_diagnostics=args.enable_solver_diagnostics
-        )
+            enable_solver_diagnostics=args.enable_solver_diagnostics)
 
         solution_writer.output_solution_to_text(
         species_names=coversets_obj.species_names,
         solution=coversets_obj.solution,
         experiment_name=args.experiment_name,
-        output_directory=args.output_directory
-        )
+        output_directory=args.output_directory)
 
         solution_writer.output_solution_to_library(
             solution=coversets_obj.solution,
             experiment_name=args.experiment_name,
-            output_directory=args.output_directory
-        )
+            output_directory=args.output_directory)
 
         solution_writer.cross_reference_solution_to_input(
             solution=coversets_obj.solution,
             experiment_name=args.experiment_name,
             input_csv_path=args.input_csv_path_with_guides,
-            output_directory=args.output_directory
-        )
+            output_directory=args.output_directory)
     else:
         coversets_obj = coverset(
             beta=args.beta,
             track=args.track,
-            preclustering=args.preclustering,
+            precluster=args.preclustering,
             seed_length=args.seed_region_is_n_upstream_of_pam,
             mismatched_allowed_after_seed=args.mismatches_allowed_after_seed_region,
             early_stopping_patience=args.early_stopping_patience,
@@ -72,42 +74,38 @@ def main() -> int:
             output_directory=args.output_directory,
             input_species_csv_file_path=args.input_species_path,
             input_species_path_column=args.input_species_path_column,
-            cut_multiplicity=args.multiplicity,
+            multiplicity=args.multiplicity,
             monophonic_threshold=args.mp_threshold,
-            enable_solver_diagnostics=args.enable_solver_diagnostics
-        )
+            enable_solver_diagnostics=args.enable_solver_diagnostics)
 
         solution_writer.output_solution_to_text(
             species_names=coversets_obj.species_names,
             solution=coversets_obj.solution,
             experiment_name=args.experiment_name,
-            output_directory=args.output_directory
-        )
+            output_directory=args.output_directory)
 
         solution_writer.output_solution_to_library(
             solution=coversets_obj.solution,
             experiment_name=args.experiment_name,
-            output_directory=args.output_directory
-        )
+            output_directory=args.output_directory)
 
-        solution_writer.align_solution_to_input_bowtie(
-            pam=args.pam,
-            solution=coversets_obj.solution,
-            experiment_name=args.experiment_name,
-            input_csv_path=args.input_species_path,
-            input_directory=args.input_directory,
-            output_directory=args.output_directory,
-            paths_csv_column_name=args.input_species_path_column,
-            species_names_csv_column_name='species_name'
-        )
+        if args.align_solution_to_input == "True":
+            solution_writer.align_solution_to_input_bowtie(
+                pam=args.pam,
+                solution=coversets_obj.solution,
+                experiment_name=args.experiment_name,
+                input_csv_path=args.input_species_path,
+                input_directory=args.input_directory,
+                output_directory=args.output_directory,
+                paths_csv_column_name=args.input_species_path_column,
+                species_names_csv_column_name='species_name')
 
     if args.postclustering:
         postprocessing.cluster_solution(
             output_directory=args.output_directory,
             experiment_name=args.experiment_name,
             req_match_len=args.seed_region_is_n_upstream_of_pam,
-            mm_allowed=args.mismatches_allowed_after_seed_region
-        )
+            mm_allowed=args.mismatches_allowed_after_seed_region)
 
     if args.output_offtargets:
         postprocessing.report_offtargets(
@@ -118,8 +116,7 @@ def main() -> int:
             input_species_offtarget_column=args.input_species_offtarget_column,
             num_mismatches=args.report_up_to_n_mismatches,
             seed_region_is_n_upstream_of_pam=args.seed_region_is_n_upstream_of_pam,
-            pam_length=3
-        )
+            pam_length=3)
     
     configurator.log_time()
 

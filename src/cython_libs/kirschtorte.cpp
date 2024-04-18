@@ -8,24 +8,53 @@
 #include "allegro/ilp_approximators.h"
 
 #include "absl/time/time.h"
+#include "ortools/util/sigint.h"
 #include "ortools/linear_solver/linear_solver.h"
+
+static void sigint_ciao()
+{
+    std::cout << BLUE "\n> " << RESET << "Interrupting " << ORANGE << "ALLEGRO" << RESET << ". Ciao.\n";
+}
 
 namespace Kirschtorte
 {
     Kirschtorte::Kirschtorte(
-        std::size_t num_containers,
+        bool precluster,
+        std::size_t beta,
+        std::size_t seed_length,
         std::size_t guide_length,
-        std::size_t early_stopping_patience_s,
-        std::string output_directory,
-        bool enable_solver_diagnostics)
+        std::size_t multiplicity,
+        std::size_t num_containers,
+        std::size_t monophonic_threshold,
+        std::size_t early_stopping_patience,
+        std::size_t mismatched_allowed_after_seed,
+        bool enable_solver_diagnostics,
+        std::string output_directory)
     {
-        this->num_containers = num_containers; // A container may be a gene, species, or chromosome.
+        this->beta = beta;
+        this->precluster = precluster;
+        this->seed_length = seed_length;
         this->guide_length = guide_length;     // Twenty (20) for cas9.
-        this->early_stopping_patience_s = early_stopping_patience_s;
+        this->multiplicity = multiplicity;
+        this->num_containers = num_containers; // A container may be a gene, species, or chromosome.
         this->output_directory = output_directory;
+        this->monophonic_threshold = monophonic_threshold;
         this->bits_required_to_store_seq = guide_length * 2; // Each nucleotide A/C/T/G in a guide
                                                              // can be represented by 2 bits.
+        this->early_stopping_patience = early_stopping_patience;
         this->enable_solver_diagnostics = enable_solver_diagnostics;
+        this->mismatched_allowed_after_seed = mismatched_allowed_after_seed;
+
+        ::google::InitGoogleLogging("ALLEGRO VON AMIR");
+
+        operations_research::SigintHandler sigintHandler;
+        sigintHandler.Register(sigint_ciao);  // Allow CTRL + C.
+
+        // Create a linear solver with the GLOP backend.
+        this->solver = operations_research::MPSolver::CreateSolver("GLOP");
+        this->infinity = this->solver->infinity(); // Used for constraints to denote >= 1 and <= 1.
+        // Define an objective.
+        this->objective = this->solver->MutableObjective();
     }
 
     Kirschtorte::~Kirschtorte() {}
@@ -68,9 +97,14 @@ namespace Kirschtorte
             // Set the appropriate bit to indicate that this new container is hit by this guide.
             this->coversets[encoded_bitset].second.set(container_id);
 
-            // TODO: Update the average score of this guide
+            // Update the average score of this guide
             // need to keep track of how many times this guide has been seen: n
             // new_average = old_average + (new_item - old_average) / (n + 1)
+            this->num_times_guide_was_seen[encoded_bitset] += 1;
+
+            this->old_score = this->coversets[encoded_bitset].first;
+
+            this->coversets[encoded_bitset].first = old_score + (score - old_score) / num_times_guide_was_seen[encoded_bitset];
         }
         else
         {
@@ -82,64 +116,48 @@ namespace Kirschtorte
 
             // Indicate that this guide (its encoded bitset) has a pair<score, and the container it targets>
             this->coversets[encoded_bitset] = std::pair<double, boost::dynamic_bitset<>>(score, bitset);
+            this->num_times_guide_was_seen[encoded_bitset] = 1;
         }
 
         return 0;
     }
 
-    std::vector<GuideStruct> Kirschtorte::setup_and_solve(
-        std::size_t monophonic_threshold,
-        std::size_t multiplicity,
-        std::size_t beta,
-        std::size_t seed_length,
-        std::size_t mismatched_allowed_after_seed,
-        bool precluster)
-    {        
-        ::google::InitGoogleLogging("ALLEGRO VON AMIR");
-
-        // Create a linear solver with the GLOP backend.
-        std::unique_ptr<operations_research::MPSolver> solver(operations_research::MPSolver::CreateSolver("GLOP"));
-        const double infinity = solver->infinity(); // Used for constraints to denote >= 1 and <= 1
+    std::vector<GuideStruct> Kirschtorte::setup_and_solve()
+    {
+        // Mark as free.
+        this->num_times_guide_was_seen.clear();
 
         // --------------------------------------------------
         // ----------------- DECORATORS ---------------------
         // --------------------------------------------------
-        if (monophonic_threshold > 0)
+        if (this->monophonic_threshold > 0)
         {
             // Within this function, guides deemed not needed have their scores set to 0.
             // These guides will be removed below where we have: if (score <= 0) {...}
-            decorate_with_monophonic(multiplicity, monophonic_threshold, this->log_buffer, this->coversets);
+            decorate_with_monophonic(this->multiplicity, this->monophonic_threshold, this->log_buffer, this->coversets);
         }
 
-        if (precluster)
+        if (this->precluster)
         {
-            if (multiplicity == 1)
+            if (this->multiplicity == 1)
             {
                 decorate_with_clustering(
-                    seed_length,
-                    multiplicity,
-                    mismatched_allowed_after_seed,
+                    this->seed_length,
+                    this->multiplicity,
+                    this->mismatched_allowed_after_seed,
                     this->log_buffer,
                     this->coversets);
             }
             else
             {
                 decorate_with_clustering_multiplicity(
-                    seed_length,
-                    multiplicity,
-                    mismatched_allowed_after_seed,
+                    this->seed_length,
+                    this->multiplicity,
+                    this->mismatched_allowed_after_seed,
                     this->log_buffer,
                     this->coversets);
             }
         }
-
-        // Maps a bitset (representing a target container (gene or species) to
-        // a set of bitsets (representing a target sequence).
-        std::map<boost::dynamic_bitset<>, std::set<boost::dynamic_bitset<>>> hit_containers;
-
-        // Maps a bitset (representing a target sequence) to an OR-TOOLS variable.
-        std::map<boost::dynamic_bitset<>, operations_research::MPVariable *> map_seq_to_vars;
-        std::map<operations_research::MPVariable *, std::size_t> map_var_to_score;
 
         auto it = this->coversets.begin();
         while (it != this->coversets.end())
@@ -172,7 +190,7 @@ namespace Kirschtorte
                 // For example, 001: 00110011... when container 1 is hit by this ATAT... guide
                 // and on the next iteration, if ATAT hits container 2 as well:
                 // 010: 00110011...
-                hit_containers[container_onehot].insert(guide_seq_bitset);
+                this->hit_containers[container_onehot].insert(guide_seq_bitset);
 
                 // Find the next container hit by this guide for the next iteration.
                 // Returns boost::dynamic_bitset<>::npos if no other bits are set.
@@ -181,104 +199,73 @@ namespace Kirschtorte
 
             std::string buffer;
             boost::to_string(guide_seq_bitset, buffer);
-            operations_research::MPVariable *const var = solver->MakeNumVar(0.0, 1.0, buffer);
+            operations_research::MPVariable *const var = this->solver->MakeNumVar(0.0, 1.0, buffer);
 
-            map_seq_to_vars[guide_seq_bitset] = var;
-            map_var_to_score[var] = score;
+            this->map_seq_to_vars[guide_seq_bitset] = var;
+            this->map_var_to_score[var] = score;
 
             it++;
         }
 
-        LOG(INFO) << "Number of variables (guides): " << solver->NumVariables();
-        this->log_buffer << "Number of variables (guides): " << solver->NumVariables() << std::endl;
+        LOG(INFO) << "Number of variables (guides): " << this->solver->NumVariables();
+        this->log_buffer << "Number of variables (guides): " << this->solver->NumVariables() << std::endl;
         // --------------------------------------------------
 
-        create_lp_constraints(solver, hit_containers, map_seq_to_vars, multiplicity);
-        hit_containers.clear(); // Mark memory as free
+        create_lp_constraints();
+        this->hit_containers.clear(); // Mark memory as free
 
-        LOG(INFO) << "Number of constraints: " << solver->NumConstraints();
-        LOG(INFO) << "Cut multiplicity: " << multiplicity << std::endl;
-        this->log_buffer << "Number of constraints: " << solver->NumConstraints() << std::endl;
-        this->log_buffer << "Cut multiplicity: " << multiplicity << std::endl;
+        LOG(INFO) << "Number of constraints: " << this->solver->NumConstraints();
+        LOG(INFO) << "Cut multiplicity: " << this->multiplicity << std::endl;
+        this->log_buffer << "Number of constraints: " << this->solver->NumConstraints() << std::endl;
+        this->log_buffer << "Cut multiplicity: " << this->multiplicity << std::endl;
 
-        // vector of guide structs [guide sequence, score, container bit vector that it cuts]
+        // vector of guide structs [guide sequence, score, container bit vector that it cuts].
         std::vector<GuideStruct> solution_set;
         std::string ok_or_error_str = "ERROR";
-        std::size_t len_solutions = 0;
-        std::size_t num_have_fractional_vars = 0;
-        std::vector<operations_research::MPVariable *> feasible_solutions;
 
-        // Define an objective.
-        operations_research::MPObjective *const objective = solver->MutableObjective();
+        std::size_t len_solutions = 0;
+        std::size_t num_fractional_vars = 0;
+        std::vector<operations_research::MPVariable *> feasible_solutions;
         // Save the solve status.
         operations_research::MPSolver::ResultStatus result_status;
 
-        // Solve without beta first.
-        result_status = setup_and_solve_without_beta(solver, objective);
-        ok_or_error_str = diagnose_lp(
-            result_status,
-            enable_solver_diagnostics,
-            solver,
-            objective,
-            beta,
-            log_buffer,
-            output_directory);
-        if (ok_or_error_str == "ERROR")
+        if (beta > 0)
+        {
+            result_status = setup_and_solve_with_beta(this->beta);
+        }
+        else
+        {
+            result_status = setup_and_solve_without_beta();
+        }
+
+        ok_or_error_str = diagnose_lp(result_status, this->beta);
+
+        if (ok_or_error_str == "EXIT")
         {
             return solution_set;
         }
 
-        // Get feasible solutions.
-        get_feasible_solutions(map_seq_to_vars, feasible_solutions, num_have_fractional_vars);
-        // Get the size of feasible solution set.
+        get_feasible_solutions(feasible_solutions, num_fractional_vars);
         len_solutions = feasible_solutions.size();
-
-        // If there is a beta, and we can afford more guides, solve maximization
-        if (len_solutions < beta)
-        {
-            std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
-            std::cout << BLUE << "> " << RESET << "Resolving with maximization since we can afford more guides..." << std::endl;
-
-            len_solutions = 0;
-            num_have_fractional_vars = 0;
-            feasible_solutions.clear();
-
-            result_status = setup_and_solve_with_beta(solver, objective, beta, map_var_to_score);
-            ok_or_error_str = diagnose_lp(
-                result_status,
-                enable_solver_diagnostics,
-                solver,
-                objective,
-                beta,
-                log_buffer,
-                output_directory);
-            if (ok_or_error_str == "EXIT")
-            {
-                return solution_set;
-            }
-
-            get_feasible_solutions(map_seq_to_vars, feasible_solutions, num_have_fractional_vars);
-            len_solutions = feasible_solutions.size();
-        }
 
         // --------------------------------------------------
         // ---------------------- ILP -----------------------
         // --------------------------------------------------
         if (len_solutions > 0)
         {
-            if (num_have_fractional_vars > 0)
+            if (num_fractional_vars > 0)
             {
                 std::cout << BLUE << "> " << RESET << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
-                std::cout << BLUE << "> " << RESET << "Switching to the ILP solver as " << num_have_fractional_vars << " residual guides remain." << std::endl;
+                std::cout << BLUE << "> " << RESET << "Switching to the ILP solver as " << num_fractional_vars << " residual guides remain." << std::endl;
                 this->log_buffer << "Number of feasible candidate guides: " << len_solutions << "." << std::endl;
                 
-                // SAT solver with time limit
+                // SAT solver with time limit.
                 sat_solver(
                     feasible_solutions,
                     this->coversets,
-                    multiplicity,
-                    beta,
-                    this->early_stopping_patience_s,
+                    this->multiplicity,
+                    this->beta,
+                    this->early_stopping_patience,
                     this->enable_solver_diagnostics,
                     this->output_directory,
                     this->log_buffer,
@@ -308,7 +295,7 @@ namespace Kirschtorte
 
                     solution_set.push_back(guide);
 
-                    log_buffer << decoded_bitset << std::endl;
+                    this->log_buffer << decoded_bitset << std::endl;
                 }
             }
         }
@@ -324,29 +311,20 @@ namespace Kirschtorte
         return solution_set;
     }
 
-    void Kirschtorte::create_lp_constraints(
-        std::unique_ptr<operations_research::MPSolver> &solver,
-        std::map<boost::dynamic_bitset<>, std::set<boost::dynamic_bitset<>>> const &hit_containers,
-        std::map<boost::dynamic_bitset<>, operations_research::MPVariable *> &map_seq_to_vars,
-        std::size_t const &multiplicity)
+    void Kirschtorte::create_lp_constraints()
     {
-        // --------------------------------------------------
-        // ------------- CONSTRAINT CREATION ----------------
-        // --------------------------------------------------
-        const double infinity = solver->infinity();
-
-        for (auto i : hit_containers)
+        for (auto i : this->hit_containers)
         {
             std::vector<operations_research::MPVariable *> vars_for_this_container;
             std::set<boost::dynamic_bitset<>> seq_bitsets_set = i.second;
 
             for (auto j : seq_bitsets_set)
             {
-                vars_for_this_container.push_back(map_seq_to_vars[j]);
+                vars_for_this_container.push_back(this->map_seq_to_vars[j]);
             }
 
             // All species/genes must be covered by at least multiplicity guide(s)
-            operations_research::MPConstraint *const constraint = solver->MakeRowConstraint(multiplicity, infinity);
+            operations_research::MPConstraint *const constraint = this->solver->MakeRowConstraint(this->multiplicity, this->infinity);
             for (auto k : vars_for_this_container)
             {
                 constraint->SetCoefficient(k, 1);
@@ -355,73 +333,58 @@ namespace Kirschtorte
     }
 
     void Kirschtorte::get_feasible_solutions(
-        std::map<boost::dynamic_bitset<>, operations_research::MPVariable *> const &map_seq_to_vars,
         std::vector<operations_research::MPVariable *> &feasible_solutions,
-        std::size_t &num_have_fractional_vars)
+        std::size_t &num_fractional_vars)
     {
-        for (auto i : map_seq_to_vars)
+        for (auto i : this->map_seq_to_vars)
         {
             boost::dynamic_bitset<> seq_bitset = i.first;
             operations_research::MPVariable *var = i.second;
 
             if (var->solution_value() > 0.0)
             {
+                feasible_solutions.push_back(var);
+
                 if (var->solution_value() < 1.0)
                 {
-                    num_have_fractional_vars++;
+                    num_fractional_vars++;
                 }
-
-                feasible_solutions.push_back(var);
             }
         }
     }
 
     operations_research::MPSolver::ResultStatus Kirschtorte::setup_and_solve_with_beta(
-        std::unique_ptr<operations_research::MPSolver> const &solver,
-        operations_research::MPObjective *const &objective,
-        std::size_t const &beta,
-        std::map<operations_research::MPVariable *, std::size_t> const &map_var_to_score)
+        std::size_t const &beta)
     {
-        const double infinity = solver->infinity();
-
-        operations_research::MPConstraint *beta_constraint;
-        beta_constraint = solver->MakeRowConstraint(-infinity, beta, "BETA");
+        operations_research::MPConstraint *beta_constraint = this->solver->MakeRowConstraint(-(this->infinity), beta, "BETA");
     
-        for (auto i : map_var_to_score)
+        for (auto i : this->map_var_to_score)
         {
             operations_research::MPVariable *const var = i.first;
             std::size_t score = i.second;
             
-            objective->SetCoefficient(var, score);
+            this->objective->SetCoefficient(var, score);
             beta_constraint->SetCoefficient(var, 1);
         }
 
-        objective->SetMaximization();
-        return solver->Solve();
+        this->objective->SetMaximization();
+        return this->solver->Solve();
     }
 
-    operations_research::MPSolver::ResultStatus Kirschtorte::setup_and_solve_without_beta(
-        std::unique_ptr<operations_research::MPSolver> const &solver,
-        operations_research::MPObjective *const &objective)
+    operations_research::MPSolver::ResultStatus Kirschtorte::setup_and_solve_without_beta()
     {
-        for (auto var : solver->variables())
+        for (auto var : this->solver->variables())
         {
-            objective->SetCoefficient(var, 1);
+            this->objective->SetCoefficient(var, 1);
         }
 
-        objective->SetMinimization();
-        return solver->Solve();
+        this->objective->SetMinimization();
+        return this->solver->Solve();
     }
-
 
     std::string Kirschtorte::diagnose_lp(
         operations_research::MPSolver::ResultStatus result_status,
-        bool const &enable_solver_diagnostics,
-        std::unique_ptr<operations_research::MPSolver> const &solver,
-        operations_research::MPObjective *const &objective,
-        std::size_t &beta,
-        std::ostringstream &log_buffer,
-        std::string const &output_directory)
+        std::size_t &beta)
     {
         // Check that the problem has a solution.
         if (result_status == operations_research::MPSolver::OPTIMAL)
@@ -440,77 +403,53 @@ namespace Kirschtorte
             std::cout << RED << "> The LP problem cannot be solved." << RESET << std::endl;
             log_buffer << "The LP problem cannot be solved. Status: " << result_status << std::endl;
 
-            if (enable_solver_diagnostics)
+            if (this->enable_solver_diagnostics)
             {
                 std::size_t counter = 1;
-                bool fixed_beta = false;
-
                 std::cout << BLUE << "> " << RESET << "Diagnosing constraints by iteratively relaxing them and resolving..." << std::endl;
-                
-                for (auto constraint : solver->constraints())
+
+                if (fix_beta(this->beta) == "OK")
                 {
-                    const double infinity = solver->infinity();
-
-                    // Temporarily relax the constraint
-                    std::cout << BLUE "\r> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
-                    constraint->SetBounds(-infinity, infinity);
-
-                    result_status = solver->Solve();  // Resolve with relaxed constraint.
-                                                    // If the constraint is BETA, this is easy and fast to solve.
-
-                    // Check feasibility
-                    if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+                    return "OK";
+                }
+                else
+                {
+                    for (auto constraint : this->solver->constraints())
                     {
-                        std::cout << BLUE "\n> " << RESET << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
-                        log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
+                        // Die grenzen vorübergehen zurücksetzen.
+                        std::cout << BLUE "\r> " << RESET << "Relaxing constraint " << counter << "/" << solver->NumConstraints() << "..." << std::flush;
+                        
+                        // Save old bounds.
+                        double old_lb = constraint->lb();
+                        double old_ub = constraint->ub();
 
-                        // Was Beta the bad constraint? Binary search for the best Beta
-                        if (constraint->name() == "BETA")
+                        // ENTSPANN DICH.
+                        constraint->SetBounds(-(this->infinity), this->infinity);
+                        result_status = solver->Solve();  // Resolve with relaxed constraint.
+
+                        // Check feasibility.
+                        if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
                         {
-                            std::cout << BLUE "> " << RESET << "Looking for the lowest feasible beta..." << std::endl;
-                            
-                            // Remove all scores from guides and resolve with minimization.
-                            // The objective value of the minimization will be the new (smallest) beta.
-                            for (auto var : solver->variables())
-                            {
-                                objective->SetCoefficient(var, 1);
-                            }
-                            
-                            objective->SetMinimization();
+                            std::cout << BLUE "\n> " << RESET << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
+                            log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
 
-                            result_status = solver->Solve();  // Resolve with relaxed constraint
-
-                            if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
-                            {
-                                std::size_t min_beta = objective->Value() + 1;
-                                // The actual objective value is a FLOAT value.
-                                // truncating the fractional part results in infeasible. One workaround is to add 1 to fix it.
-                                
-                                std::cout << BLUE "> " << RESET << "Increasing beta to " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
-                                log_buffer << "Increasing beta " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
-                                
-                                beta = min_beta;
-                                fixed_beta = true;
-                                break;
-                            }
-                        }
-                        else
-                        {
                             std::cout << BLUE "> " << RESET << "Exiting." << std::endl; 
                             log_info(log_buffer, output_directory);
                             return "ERROR";
+                        }
+                        else
+                        {
+                            // Grenzen zurücksetzen.
+                            constraint->SetBounds(old_lb, old_ub);
                         }
                     }
                     counter++;
                 }
 
-                if (fixed_beta == false)
-                {
-                    std::cout << RED << "> Unfortunately ALLEGRO could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
-                    log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
-                    log_info(log_buffer, output_directory);
-                    return "ERROR";
-                }
+                std::cout << RED << "> Unfortunately " << ORANGE << "ALLEGRO" << RED << " could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
+                log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
+                log_info(log_buffer, output_directory);
+                return "ERROR";
             }
             else
             {
@@ -519,7 +458,64 @@ namespace Kirschtorte
                 return "ERROR";
             }
         }
+        return "ERROR";
+    }
 
-        return "OK";
+    std::string Kirschtorte::fix_beta(std::size_t &beta)
+    {
+        for (auto constraint : this->solver->constraints())
+        {
+            // Is Beta the bad constraint? Search for the best Beta.
+            if (constraint->name() == "BETA")
+            {
+                std::cout << BLUE "> " << RESET << "Looking for the lowest feasible beta..." << std::endl;
+                
+                // Remove all scores from guides and resolve with minimization.
+                // The objective value of the minimization will be the new (smallest) beta.
+                for (auto var : this->solver->variables())
+                {
+                    this->objective->SetCoefficient(var, 1);
+                }
+
+                // Save old bounds.
+                double old_lb = constraint->lb();
+                double old_ub = constraint->ub();
+
+                constraint->SetBounds(-(this->infinity), this->infinity);
+                this->objective->SetMinimization();
+                operations_research::MPSolver::ResultStatus result_status = this->solver->Solve();  // Resolve with relaxed beta.
+
+                if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
+                {
+                    // The actual objective value is a floating value.
+                    // truncating the fractional part results in infeasible. One workaround is to add 1 to fix it.
+                    std::size_t min_beta = this->objective->Value() + 1;
+                    
+                    std::cout << BLUE "> " << RESET << "Increasing beta to " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
+                    log_buffer << "Increasing beta " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
+                    
+                    beta = min_beta;
+                    return "OK";
+                }
+                else
+                {
+                    // Grenzen zurücksetzen.
+                    constraint->SetBounds(old_lb, old_ub);
+
+                    for (auto i : this->map_var_to_score)
+                    {
+                        operations_research::MPVariable *const var = i.first;
+                        std::size_t score = i.second;
+                        
+                        this->objective->SetCoefficient(var, score);
+                    }
+
+                    this->objective->SetMaximization();
+
+                    return "ERROR";
+                }
+            }
+        }
+        return "ERROR";
     }
 }
