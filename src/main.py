@@ -1,5 +1,11 @@
 import sys
 
+try:
+    import setproctitle
+    setproctitle.setproctitle('ALLEGRO')
+except ModuleNotFoundError:
+    pass
+
 from utils.configurator import Configurator
 import utils.postprocessing as postprocessing
 import utils.write_solution_to_file as solution_writer
