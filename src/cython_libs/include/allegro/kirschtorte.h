@@ -50,6 +50,10 @@ namespace Kirschtorte
         bool enable_solver_diagnostics;
         std::string output_directory;
 
+        // Used to keep a rolling average of guides' scores
+        double old_score;
+        std::map<boost::dynamic_bitset<>, std::size_t> num_times_guide_was_seen;
+
         double infinity;
         operations_research::MPSolver *solver;
         operations_research::MPObjective *objective;

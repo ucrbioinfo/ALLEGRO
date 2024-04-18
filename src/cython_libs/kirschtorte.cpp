@@ -97,9 +97,14 @@ namespace Kirschtorte
             // Set the appropriate bit to indicate that this new container is hit by this guide.
             this->coversets[encoded_bitset].second.set(container_id);
 
-            // TODO: Update the average score of this guide
+            // Update the average score of this guide
             // need to keep track of how many times this guide has been seen: n
             // new_average = old_average + (new_item - old_average) / (n + 1)
+            this->num_times_guide_was_seen[encoded_bitset] += 1;
+
+            this->old_score = this->coversets[encoded_bitset].first;
+
+            this->coversets[encoded_bitset].first = old_score + (score - old_score) / num_times_guide_was_seen[encoded_bitset];
         }
         else
         {
@@ -111,6 +116,7 @@ namespace Kirschtorte
 
             // Indicate that this guide (its encoded bitset) has a pair<score, and the container it targets>
             this->coversets[encoded_bitset] = std::pair<double, boost::dynamic_bitset<>>(score, bitset);
+            this->num_times_guide_was_seen[encoded_bitset] = 1;
         }
 
         return 0;
@@ -118,6 +124,9 @@ namespace Kirschtorte
 
     std::vector<GuideStruct> Kirschtorte::setup_and_solve()
     {
+        // Mark as free.
+        this->num_times_guide_was_seen.clear();
+
         // --------------------------------------------------
         // ----------------- DECORATORS ---------------------
         // --------------------------------------------------
@@ -213,7 +222,7 @@ namespace Kirschtorte
         // vector of guide structs [guide sequence, score, container bit vector that it cuts].
         std::vector<GuideStruct> solution_set;
         std::string ok_or_error_str = "ERROR";
-        // Solve the LP with a slightly larger beta. This grants the ILP some breathing room.
+
         std::size_t len_solutions = 0;
         std::size_t num_fractional_vars = 0;
         std::vector<operations_research::MPVariable *> feasible_solutions;
