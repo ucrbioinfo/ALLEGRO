@@ -103,7 +103,8 @@ void decorate_with_monophonic(
 }
 
 // Function to XOR every two bits and count mismatches
-int xor_and_count_mismatches(const boost::dynamic_bitset<>& bitset1, const boost::dynamic_bitset<>& bitset2) {
+int xor_and_count_mismatches(const boost::dynamic_bitset<>& bitset1, const boost::dynamic_bitset<>& bitset2)
+{
     int mismatches = 0;
 
     for (size_t i = 0; i < bitset1.size(); i += 2) {
@@ -117,6 +118,26 @@ int xor_and_count_mismatches(const boost::dynamic_bitset<>& bitset1, const boost
     return mismatches;
 }
 
+// Comparator to use with std::set for boost::dynamic_bitset.
+struct BitSetComparator {
+    bool operator()(const boost::dynamic_bitset<>& lhs, const boost::dynamic_bitset<>& rhs) const
+    {
+        if (lhs.size() != rhs.size())
+        {
+            return lhs.size() < rhs.size();
+        }
+        // Compare bitsets as needed (bitwise).
+        for (size_t i = 0; i < lhs.size(); ++i)
+        {
+            if (lhs[i] != rhs[i])
+            {
+                return lhs[i] < rhs[i];
+            }
+        }
+        return false;
+    }
+};
+
 void decorate_with_clustering(
     std::size_t seed_length,
     std::size_t cut_multiplicity,  // aka m guides required per container
@@ -124,11 +145,17 @@ void decorate_with_clustering(
     std::ostringstream &log_buffer,
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets)
 {
+    std::size_t guide_length;
     std::size_t left_side_bits_length;
     std::size_t seed_bits_length = seed_length * 2;  // Each nucleotide is represented with 2 bits.
-    std::map<boost::dynamic_bitset<>, std::vector<boost::dynamic_bitset<>>> seed_to_vec;
+
+    // Maps seeds to vectors of clusters where in each cluster, all left-side non-seed seqs are
+    // within mismatched_allowed_after_seed of each other.
+    std::map<boost::dynamic_bitset<>, std::vector<std::set<boost::dynamic_bitset<>, BitSetComparator>>> seed_to_vec;
 
     auto it = coversets.begin();
+    guide_length = it->first.size();
+
     while (it != coversets.end())
     {
         double new_score = it->second.first;
@@ -157,71 +184,106 @@ void decorate_with_clustering(
         auto it_seed_to_vec = seed_to_vec.find(seed_bits);
         if (it_seed_to_vec != seed_to_vec.end())
         {
-            bool found_an_heir = false;
-            std::size_t fewest_mismatches = mismatched_allowed_after_seed + 1;
-            boost::dynamic_bitset<> reigning_guide_w_fewest_mismatches(new_guide.size());
-            boost::dynamic_bitset<> left_side_of_reigning_guide_w_fewest_mismatches(left_side_bits_length);
-            std::vector<boost::dynamic_bitset<>> left_sides_with_same_seed = it_seed_to_vec->second;
+            std::vector<std::set<boost::dynamic_bitset<>, BitSetComparator>> &vector_of_clusters = it_seed_to_vec->second;
 
-            // Iterate over the vector in seed_to_vec and find the sequence
-            // with the fewest mismatches within accepted threshold (mismatched_allowed_after_seed).
-            for (boost::dynamic_bitset<>& reigning_guide_left_side : left_sides_with_same_seed)
+            bool new_guide_was_placed_in_a_cluster = false;
+
+            for (std::set<boost::dynamic_bitset<>, BitSetComparator>& set_of_clusters : vector_of_clusters)
             {
-                // Perform XOR on every two bits and count the mismatches.
-                std::size_t mismatches_after_seed = xor_and_count_mismatches(new_guide_left_side_bits, reigning_guide_left_side);
+                bool mismatches_more_than_allowed = false;
 
-                if ((mismatches_after_seed <= mismatched_allowed_after_seed) && (mismatches_after_seed < fewest_mismatches))
+                for (boost::dynamic_bitset<> const& member : set_of_clusters)
                 {
-                    found_an_heir = true;
+                    int num_mm = xor_and_count_mismatches(new_guide_left_side_bits, member);
+                    
+                    if (num_mm > mismatched_allowed_after_seed)
+                    {
+                        mismatches_more_than_allowed = true;
+                        break;
+                    }
+                }
 
-                    // New fewest matches
-                    fewest_mismatches = mismatches_after_seed;
-                    left_side_of_reigning_guide_w_fewest_mismatches = reigning_guide_left_side; 
+                if (!mismatches_more_than_allowed)
+                {
+                    set_of_clusters.insert(new_guide_left_side_bits);
+                    
+                    new_guide_was_placed_in_a_cluster = true;
+                    break;
                 }
             }
 
-            // None of the reigning guides have few enough mismatches to the new guide.
-            if (found_an_heir == false)
+            if (!new_guide_was_placed_in_a_cluster)
             {
-                // The new guide ('s left side bits) is now also a reigning.
-                seed_to_vec[seed_bits].push_back(new_guide_left_side_bits);
-            }
-            // Get the best reigning guide and its targets.
-            else
-            {
-                // Mark the new guide for deletion.
-                coversets[new_guide].first = 0;
+                std::set<boost::dynamic_bitset<>, BitSetComparator> new_cluster;
+                new_cluster.insert(new_guide_left_side_bits);
 
-                //
-                // Reconstruct the reigning guide
-                //
-                
-                // Copy left side of reigning.
-                boost::dynamic_bitset<> reigning_guide_left_side_extended(left_side_of_reigning_guide_w_fewest_mismatches);
-                // Extend it.
-                reigning_guide_left_side_extended.resize(new_guide.size());
-                // Make room for seed_bits.
-                reigning_guide_left_side_extended <<= seed_bits.size();
-
-                // Copy seed_bits.
-                boost::dynamic_bitset<> seed_bits_extended(seed_bits);
-                // Extend it.
-                seed_bits_extended.resize(reigning_guide_left_side_extended.size());
-
-                // Reconstruct the reigning guide by concatenating left and seed.
-                reigning_guide_w_fewest_mismatches = reigning_guide_left_side_extended | seed_bits_extended;
-
-                // The reigning guide inherits the targets of the new guide.
-                coversets[reigning_guide_w_fewest_mismatches].second |= coversets[new_guide].second;
+                vector_of_clusters.push_back(new_cluster);
             }
         }
-        // First reigning.
+         // First cluster for this seed.
         else
         {
-            seed_to_vec[seed_bits] = std::vector<boost::dynamic_bitset<>>{new_guide_left_side_bits};
+            std::set<boost::dynamic_bitset<>, BitSetComparator> new_cluster;
+            new_cluster.insert(new_guide_left_side_bits);
+
+            std::vector<std::set<boost::dynamic_bitset<>, BitSetComparator>> clusters_vector;
+            clusters_vector.push_back(new_cluster);
+
+            seed_to_vec[seed_bits] = clusters_vector;
         }
 
         it++;
+    }
+
+    for (auto & mapping : seed_to_vec)
+    {
+        boost::dynamic_bitset<> seed_bits = mapping.first;  // key
+        std::vector<std::set<boost::dynamic_bitset<>, BitSetComparator>> vector_of_clusters = mapping.second;  // value
+
+        for (auto & set_of_clusters : vector_of_clusters) 
+        {
+            if (set_of_clusters.size() > 1)
+            {
+                auto first_element = set_of_clusters.begin();
+
+                for (auto it = set_of_clusters.begin(); it != set_of_clusters.end(); ++it) {
+                    if (it != first_element) {
+                        
+                        // reconstruct the whole guide
+                        // Copy left side of reigning.
+                        boost::dynamic_bitset<> reigning_guide_left_side_extended(*first_element);
+                        // Extend it.
+                        reigning_guide_left_side_extended.resize(guide_length);
+                        // Make room for seed_bits.
+                        reigning_guide_left_side_extended <<= seed_bits_length;
+
+                        // Copy seed_bits.
+                        boost::dynamic_bitset<> seed_bits_extended(seed_bits);
+                        // Extend it.
+                        seed_bits_extended.resize(guide_length);
+
+                        // Reconstruct the reigning guide by concatenating left and seed.
+                        reigning_guide_left_side_extended = reigning_guide_left_side_extended | seed_bits_extended;
+
+                        // -----
+                        // Copy left side. of the other guide
+                        boost::dynamic_bitset<> other_guide_left_side_extended(*it);
+                        // Extend it.
+                        other_guide_left_side_extended.resize(guide_length);
+                        // Make room for seed_bits.
+                        other_guide_left_side_extended <<= seed_bits_length;
+
+                        // Reconstruct the other guide by concatenating left and seed.
+                        other_guide_left_side_extended = other_guide_left_side_extended | seed_bits_extended;
+
+                        // The reigning guide inherits the targets of the new guide.
+                        coversets[reigning_guide_left_side_extended].second |= coversets[other_guide_left_side_extended].second;
+
+                        coversets[other_guide_left_side_extended].first = 0;
+                    }
+                }
+            }
+        }
     }
 }
 

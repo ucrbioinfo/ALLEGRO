@@ -14,14 +14,13 @@
 void sat_solver(
     std::vector<operations_research::MPVariable *> &feasible_solutions,
     std::map<boost::dynamic_bitset<>, std::pair<double, boost::dynamic_bitset<>>> &coversets,
-    std::size_t multiplicity,
-    std::size_t beta,
-    int early_stopping_patience_s,
-    bool enable_solver_diagnostics,
-    std::string output_directory,
+    std::size_t const &multiplicity,
+    std::size_t &beta,
+    std::size_t &early_stopping_patience,
+    bool const &enable_solver_diagnostics,
+    std::string const &output_directory,
     std::ostringstream &log_buffer,
-    std::vector<GuideStruct> &solution_set
-    )
+    std::vector<GuideStruct> &solution_set)
 {
     std::cout << BLUE << "> " << RESET << "Setting up the ILP problem..." << std::endl;
     // Recreate coversets using feasible variables
@@ -41,7 +40,7 @@ void sat_solver(
     
     // solver->EnableOutput();
     
-    int time_limit = early_stopping_patience_s;
+    int time_limit = early_stopping_patience;
     absl::Duration time_limit_ms = absl::Milliseconds(time_limit * 1000);  // Convert milliseconds to absl::Duration
     solver->SetTimeLimit(time_limit_ms);
 
@@ -156,14 +155,14 @@ void sat_solver(
     }
 
     // Solve the integer linear program
-    std::cout << BLUE << "> " << RESET << "Solving the ILP within the given time limit of " << early_stopping_patience_s << " seconds..." << std::endl;
+    std::cout << BLUE << "> " << RESET << "Solving the ILP within the given time limit of " << early_stopping_patience << " seconds..." << std::endl;
     operations_research::MPSolver::ResultStatus result_status = solver->Solve();
     
     bool solved = false;
-    unsigned char num_retries = 0;
+    std::size_t num_retries = 1;
     std::size_t auto_time_lim = 120;
 
-    while (!solved && (num_retries != 10))
+    while (!solved && (num_retries < 10))
     {
         if (result_status == operations_research::MPSolver::OPTIMAL)
         {
@@ -182,28 +181,28 @@ void sat_solver(
         // Time limit issue - NOT_SOLVED means not **yet** solved
         else if (result_status == operations_research::MPSolver::NOT_SOLVED)
         {
-            std::cout << RED << "> The ILP problem cannot be solved within the given time limit of " << time_limit << "." << RESET << std::endl;
+            std::cout << RED << "> The ILP problem cannot be solved within the given time limit of " << time_limit << " seconds." << RESET << std::endl;
 
             if (enable_solver_diagnostics)
             {
-                if (early_stopping_patience_s < auto_time_lim)
+                if (early_stopping_patience < auto_time_lim)
                 {
                     time_limit = auto_time_lim;
                 }
                 else
                 {
-                    time_limit = early_stopping_patience_s * 1.5;
+                    time_limit = early_stopping_patience * 1.5;
                 }
 
                 time_limit_ms = absl::Milliseconds(time_limit * 1000);
                 solver->SetTimeLimit(time_limit_ms);
-                early_stopping_patience_s = time_limit;
+                early_stopping_patience = time_limit;
                 
-                std::cout << BLUE << "> " << RESET << "Retrying with a time limit of " << early_stopping_patience_s << " seconds." << std::endl;
+                std::cout << BLUE << "> " << RESET << "Retrying with a time limit of " << early_stopping_patience << " seconds (attempt " << num_retries << "/10)..." << std::endl;
 
                 if (beta > 0)
                 {
-                    float increment_percent = 0.02;
+                    float increment_percent = 0.01 * num_retries;
                     beta = beta * increment_percent + beta;
                     beta_constraint->SetBounds(-infinity, beta);
                     std::cout << BLUE << "> " << RESET << "Increasing beta by a factor of " << increment_percent << " to " << beta << "." << std::endl;
@@ -268,7 +267,7 @@ void sat_solver(
                                 
                                 objective->SetMinimization();
 
-                                time_limit = early_stopping_patience_s;  // Time limit in milliseconds
+                                time_limit = early_stopping_patience;  // Time limit in milliseconds
                                 time_limit_ms = absl::Milliseconds(time_limit * 1000);  // Convert milliseconds to absl::Duration
                                 solver->SetTimeLimit(time_limit_ms);
 
@@ -365,35 +364,3 @@ void sat_solver(
 
     log_buffer << "Size of the final set: " << solution_set.size() << std::endl;
 }
-
-// DO NOT DELETE.
-//
-// May need to use binary search if problem isnt solved 
-//
-// std::size_t low = beta;
-// std::size_t high = solver->NumVariables();
-// std::size_t mid = (low + high) / 2;
-
-// while (low < high)
-// {
-//     mid = (low + high) / 2;
-
-//     std::cout << BLUE "\r> " << RESET << "Trying " << mid << "..." << std::flush;
-
-//     // Relax and resolve
-//     constraint->SetBounds(-infinity, mid);
-//     result_status = solver->Solve();
-
-//     if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
-//     {
-//         high = mid;
-//     }
-//     else
-//     {
-//         low = mid + 1;
-//     }
-// }
-
-// // Relax and resolve
-// constraint->SetBounds(-infinity, low);
-// result_status = solver->Solve();

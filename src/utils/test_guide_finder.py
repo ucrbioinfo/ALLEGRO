@@ -1,21 +1,19 @@
+# Functions imported by ALLEGRO. No need to run it manually.
+# You can import this .py file separately, instantiate GuideFinder,
+# and check for guides in your custom sequence by calling identify_guides_and_indicate_strand(...).
 import re
 import os
 import sys
 import time
 import pandas
 import subprocess
+from io import StringIO
 from Bio import SeqIO
 from Bio.Seq import Seq
-from io import StringIO
-from itertools import product
-
-from utils.shell_colors import bcolors
-from utils.iupac_codes import iupac_dict
 
 
 def calculate_gc_content(sequence):
     return (sequence.upper().count('G') + sequence.upper().count('C')) / len(sequence)
-
 
 def count_kmers(sequence, k):
     kmers = dict()
@@ -24,70 +22,6 @@ def count_kmers(sequence, k):
         kmers[kmer] = kmers.setdefault(kmer, 0) + 1
 
     return kmers
-
-
-def align_guides_to_seq_bowtie(
-    name: str,
-    output_align_temp_path: str,
-    file_path: str,
-    output_directory: str,
-    ) -> tuple[list[str], list[str], list[str], list[str], list[str], float]:
-
-    base_path = os.getcwd()
-    index_basename = os.path.join(output_directory, name + '_idx')
-
-    bowtie_build_command = ['bowtie-build', '--quiet', '-f', base_path + '/' + file_path, base_path + '/' + index_basename]
-    bowtie_command = ['bowtie', '-a', '-v', '0', '--quiet', '--suppress', '5,6,7,8', '-f', base_path + '/' + index_basename, base_path + '/' + output_align_temp_path]
-
-    start_time = time.process_time()
-    process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    _, stderr = process.communicate()
-
-    # Check for any errors
-    if stderr:
-        print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie-build error: {stderr.decode()}')
-        print('Exiting.')
-        sys.exit(1)
-
-    if process.returncode != 0:
-        error_message = f"Command failed with return code {process.returncode}. Error: {stderr.decode('utf-8')}"
-        raise RuntimeError(error_message)
-
-    process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-
-    # Check for any errors
-    if stderr:
-        print(f'{bcolors.RED}>{bcolors.RESET} guide_finder.py: bowtie error: {stderr.decode()}')
-        print('Exiting.')
-        sys.exit(1)
-
-    if process.returncode != 0:
-        error_message = f"Command failed with return code {process.returncode}. Error: {stderr.decode('utf-8')}"
-        raise RuntimeError(error_message)
-
-    end_time = time.process_time()
-    # Calculate the elapsed time in seconds
-    elapsed_seconds = end_time - start_time
-
-    df = pandas.read_csv(StringIO(stdout.decode()), sep='\t',
-                names=['query_name', 'strand', 'reference_name', 'start_position'],
-                dtype={'reference_name': str, 'query_name': str})
-
-    records = list(SeqIO.parse(file_path, 'fasta'))
-
-    map_ref_id_to_ortho = dict()
-    for record in records:
-        match = re.search(r'\[orthologous_to_gene=(.*?)\]', record.description)
-        map_ref_id_to_ortho[record.id] = match.group(1) if match else 'N/A'
-
-    sequences = df['query_name'].tolist()
-    strands = df['strand'].tolist()
-    reference_names = df['reference_name'].tolist()
-    orthos = [map_ref_id_to_ortho[ref_id] for ref_id in reference_names]
-    start_positions = df['start_position'].tolist()
-
-    return sequences, strands, reference_names, orthos, start_positions, elapsed_seconds
 
 
 class GuideFinder:
@@ -113,45 +47,6 @@ class GuideFinder:
             if os.path.exists('data/input/_the_blocklist_.txt'):
                 with open('data/input/_the_blocklist_.txt', 'r') as file:
                     self.exclusion_list = file.read().splitlines()
-                    if len(self.exclusion_list) != 0:
-                        print(f'{bcolors.BLUE}>{bcolors.RESET} Excluding the gRNA(s) in data/input/{bcolors.BLACK}_the_blocklist_.csv{bcolors.RESET}')
-
-
-    def contains_iupac_pattern(self, sequence: str, patterns: list[str]) -> bool:
-        sequence = sequence.strip().upper()
-
-        for pattern in patterns:
-            pattern = pattern.strip().upper()
-
-            if (len(pattern) == len(sequence)):
-                for i, p in enumerate(pattern):
-
-                    # seq: AAAAGGAAGTAGCGGAGCAG
-                    # pat: TAAAGGAAGTAGCGGAGCAG
-                    # p  : T
-                    # if T =/= A return False
-                    if not (sequence[i] in iupac_dict[p]):
-                        return False
-
-                return True
-
-            elif (len(pattern) < len(sequence)):
-                # For example, if pattern = 'MK', if any of the ['GA', 'GC', 'TA', 'TC'] 
-                # appear in sequence, return True
-                lists = [iupac_dict[code] for code in pattern]
-                if lists != []:
-                    combinations = [''.join(pair) for pair in product(*lists)]
-                    
-                    for combination in combinations:
-                        if combination in sequence:
-                            return True
-
-            else:
-                print(f'{bcolors.RED}>{bcolors.RESET} Dev warning in contains_iupac_pattern(). Pattern {pattern} is longer than {sequence}. Ignoring pattern.')
-                continue
-
-        return False
-
 
     def identify_guides_and_indicate_strand(
         self,
@@ -160,10 +55,7 @@ class GuideFinder:
         protospacer_length: int,
         context_toward_five_prime: int,
         context_toward_three_prime: int,
-        gc_min: float,
-        gc_max: float,
-        filter_by_gc: bool = False,
-        patterns_to_exclude: list[str] = []
+        filter_repetitive: bool
         ) -> tuple[list[str], list[str], list[str], list[int]]:
         '''
         ## Args:
@@ -174,17 +66,15 @@ class GuideFinder:
                 the 5-prime after the protospacer (to the left of the sequence).
             * context_toward_three_prime: The number of nucleotides to extract toward
                 the 3-prime after (and excluding) the PAM (to the right side of the sequence).
-            * gc_min: float, discard less than this value.
-            * gc_max: float, discard more than this value.
-            * filter_by_gc: bool = False
-            * patterns_to_exclude: Discards a guide if the target contains any of the IUPAC patterns.
+            * filter_repetitive: Discards a guide if the protospace contains 2-mers
+                repeated 5 or more times.
 
         ## Returns:
             A tuple of four lists:
             * The first list[str] is a list of the protospacers (WITHOUT PAM) found in `sequence`.
             * The second list[str] is a list of the protospacers with their context around them.
             This includes the PAM by default.
-            * The third list[str] is a list of '+'s and '-'s indicating on
+            * The third list[str] is a list of 'F's and 'RC's indicating on
                 which strand, Forward or Reverse Complement, each respective guide resides.
             * The fourth list[int] shows the location of the start of the PAM of each guide in `sequence`.
 
@@ -209,7 +99,6 @@ class GuideFinder:
         if pam in self.pam_dict:
             pam_regex = self.pam_dict[pam]
         else:
-            print(f'{bcolors.RED}> Unsupported Feature Error{bcolors.RESET}: PAM {pam} not recognized. ALLEGRO currently does not support any Cas PAM other than Cas9 NGG. Exiting.')
             sys.exit(1)
             # pam_regex = r'(?=({PAM}))'.format(PAM=pam)
             
@@ -217,6 +106,8 @@ class GuideFinder:
         def find_matches(seq: str, strand: str) -> None:        
             matches = re.finditer(pam_regex, seq)  # Find PAMs on seq
             pam_positions = [match.start() for match in matches]
+
+            filter_by_gc = True
 
             for position in pam_positions:
                 if (position - protospacer_length >= 0):
@@ -229,28 +120,31 @@ class GuideFinder:
                     if guide in self.exclusion_list:
                         continue
 
-                    # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
-                    # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
-                    if patterns_to_exclude:
-                        # ['NNNNNGNNNNNNNGNNNNNN', 'TTTT']
-                        if self.contains_iupac_pattern(guide, patterns_to_exclude):
+                    if filter_repetitive == True:
+                        # Skip guides such as GGAGGAGGAGGAGGAGGAGG where GG is repeated
+                        # 7 times or GA is repeated 6 times.
+                        if max(count_kmers(guide, 2).values()) >= 5:
                             continue
 
-                    if filter_by_gc:
-                        gc = calculate_gc_content(guide)
-                        if (gc > gc_max) or (gc < gc_min):
+                        # https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0784-0#Abs1:~:text=Repetitive%20bases%20are%20defined%20as%20any%20of%20the%20following
+                        if any(substr in guide for substr in ['AAAAA', 'CCCCC', 'GGGGG', 'TTTTT']):
                             continue
+                        
+                        # https://www.nature.com/articles/s41467-019-12281-8#Abs1:~:text=but%20not%20significant).-,The%20contribution%20of,-repetitive%20nucleotides%20to
+                        if any(substr in guide for substr in ['AAAA', 'CCCC', 'GGGG', 'TTTT']):
+                            continue
+
+                    if filter_by_gc == True:
+                        gc = calculate_gc_content(guide)
+                        if (gc > 0.7) or (gc < 0.3):
+                            continue
+
+                    guide_with_context = ''
 
                     # There is enough context on both sides of the PAM
-                    guide_with_context = ''
-                    if (position-protospacer_length-context_toward_five_prime >= 0) and (position+len(pam)+context_toward_three_prime < len(seq) + 1):
+                    if position-protospacer_length-context_toward_five_prime >= 0 and position+len(pam)+context_toward_three_prime < len(seq) + 1:
                         guide_with_context = seq[position-protospacer_length-context_toward_five_prime:position+len(pam)+context_toward_three_prime]
-
-                        # If we're not using uCRISPR, or a scorer that doesn't need a context, context_toward_five_prime and 
-                        # context_toward_three_prime should be set to 0 by the configurator in settings. That way, 
-                        # guides with | around them (but not in them) won't be discarded.
-                        if '|' in guide_with_context:
-                            continue
+                    
                     else:
                         continue
 
@@ -264,7 +158,62 @@ class GuideFinder:
         find_matches(seq=sequence_rev_comp, strand='-')  # - is the reverse complement strand
 
         return guides_list, guides_context_list, strands_list, locations_list
-    
+
+
+    def align_guides_to_seq_bowtie(
+        self,
+        name: str,
+        output_align_temp_path: str,
+        file_path: str,
+        output_directory: str,
+        ) -> tuple[list[str], list[str], list[str], list[str], list[str], float]:
+
+        base_path = os.getcwd()
+        index_basename = os.path.join(output_directory, name + '_idx')
+
+        bowtie_build_command = ['bowtie-build', '--quiet', '-f', base_path + '/' + file_path, base_path + '/' + index_basename]
+        bowtie_command = ['bowtie', '-a', '-v', '0', '--quiet', '--suppress', '5,6,7,8', '-f', base_path + '/' + index_basename, base_path + '/' + output_align_temp_path]
+
+        start_time = time.time()
+        process = subprocess.Popen(bowtie_build_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _, stderr = process.communicate()
+
+        # Check for any errors
+        if stderr: print(f'test_guide_finder.py: bowtie-build error: {stderr.decode()}')
+
+        process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+
+        end_time = time.time()
+
+        # Calculate the elapsed time in seconds
+        elapsed_seconds = end_time - start_time
+
+        # Check for any errors
+        if stderr: print(f'test_guide_finder.py: bowtie error: {stderr.decode()}')
+
+        df = pandas.read_csv(StringIO(stdout.decode()), sep='\t',
+                    names=['query_name', 'strand', 'reference_name', 'start_position'])
+
+        records = list(SeqIO.parse(file_path, 'fasta'))
+
+        map_ref_id_to_ortho = dict()
+        for record in records:
+            match = re.search(r'\[orthologous_to_gene=(.*?)\]', record.description)
+            map_ref_id_to_ortho[record.id] = match.group(1) if match else 'N/A'
+
+        sequences = df['query_name'].tolist()
+        strands = df['strand'].tolist()
+        reference_names = df['reference_name'].tolist()
+        orthos = [map_ref_id_to_ortho[ref_id] for ref_id in reference_names]
+        start_positions = df['start_position'].tolist()
+
+        for filename in os.listdir(output_directory):
+            if filename.endswith('.ebwt'):
+                file_path = os.path.join(output_directory, filename)
+                os.remove(file_path)
+
+        return sequences, strands, reference_names, orthos, start_positions, elapsed_seconds
 
     def locate_guides_in_sequence(
         self,
