@@ -96,7 +96,13 @@ class Configurator:
 
         config_arg_dict = vars(config_args)
         if config_args.config:
-            config_arg_dict.update(yaml.load(config_args.config, Loader=yaml.FullLoader))
+            try:
+                config_arg_dict.update(yaml.load(config_args.config, Loader=yaml.FullLoader))
+            except yaml.parser.ParserError as e:
+                line_number = re.search(r"line (\d+)", str(e)).group(1)
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: Something went wrong while reading config.yaml. Please check line {line_number}. Exiting.')
+                print(f'{bcolors.RED}>{bcolors.RESET} Here is the error message:\n{e}')
+                sys.exit(1)
 
         parser = argparse.ArgumentParser(
             prog='ALLEGRO: An algorithm for a linear program to enhance guide RNA optimization',
