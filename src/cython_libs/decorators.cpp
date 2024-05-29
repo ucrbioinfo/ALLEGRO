@@ -196,6 +196,8 @@ void decorate_with_clustering(
                 {
                     int num_mm = xor_and_count_mismatches(new_guide_left_side_bits, member);
                     
+                    // Check next cluster if this sequence mismatches more than allowed
+                    // with any cluster members.
                     if (num_mm > mismatched_allowed_after_seed)
                     {
                         mismatches_more_than_allowed = true;
@@ -203,6 +205,7 @@ void decorate_with_clustering(
                     }
                 }
 
+                // Plays nice with seedlings (siblings?). Insert in this cluster.
                 if (!mismatches_more_than_allowed)
                 {
                     set_of_clusters.insert(new_guide_left_side_bits);
@@ -212,6 +215,7 @@ void decorate_with_clustering(
                 }
             }
 
+            // Gets own cluster for this seed because it doesn't play nice with its same-seed friends
             if (!new_guide_was_placed_in_a_cluster)
             {
                 std::set<boost::dynamic_bitset<>, BitSetComparator> new_cluster;
@@ -229,6 +233,9 @@ void decorate_with_clustering(
             std::vector<std::set<boost::dynamic_bitset<>, BitSetComparator>> clusters_vector;
             clusters_vector.push_back(new_cluster);
 
+            // There is a vector of clusters where all sequences in those clusters have the same
+            // seed. However, the sequences must be in separate clusters because they are
+            // not within mismatched_allowed_after_seed of each other.
             seed_to_vec[seed_bits] = clusters_vector;
         }
 
