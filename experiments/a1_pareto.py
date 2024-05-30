@@ -58,18 +58,17 @@ enable_solver_diagnostics: True
 '''
 
 # A1 ---------------------------------
-a1_betas = [170]
+a1_betas = [180]
 c = 20
 while(True):
-    if a1_betas[-1] >= 2059:
+    if a1_betas[-1] >= 2055:
         break
 
     a1_betas.append(a1_betas[-1] + c)
     c += 20
-a1_betas = [166] + a1_betas[-1] + [2059]
+a1_betas = [177] + a1_betas[:-1] + [2055]
 # ------------------------------------
-
-            # 166     
+   
 tracks = [('track_a', 1)]
 beta_lists = [a1_betas]
 

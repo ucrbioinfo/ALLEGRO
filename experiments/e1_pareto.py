@@ -58,24 +58,16 @@ enable_solver_diagnostics: True
 '''
 
 # E1 ---------------------------------
-# e1_betas = [2700]
-# c = 100
-# while(True):
-#     if e1_betas[-1] >= 13001:
-#         break
-
-#     e1_betas.append(e1_betas[-1] + c)
-#     c += 100
-# e1_betas = [2633] + e1_betas[:-1] + [13001]
-# # ------------------------------------
-e1_betas = [2635]
-c = 20
+e1_betas = [2400]
+c = 100
 while(True):
-    if e1_betas[-1] >= 3000:
+    if e1_betas[-1] >= 10998:
         break
 
     e1_betas.append(e1_betas[-1] + c)
-e1_betas = e1_betas[:-1] + [3000]
+    c += 100
+e1_betas = [2349] + e1_betas[:-1] + [10998]
+# # ------------------------------------
 
             # 2633    
 tracks = [('track_e', 1)]
@@ -96,7 +88,7 @@ for idx, t in enumerate(tracks):
             'beta': beta,
             'mult': mult,
             'patterns_to_exclude': ['TTTT'],
-            'early_stopping_patience': 60
+            'early_stopping_patience': 300
         }
 
         config_name = f'temp_config_{new_exp_name}.yaml'

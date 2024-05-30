@@ -207,8 +207,8 @@ def threaded_split(args):
                     species_is_covered_n_times += 1
             
             # Attempt to find partial matches.
-            mm_allowed = 2
-            req_match_len = 10
+            mm_allowed = 1
+            req_match_len = 12
 
             for record in records:
                 gene_name, protein_id, ortho_prot_id, ortho_gene_name = get_record_metadata(record)

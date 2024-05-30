@@ -1,23 +1,33 @@
-#================================================================
+# ===============================================================
 # Basic Settings
-#================================================================
-experiment_name: 'ALLEGRO_EXAMPLE_RUN'
+# ===============================================================
+experiment_name: '1k_asco_again'
 # ---
 
 # ---------------------------------------------------------------
-# Path Settings - Ignored if Easy Mode has a value
+# Path Settings
 # ---------------------------------------------------------------
 
 # Ignored if Easy Mode input_csv_path_with_guides above has a value
-input_directory: 'data/input/example_input'
-input_species_path: 'data/input/fifty_example_input_species.csv'
-input_species_path_column: 'ortho_file_name'
+# input_directory: 'data/input/example_input'
+# input_species_path: 'data/input/fifty_example_input_species.csv'
+input_species_path_column: 'cds_file_name'
+input_directory: 'data/input/cds/delimited_cds_from_gff'
+input_species_path: 'data/input/ascomycota_input_species.csv'
+
+# input_species_path_column: 'filename'
+# input_directory: 'data/input/cds/'
+# input_species_path: 'data/input/hundred.csv'
+
+# input_species_path_column: 'ortho_file_name'
+# input_directory: 'data/input/cds/ortho_from_gff'
+# input_species_path: 'data/input/fourdbs_input_species.csv'
 # ---------------------------------------------------------------
 
 # String value, default: 'track_e'
 # track_a: any of the fasta records can be targeted. There will be multiplicity targets per fasta record.
 # track_e: each fasta record has to be targeted at least multiplicity times,
-track: 'track_e'
+track: 'track_a'
 # ---
 
 # Integer value, default: 1
@@ -28,9 +38,9 @@ multiplicity: 1
 
 # Possible values: True or False. Default: True
 # Remove guides with > gc_max and < gc_min from consideration?
-filter_by_gc: False
-gc_max: 0.7  # Only works if filter_by_gc is True.
-gc_min: 0.3  # Only works if filter_by_gc is True.
+filter_by_gc: True
+gc_max: 0.6  # Only works if filter_by_gc is True.
+gc_min: 0.4  # Only works if filter_by_gc is True.
 # ---
 
 # ---------------------------------------------------------------
@@ -38,14 +48,20 @@ gc_min: 0.3  # Only works if filter_by_gc is True.
 # ---------------------------------------------------------------
 input_csv_path_with_guides: ''  # Default: ''
 
-#================================================================
+# ===============================================================
 # Advanced Settings
 # ===============================================================
 
 # Possible choices: 'dummy' (default), 'ucrispr'
-# scorer: 'ucrispr' uses a faster implementation of zhang2019
 # dummy assigns a score of 1.0 to all gRNAs, essentially treats all guides as the same.
+# scorer: 'ucrispr' uses a faster implementation of zhang2019
+# ucrispr assigns an efficacy score between [0-100] to each guide.
 scorer: 'dummy'
+
+# Integer value, default: 0
+# Only used if scorer: 'ucrispr'
+# Remove guides with a score under this value from the calculation.
+guide_score_threshold: 0
 # ---
 
 # Integer value, default: 0
@@ -54,7 +70,8 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
           # (treats all of the gRNAs as equals).
           # If set to the number of input species, the final size of the set may be up to
           # the number of species you have (worst case, one gRNA per species).
-          # If set to a number HIGHER than the number of species, finds the best #beta gRNAs.
+          # If set to a number HIGHER than the number of species (track A) or genes (track E),
+          # finds the best #beta gRNAs.
 # ---
 
 # List of strings, Default: ['']
@@ -68,7 +85,7 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
 # You may end up excluding most or all guides from the calculation.
 
 # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3568203/#:~:text=For%20vertebrates%2C%20as,of%20these%20species.
-patterns_to_exclude: ['TTTT']
+patterns_to_exclude: ['TTTT', 'AAAA', 'CCCC', 'GGGG']
 # ---
 
 # Boolean: True or False. Default: False
@@ -76,11 +93,11 @@ patterns_to_exclude: ['TTTT']
 # True reports gRNA with off-targets.
 # report_up_to_n_mismatches reports gRNA with fewer <= N mismatches after the seed region.
 output_offtargets: False
-report_up_to_n_mismatches: 3  # This may be [0-3]
+report_up_to_n_mismatches: 1  # This may be [0-3]
 
 # The column in the input csv file with the name of the 
 # background fasta to check off-targets against
-input_species_offtarget_dir: 'data/input/example_input/'
+input_species_offtarget_dir: 'data/input/cds/ortho_from_gff'
 input_species_offtarget_column: 'ortho_file_name'
 # ---
 
@@ -100,13 +117,22 @@ preclustering: False
 # Uses seed_region_is_n_upstream_of_pam and mismatches_allowed_after_seed_region
 postclustering: False
 seed_region_is_n_upstream_of_pam: 12
-mismatches_allowed_after_seed_region: 3  # Integer value, default: 2
+mismatches_allowed_after_seed_region: 2  # Integer value, default: 2
 
 # Integer value, measured in seconds, default: 60
 # Only used in solving the ILP if there are remaining feasible guides with
 # fractional values after solving the LP.
 # Stop searching for an optimal solution after this many seconds.
 early_stopping_patience: 60
+# ---
+
+# Integer value. Default: 3
+# A higher value sacrifices more running time for lower memory consumption.
+# A preprocessing step that removes redundant guides.
+# Use if you need to save memory.
+# Max value is the total number of genes if using track E, and
+# the total number of species if using track A.
+mp_threshold: 0
 # ---
 
 # Boolean: True or False. Default: True
@@ -119,3 +145,31 @@ early_stopping_patience: 60
 # and kill it manually: $ kill -SIGKILL PID
 enable_solver_diagnostics: True
 # ---
+
+
+# left side    seed
+# GTGCTCAG   CTTCGGCGTCAA
+
+# allow 3mm
+
+# guide1 ACTG-CTTCGGCGTCAA: gene A, gene B
+
+# guide2 CCTG-CTTCGGCGTCAA: gene C, gene D
+# guide3 TCTG-seed
+
+# newdict
+# CTTCGGCGTCAA: [ACTG, CCTG]  # median string
+
+# make script for finding conserved domains for high hitter guides
+# preclustering replace greedy
+
+# we need time analysis. if you give the ILP 10 hours, it will run for 10 hours if it doesn't 
+# find an optimal solution before that. If it finds a feasible solution by 10 hours, that's what
+# you get. 
+# You can give A7 5 minutes and the whole process takes 9 minutes. or you can give 3 hours
+# to A1 and it will take about 3 hours to finish. A1 does not need 3 hours...
+# How long until first feasible? How long until optimal? Currently, for E1, 
+# it's between 10 minutes and 3 hours... when does it find the first feasible?
+
+# explain in wiki how to use preclustering. if you turn it on, the csv file doesnt show that all targets are covered.
+# you need to turn on offtarget finder and analize that
