@@ -31,8 +31,6 @@ scorer: 'ucrispr'
 early_stopping_patience: {early_stopping_patience}
 # ---
 
-guide_score_threshold: 30
-
 filter_by_gc: True
 gc_max: 0.7
 gc_min: 0.3
@@ -59,35 +57,29 @@ enable_solver_diagnostics: True
 # ---
 '''
 
-# E1 ---------------------------------
-e1_betas = [2700]
+# a6 ---------------------------------
+a6_betas = [1300]
 c = 100
 while(True):
-    if e1_betas[-1] >= 13001:
+    if a6_betas[-1] >= 12330:
         break
 
-    e1_betas.append(e1_betas[-1] + c)
+    a6_betas.append(a6_betas[-1] + c)
     c += 100
-e1_betas = [2633] + e1_betas[:-1] + [13001]
-# # ------------------------------------
-# e1_betas = [2635]
-# c = 20
-# while(True):
-#     if e1_betas[-1] >= 3000:
-#         break
+a6_betas = [1269] + a6_betas[:-1] + [12330]
+# ------------------------------------ 
 
-#     e1_betas.append(e1_betas[-1] + c)
-# e1_betas = e1_betas[:-1] + [3000]
-
-            # 2633    
-tracks = [('track_e', 1)]
-beta_lists = [e1_betas]
+tracks = [('track_a', 6)]
+beta_lists = [a6_betas]
 
 for idx, t in enumerate(tracks):
     track, mult = t
 
     for beta in beta_lists[idx]:
         new_exp_name = f'{track}{mult}_b{beta}'
+
+        if os.path.exists(f'data/output/{new_exp_name}'):
+            continue
 
         context = {
             'experiment_name': new_exp_name,
@@ -98,7 +90,7 @@ for idx, t in enumerate(tracks):
             'beta': beta,
             'mult': mult,
             'patterns_to_exclude': ['TTTT'],
-            'early_stopping_patience': 60
+            'early_stopping_patience': 300
         }
 
         config_name = f'temp_config_{new_exp_name}.yaml'
