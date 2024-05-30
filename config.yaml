@@ -109,6 +109,15 @@ mismatches_allowed_after_seed_region: 3  # Integer value, default: 2
 early_stopping_patience: 60
 # ---
 
+# Integer value. Default: 3
+# A higher value sacrifices more running time for lower memory consumption.
+# A preprocessing step that removes redundant guides.
+# Use if you need to save memory.
+# Max value is the total number of genes if using track E, and
+# the total number of species if using track A.
+mp_threshold: 0
+# ---
+
 # Boolean: True or False. Default: True
 # When a problem is deemed unsolvable (e.g., Status: MPSOLVER_INFEASIBLE)
 # Enabling diagnostics will attempt to relax each constraint and resolve the problem.
