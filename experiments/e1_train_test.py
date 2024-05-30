@@ -213,8 +213,8 @@ def threaded_split(args):
                 if len(matches) == 0:
 
                     # Try partial matches for this genes.
-                    mm_allowed = 2
-                    req_match_len = 10
+                    mm_allowed = 1
+                    req_match_len = 12
 
                     for idx, test_guide in enumerate(guides_list):
                         for lib_guide in library:

@@ -116,14 +116,14 @@ def threaded_split(args):
     train_index, test_index, split, run_range = args
     train, test = df.iloc[train_index], df.iloc[test_index]
 
-    train_new_path = f'data/input/train_a7_cv_split_{split}.csv'
+    train_new_path = f'data/input/train_a6_cv_split_{split}.csv'
     train.to_csv(train_new_path, index=False)
 
-    test_new_path = f'data/input/test_a7_cv_split_{split}.csv'
+    test_new_path = f'data/input/test_a6_cv_split_{split}.csv'
     test.to_csv(test_new_path, index=False)
 
     for run in run_range:
-        new_exp_name = f'a7_cv_split_{split}_run_{run}'
+        new_exp_name = f'a6_cv_split_{split}_run_{run}'
 
         if os.path.exists(f'data/output/test_{new_exp_name}_results.csv'):
             return
@@ -135,11 +135,11 @@ def threaded_split(args):
             'input_species_path_column': 'ortho_file_name',
             'track': 'track_a',
             'beta': 0,
-            'mult': '7',
+            'mult': '6',
             'patterns_to_exclude': ['TTTT'],
         }
 
-        config_name = f'temp_config_a7_cv_{split}_{run}.yaml'
+        config_name = f'temp_config_a6_cv_{split}_{run}.yaml'
         with open(config_name, 'w') as f:
             f.write(config.format(**context))
 
@@ -152,7 +152,7 @@ def threaded_split(args):
             for line in f.readlines():
                 library.append(line.strip())
 
-        test_df = pd.read_csv(f'data/input/test_a7_cv_split_{split}.csv')[['species_name', context['input_species_path_column']]]
+        test_df = pd.read_csv(f'data/input/test_a6_cv_split_{split}.csv')[['species_name', context['input_species_path_column']]]
 
         df_species_name_list = list()
         df_covered_list = list()
@@ -207,8 +207,8 @@ def threaded_split(args):
                     species_is_covered_n_times += 1
             
             # Attempt to find partial matches.
-            mm_allowed = 2
-            req_match_len = 10
+            mm_allowed = 1
+            req_match_len = 12
 
             for record in records:
                 gene_name, protein_id, ortho_prot_id, ortho_gene_name = get_record_metadata(record)

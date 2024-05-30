@@ -58,9 +58,10 @@ enable_solver_diagnostics: True
 import os
 import pandas as pd
 
-increments = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2059]
+increments = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2055]
 
-tasks = [('track_a', 1), ('track_a', 7), ('track_e', 1)]
+# tasks = [('track_a', 1), ('track_a', 7), ('track_e', 1)]
+tasks = [('track_a', 6)]
 
 # Read in all species.
 all_species = pd.read_csv('data/input/fourdbs_input_species.csv')
@@ -96,7 +97,7 @@ def run_exp(track, mult, species_to_try):
 
 for inc in increments:
     for task in tasks:
-        for _ in range(100):
+        for _ in range(10):
             species_to_try = all_species.sample(inc, replace=False)  # randomly sample n=increment species.
 
             run_exp(task[0], task[1], species_to_try)
