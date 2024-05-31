@@ -1,0 +1,83 @@
+# ===============================================================
+# Basic Settings
+# ===============================================================
+experiment_name: 'a6_1mm_ot'
+# ---
+
+# ---------------------------------------------------------------
+# Path Settings
+# ---------------------------------------------------------------
+
+input_species_path_column: 'ortho_file_name'
+input_directory: 'data/input/cds/ortho_from_gff'
+input_species_path: 'data/input/fourdbs_input_species.csv'
+# ---------------------------------------------------------------
+
+track: 'track_a'
+# ---
+
+# Integer value, default: 1
+# In track_a, each species needs to be targeted at least this many times ANYWHERE.
+# In track_e, EACH gene/record needs to be targeted at least this many times in that gene/record.
+multiplicity: 6
+# ---
+
+filter_by_gc: True
+gc_max: 0.7
+gc_min: 0.3
+# ---
+
+# ---------------------------------------------------------------
+# Easy Mode - Has priority over Path Settings
+# ---------------------------------------------------------------
+input_csv_path_with_guides: ''  # Default: ''
+
+# ===============================================================
+# Advanced Settings
+# ===============================================================
+
+scorer: 'dummy'
+
+guide_score_threshold: 0
+# ---
+
+beta: 0
+# ---
+
+patterns_to_exclude: ['TTTT']
+# ---
+
+# Boolean: True or False. Default: False
+# Significantly affects running time.
+# True reports gRNA with off-targets.
+# report_up_to_n_mismatches reports gRNA with fewer <= N mismatches after the seed region.
+output_offtargets: True
+report_up_to_n_mismatches: 1  # This may be [0-3]
+
+# The column in the input csv file with the name of the 
+# background fasta to check off-targets against
+input_species_offtarget_dir: 'data/input/cds/ortho_from_gff'
+input_species_offtarget_column: 'ortho_file_name'
+# ---
+
+# Boolean: True or False. Default: False
+# Affects running time performance.
+# Allows a guide within up to the set number of mismatches (after the seed region) of another guide
+# to "inherit" the second guide's targets, essentially rendering the second guide useless
+# and reducing the total guides needed.
+# Works best when unscored guides are present as it does not consider scores.
+# Uses seed_region_is_n_upstream_of_pam and mismatches_allowed_after_seed_region
+preclustering: True
+
+postclustering: False
+seed_region_is_n_upstream_of_pam: 12
+mismatches_allowed_after_seed_region: 1  # Integer value, default: 2
+
+early_stopping_patience: 60
+# ---
+
+mp_threshold: 0
+# ---
+
+enable_solver_diagnostics: True
+# ---
