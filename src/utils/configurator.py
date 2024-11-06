@@ -563,7 +563,7 @@ class Configurator:
         #   output_offtargets
         # ------------------------------------------------------------------------------
                     
-        elif self.args.output_offtargets:
+        if self.args.output_offtargets:
             try:
                 species_df[self.args.input_species_offtarget_column]
             except KeyError:
