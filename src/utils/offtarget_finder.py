@@ -132,7 +132,7 @@ class OfftargetFinder:
     def run_bowtie_against_other(self, this_species_name: str, that_species_name: str, gene_or_genome_str: str, num_of_mismatches: int) -> None:
         # print(f'{bcolors.BLUE}>{bcolors.RESET} Running Bowtie with gRNA reads from {this_species_name} against {that_species_name}')
 
-        num_of_mismatches = str(max(num_of_mismatches, 3))
+        num_of_mismatches = str(num_of_mismatches)
 
         bowtie_command = ['bowtie', '-v', num_of_mismatches, '-a', '--quiet', f'{self._base_path}/{self._cache_path}/index/{that_species_name}_{gene_or_genome_str}_idx', f'{self._base_path}/{self._cache_path}/reads/{this_species_name}_reads.fq', f'{self._base_path}/{self._cache_path}/alignments/{this_species_name}_against_{that_species_name}_{num_of_mismatches}mm_alignment.sam']
         process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
