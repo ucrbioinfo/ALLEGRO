@@ -669,7 +669,7 @@ class Configurator:
         # ------------------------------------------------------------------------------
         if self.args.mp_threshold > 0 and self.args.mp_threshold < self.args.multiplicity:
             print(f'{bcolors.RED}> Warning{bcolors.RESET}: mp_threshold is set to {self.args.mp_threshold}, a positive value smaller than the multiplicity {self.args.multiplicity}.')
-            print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot remove all but {self.args.mp_threshold} guides from each recprd record still ensure each record is targeted at least {self.args.multiplicity} times.')
+            print(f'{bcolors.BLUE}>{bcolors.RESET} {bcolors.ORANGE}ALLEGRO{bcolors.RESET} cannot remove all but {self.args.mp_threshold} guides from each record and still ensure each record is targeted at least {self.args.multiplicity} times.')
             print(f'{bcolors.BLUE}>{bcolors.RESET} Auto adjusting mp_threshold to be equal to multiplicity. You may also set mp_threshold to 0 to disable this feature. Refer to the manual for more details.')
             self.args.mp_threshold = self.args.multiplicity
 
