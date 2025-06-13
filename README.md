@@ -12,7 +12,7 @@ ALLEGRO (_<ins>Al</ins>gorithm for a <ins>L</ins>inear program <ins>E</ins>nabli
 You may find the documentation for ALLEGRO at its [GitHub Wiki](https://github.com/ucrbioinfo/allegro/wiki).
 
 # Support
-If you run into any issues or have suggestions for ALLEGRO, please report them on our GitHub Issues tracker. It's the fastest way to get support and helps us improve ALLEGRO for everyone.
+If you run into any issues or have suggestions for ALLEGRO, please report them on our GitHub Issues tracker. It's the fastest way to get support and helps us improve ALLEGRO for everyone. You may also email the authors at their provided e-mail addresses on the publication directly.
 
 # About
 SIRIUS has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, and Stefano Lonardi at the University of California, Riverside.
