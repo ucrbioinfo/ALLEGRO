@@ -16,3 +16,5 @@ If you run into any issues or have suggestions for ALLEGRO, please report them o
 
 # About
 ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, and Stefano Lonardi at the University of California, Riverside.
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15597071.svg)](https://doi.org/10.5281/zenodo.15597071)
