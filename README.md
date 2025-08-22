@@ -7,7 +7,7 @@ ALLEGRO (_<ins>Al</ins>gorithm for a <ins>L</ins>inear program <ins>E</ins>nabli
 - Flexible library design using an ensemble of options such as tracks, multiplicity, pre- and post-clustering, guide cutting efficacy prediction, and more
 - Extremely fast and computationally efficient
 - Written in Python, Cython, and C++
-- Published in [_Nucleic Acids Research, Volume 53, Issue 15, 28 August 2025, gkaf783_](https://doi.org/10.1093/nar/gkaf783)
+- Published in [_Nucleic Acids Research_, Volume 53, Issue 15, 28 August 2025, gkaf783](https://doi.org/10.1093/nar/gkaf783)
 
 
 # Documentation
@@ -20,5 +20,6 @@ If you run into any issues or have suggestions for ALLEGRO, please report them o
 ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, and Stefano Lonardi at the University of California, Riverside.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15597071.svg)](https://doi.org/10.5281/zenodo.15597071)
+
 
 
