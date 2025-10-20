@@ -1,6 +1,9 @@
 <img width="150" alt="ALLEGRO Logo" src="https://github.com/AmirUCR/allegro/assets/46543443/d173addd-24ef-4532-a8b8-a902e9a8ec36">
 
 # Introduction
+
+[Notice: The current build may have issues compiling. Amir is working on a one line fix (to just pip install allegro-crispr) coming late October]
+
 ALLEGRO (_<ins>Al</ins>gorithm for a <ins>L</ins>inear program <ins>E</ins>nabling <ins>G</ins>uide <ins>R</ins>NA <ins>O</ins>ptimization_) is a synthetic biology tool leveraging Google OR-Tools integer linear programming to design the smallest possible gRNA library to fulfill user-specified constraints.
 
 - Design a Cas9 gRNA library for thousands of species simultaneously
@@ -20,6 +23,7 @@ If you run into any issues or have suggestions for ALLEGRO, please report them o
 ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, and Stefano Lonardi at the University of California, Riverside.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15597071.svg)](https://doi.org/10.5281/zenodo.15597071)
+
 
 
 
