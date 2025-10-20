@@ -12,6 +12,9 @@ ALLEGRO (_<ins>Al</ins>gorithm for a <ins>L</ins>inear program <ins>E</ins>nabli
 - Written in Python, Cython, and C++
 - Published in [_Nucleic Acids Research_, Volume 53, Issue 15, 28 August 2025, gkaf783](https://doi.org/10.1093/nar/gkaf783)
 
+<img width="1034" height="251" alt="image" src="https://github.com/user-attachments/assets/4661f43b-0c4e-462e-94ff-c86b64c3817d" />
+
+**ALLEGRO’s workflow**. **Step (1)** Given the gene sequence or the genome of hundreds to thousands of input species, ALLEGRO extracts Cas9 target sequences. **Step (2)** ALLEGRO builds and solves an (integer) linear program involving millions of variables. **Step (3)** The optimal solution of the linear program determines the sgRNA library with minimal size that covers all targets.
 
 # Documentation
 You may find the documentation for ALLEGRO at its [GitHub Wiki](https://github.com/ucrbioinfo/allegro/wiki).
@@ -23,6 +26,7 @@ If you run into any issues or have suggestions for ALLEGRO, please report them o
 ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, and Stefano Lonardi at the University of California, Riverside.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15597071.svg)](https://doi.org/10.5281/zenodo.15597071)
+
 
 
 
