@@ -27,21 +27,22 @@ ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, an
 
 ```
 @article{mohseni2025allegro,
-    title = {Kingdom-wide CRISPR guide design with ALLEGRO},
-    author = {Mohseni, Amirsadra and Nia, Reyhane Ghorbani and Tafrishi, Aida and López, Mario León and Liu, Xin-Zhan and Stajich, Jason E and Lonardi, Stefano and Wheeldon, Ian},
-    journal = {Nucleic Acids Research},
-    volume = {53},
-    number = {15},
-    pages = {gkaf783},
-    year = {2025},
-    doi = {10.1093/nar/gkaf783},
-    url = {https://doi.org/10.1093/nar/gkaf783},
-    eprint = {https://academic.oup.com/nar/article-pdf/53/15/gkaf783/64082253/gkaf783.pdf},
+    title={Kingdom-wide CRISPR guide design with ALLEGRO},
+    author={Mohseni, Amirsadra and Nia, Reyhane Ghorbani and Tafrishi, Aida and López, Mario León and Liu, Xin-Zhan and Stajich, Jason E and Lonardi, Stefano and Wheeldon, Ian},
+    journal={Nucleic Acids Research},
+    volume={53},
+    number={15},
+    pages={gkaf783},
+    year={2025},
+    doi={10.1093/nar/gkaf783},
+    url={https://doi.org/10.1093/nar/gkaf783},
+    eprint={https://academic.oup.com/nar/article-pdf/53/15/gkaf783/64082253/gkaf783.pdf},
     publisher={Oxford University Press}
 }
 ```
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15597071.svg)](https://doi.org/10.5281/zenodo.15597071)
+
 
 
 
