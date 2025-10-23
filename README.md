@@ -25,6 +25,7 @@ If you run into any issues or have suggestions for ALLEGRO, please report them o
 # About
 ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, and Stefano Lonardi at the University of California, Riverside.
 
+```
 @article{mohseni2025allegro,
     title = {Kingdom-wide CRISPR guide design with ALLEGRO},
     author = {Mohseni, Amirsadra and Nia, Reyhane Ghorbani and Tafrishi, Aida and López, Mario León and Liu, Xin-Zhan and Stajich, Jason E and Lonardi, Stefano and Wheeldon, Ian},
@@ -38,8 +39,10 @@ ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, an
     eprint = {https://academic.oup.com/nar/article-pdf/53/15/gkaf783/64082253/gkaf783.pdf},
     publisher={Oxford University Press}
 }
+```
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15597071.svg)](https://doi.org/10.5281/zenodo.15597071)
+
 
 
 
