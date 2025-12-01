@@ -1,5 +1,3 @@
-<img width="150" alt="ALLEGRO Logo" src="https://github.com/AmirUCR/allegro/assets/46543443/d173addd-24ef-4532-a8b8-a902e9a8ec36">
-
 # Introduction
 
 [Notice: The current build may have issues compiling. Amir is working on a one line fix (to just pip install allegro-crispr) coming late October]
@@ -42,6 +40,7 @@ ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, an
 ```
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15597071.svg)](https://doi.org/10.5281/zenodo.15597071)
+
 
 
 
