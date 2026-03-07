@@ -1,0 +1,19 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include cpp/CMakeLists.txt
+
+# C++ Core & Subdirectories
+recursive-include cpp *.cpp *.h *.hpp
+recursive-include cpp/kirschtorte *
+recursive-include cpp/uCRISPR *
+recursive-include cpp/boost_1_81_0 *
+
+# Python Package & Resources
+recursive-include python/allegro *.py
+recursive-include python/allegro/scorers/uCRISPR/RNAstructure/data_tables *
+
+# Exclude unnecessary artifacts
+prune build
+prune **/__pycache__
+exclude **/*.pyc

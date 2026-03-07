@@ -1,0 +1,41 @@
+[build-system]
+requires = [
+  "setuptools>=69",
+  "wheel",
+  "cmake>=3.20",
+  "pybind11>=2.10",
+  "patchelf>=0.17.2.1; platform_system == 'Linux'"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "allegro-bio"
+version = "1.0.0"
+description = "ALLEGRO: CRISPR Guide Design Tool with ILP/CP-SAT core"
+authors = [{ name = "Amirsadra Mohseni", email = "amohs002@ucr.edu" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { file = "LICENSE" }
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyyaml",
+    "setproctitle",
+    "scipy"
+]
+
+[project.scripts]
+allegro = "allegro.main:main"
+
+[tool.setuptools.packages.find]
+where = ["python"]
+include = ["allegro*"]
+
+[tool.setuptools.package-data]
+"allegro" = [
+    "bin/uCRISPR_scorer",
+    "lib/*.so*",
+    "_kirschtorte.py",
+    # Recursive glob ensures every table in every subdirectory is captured
+    "scorers/uCRISPR/RNAstructure/data_tables/**/*"
+]

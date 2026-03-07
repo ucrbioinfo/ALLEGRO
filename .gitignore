@@ -1,0 +1,12 @@
+.vscode/
+__pycache__
+data/cache/
+data/output/
+.pytest_cache/
+test.*
+out
+build/
+allegro_bio.egg-info/
+ortools/
+*.sif
+*.sh

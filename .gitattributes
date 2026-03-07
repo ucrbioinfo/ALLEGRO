@@ -1,0 +1,7 @@
+# Mark all files as not detectable
+* linguist-detectable=false
+
+# Enable detection for specific file extensions
+*.cpp linguist-detectable=true
+*.py linguist-detectable=true
+*.pyx linguist-detectable=true
