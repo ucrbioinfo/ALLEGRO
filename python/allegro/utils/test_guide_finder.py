@@ -1,6 +1,3 @@
-# Functions imported by ALLEGRO. No need to run it manually.
-# You can import this .py file separately, instantiate GuideFinder,
-# and check for guides in your custom sequence by calling identify_guides_and_indicate_strand(...).
 import re
 import os
 import sys

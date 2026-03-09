@@ -2,6 +2,7 @@
 __pycache__
 data/cache/
 data/output/
+cached_guides.pickle
 .pytest_cache/
 test.*
 out

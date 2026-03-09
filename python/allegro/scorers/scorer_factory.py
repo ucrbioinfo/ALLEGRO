@@ -19,10 +19,10 @@ class ScorerFactory:
 
         match scorer_name.lower():
             case 'dummy':
-                return DummyScorer(guide_settings)
+                return DummyScorer()
             
             case 'ucrispr':
-                return uCRISPR_scorer(guide_settings)
+                return uCRISPR_scorer()
             
             case _:
                 print(f'{bcolors.RED}> Error{bcolors.RESET}: Unknown scorer selected. Exiting.')

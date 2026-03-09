@@ -1,8 +1,4 @@
 from __future__ import annotations
-import typing
-
-if typing.TYPE_CHECKING:
-    from allegro.classes.guide_container import GuideContainer
 
 from abc import ABC, abstractmethod
 
@@ -11,7 +7,7 @@ class Scorer(ABC):
     def score_sequence(self, guides_context_list: list[str]) -> list[float]:
         '''
         ## Args:
-            * guide_container: Either a Gene or a Chromosome type guide container.
+            * guides_context_list: a list of guide strings with extra base context on their 5' and 3'.
         
         ## Returns:
             * list[float] indicates the efficiency scores of each guide.

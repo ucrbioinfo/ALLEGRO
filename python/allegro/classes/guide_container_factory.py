@@ -2,7 +2,6 @@ import re
 import sys
 from Bio import SeqIO
 
-from allegro.scorers.scorer_base import Scorer
 from allegro.classes.guide_container import GuideContainer
 from allegro.utils.shell_colors import bcolors
 
@@ -14,7 +13,6 @@ class GuideContainerFactory:
         self,
         species_name: str,
         records_path: str,
-        guide_scorer_obj: Scorer
         ) -> list[GuideContainer]:
         
         guide_container_list: list[GuideContainer] = list()
@@ -67,7 +65,6 @@ class GuideContainerFactory:
                 string_id=record.id,
                 ref_species=ref_species,
                 sequence=record.seq,
-                guide_scorer=guide_scorer_obj,
                 orthologous_to_prot=ortho_prot_id,
                 orthologous_to_gene=ortho_gene_name))
 

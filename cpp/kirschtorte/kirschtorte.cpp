@@ -30,7 +30,6 @@ namespace Kirschtorte
         bool precluster,
         std::size_t beta,
         std::size_t seed_length,
-        // std::size_t guide_length,
         std::size_t multiplicity,
         std::size_t num_containers,
         std::size_t monophonic_threshold,
@@ -42,13 +41,10 @@ namespace Kirschtorte
         this->beta = beta;
         this->precluster = precluster;
         this->seed_length = seed_length;
-        // this->guide_length = guide_length;     // Twenty (20) for cas9.
         this->multiplicity = multiplicity;
         this->num_containers = num_containers; // A container may be a gene, species, or chromosome.
         this->output_directory = output_directory;
         this->monophonic_threshold = monophonic_threshold;
-        // this->bits_required_to_store_seq = guide_length * 2; // Each nucleotide A/C/T/G in a guide
-                                                             // can be represented by 2 bits.
         this->early_stopping_patience = early_stopping_patience;
         this->enable_solver_diagnostics = enable_solver_diagnostics;
         this->mismatched_allowed_after_seed = mismatched_allowed_after_seed;

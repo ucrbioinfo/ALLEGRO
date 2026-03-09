@@ -9,6 +9,7 @@ from Bio.Seq import Seq
 from io import StringIO
 from itertools import product
 
+from allegro.scorers.scorer_base import Scorer
 from allegro.utils.shell_colors import bcolors
 from allegro.utils.iupac_dict import iupac_dict
 
@@ -203,17 +204,25 @@ class GuideFinder:
     _filter_by_gc_cache: bool = False
     _gc_min_cache: float = 0.0
     _gc_max_cache: float = 0.0
+    _guide_score_threshold_cache = 0.0
     _protospacer_length_cache: int = 0
     _pam_dict_cache: dict[str, re.Pattern] = dict()
     _exclusion_list_cache: list[str] = list()
     _exclusion_patterns_combinations_cache: list[str] = list()
+    _guide_scorer_cache: Scorer
 
     def __init__(self) -> None:
         if not self.__class__._initialized:
             raise RuntimeError(
-                'GuideFinder has not been initialized. '
-                'Call GuideFinder.initialize(blocklist_path, pam_list, exclusion_patterns_list) first.'
-            )
+                'GuideFinder has not been initialized. ' + \
+                'Call GuideFinder.initialize(blocklist_path' + \
+                ', pam_list' + \
+                ', filter_by_gc' + \
+                ', gc_min' + \
+                ', gc_max' + \
+                ', protospacer_length' + \
+                ', patterns_to_exclude' + \
+                ', guide_scorer) first.')
 
     @property
     def pam_dict(self) -> dict[str, re.Pattern]:
@@ -243,16 +252,26 @@ class GuideFinder:
     def exclusion_patterns_combinations(self) -> list[str]:
         return self.__class__._exclusion_patterns_combinations_cache
 
+    @property
+    def guide_scorer(self) -> Scorer:
+        return self.__class__._guide_scorer_cache
+
+    @property
+    def guide_score_threshold(self) -> float:
+        return self.__class__._guide_score_threshold_cache
+
     @classmethod
     def initialize(
-        cls, 
+        cls,
         blocklist_path: str,
         pam_list: list[str],
         filter_by_gc: bool,
         gc_min: float,
         gc_max: float,
         protospacer_length: int,
-        patterns_to_exclude: list[str]) -> None:
+        patterns_to_exclude: list[str],
+        guide_scorer: Scorer,
+        guide_score_threshold: float) -> None:
         normalized_pams = [pam.strip().upper() for pam in pam_list if pam.strip()]
         normalized_patterns = [pattern.strip().upper() for pattern in patterns_to_exclude if pattern.strip()]
 
@@ -283,6 +302,8 @@ class GuideFinder:
         cls._gc_min_cache = gc_min
         cls._gc_max_cache = gc_max
         cls._exclusion_patterns_combinations_cache = list(dict.fromkeys(combinations))
+        cls._guide_scorer_cache = guide_scorer
+        cls._guide_score_threshold_cache = guide_score_threshold
         cls._initialized = True
 
     def contains_iupac_pattern(self, sequence: str, patterns: list[str]) -> bool:
@@ -307,16 +328,17 @@ class GuideFinder:
 
         return False
 
-    def identify_guides_and_indicate_strand(
-        self,
-        sequence: str,
-        context_toward_five_prime: int,
-        context_toward_three_prime: int) -> tuple[list[str], list[str], list[str], list[int]]:
+    def score_guides_from_list(self, guides_context_list: list[str]) -> list[float]:
+        return self.guide_scorer.score_sequence(guides_context_list)
 
+    def identify_guides_and_indicate_strand(
+        self, 
+        sequence: str) -> tuple[list[str], list[str], list[str], list[int], list[float]]:
         guides_list: list[str] = list()
         guides_context_list: list[str] = list()
         strands_list: list[str] = list()
         locations_list: list[int] = list()
+        scores_list: list[float] = list()
 
         valid_bases = {'A', 'C', 'G', 'T'}
         
@@ -350,12 +372,12 @@ class GuideFinder:
                     # There is enough context on both sides of the PAM
                     guide_with_context = ''
                     if (
-                        position - self.protospacer_length - context_toward_five_prime >= 0 
-                        and position + len(pam_name) + context_toward_three_prime < len(seq) + 1
+                        position - self.protospacer_length - self.guide_scorer.context_toward_five_prime >= 0 
+                        and position + len(pam_name) + self.guide_scorer.context_toward_three_prime < len(seq) + 1
                     ):
                         guide_with_context = seq[
-                            position - self.protospacer_length - context_toward_five_prime:
-                            position + len(pam_name) + context_toward_three_prime
+                            position - self.protospacer_length - self.guide_scorer.context_toward_five_prime:
+                            position + len(pam_name) + self.guide_scorer.context_toward_three_prime
                         ]
 
                         # If we're not using uCRISPR, or a scorer that doesn't need a context, context_toward_five_prime and 
@@ -366,12 +388,18 @@ class GuideFinder:
                     else:
                         continue
 
+                    guide_score = self.score_guides_from_list([guide_with_context])
+
+                    if guide_score[0] < self.guide_score_threshold:
+                        continue
+
                     guides_list.append(guide)
                     guides_context_list.append(guide_with_context)
                     strands_list.append(strand)
                     locations_list.append(position)
+                    scores_list.append(guide_score[0])
 
-        return guides_list, guides_context_list, strands_list, locations_list
+        return guides_list, guides_context_list, strands_list, locations_list, scores_list
     
     def locate_guides_in_sequence(
         self,

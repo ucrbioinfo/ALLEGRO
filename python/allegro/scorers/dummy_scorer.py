@@ -12,6 +12,6 @@ class DummyScorer(Scorer):
         Assigns all guides in param sequence a score of 1.
         '''
         
-        scores = [1.0] * len(guides_list)
+        scores = [1.0] * len(guides_context_list)
     
         return scores

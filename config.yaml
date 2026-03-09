@@ -35,6 +35,9 @@ input_species_path_column: 'cds_file_name'
 # input_species_path_column: ortho_file_name
 # ---------------------------------------------------------------
 
+pam: 'NGG'
+protospacer_length: 20
+
 # String value, default: 'track_e'
 # track_a: any of the fasta records can be targeted. There will be multiplicity targets per fasta record.
 # track_e: each fasta record has to be targeted at least multiplicity times,

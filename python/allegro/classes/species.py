@@ -1,5 +1,4 @@
 from allegro.classes.guide import Guide
-from allegro.scorers.scorer_base import Scorer
 from allegro.classes.guide_container import GuideContainer
 from allegro.classes.guide_container_factory import GuideContainerFactory
 
@@ -7,7 +6,6 @@ class Species:
     __slots__ = [
         'name',
         'records_path',
-        'guide_scorer',
         'bowtie_index_path',
         'guide_objects_list',
         'guide_containers_list',
@@ -16,7 +14,6 @@ class Species:
 
     name: str
     records_path: str
-    guide_scorer: Scorer
     bowtie_index_path: str
     guide_objects_list: list[Guide]
     guide_containers_list: list[GuideContainer]
@@ -26,13 +23,11 @@ class Species:
         self,
         name: str,
         records_path: str,
-        guide_scorer: Scorer,
         guide_container_factory: GuideContainerFactory,
         ) -> None:
         
         self.name = name
         self.records_path = records_path
-        self.guide_scorer = guide_scorer  # dummy, or other options in config.yaml
         self.guide_container_factory = guide_container_factory
         self.guide_containers_list: list[GuideContainer]
         self.guide_objects_list: list[Guide]
@@ -40,8 +35,7 @@ class Species:
     def make_guide_containers(self) -> None:
         self.guide_containers_list = self.guide_container_factory.make_guide_containers(
             species_name=self.name,
-            records_path=self.records_path,
-            guide_scorer_obj=self.guide_scorer)
+            records_path=self.records_path)
 
     def get_guides_from_containers(self) -> list[Guide]:
         self.guide_objects_list: list[Guide] = list()

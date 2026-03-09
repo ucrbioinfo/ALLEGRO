@@ -8,33 +8,26 @@ from allegro._kirschtorte_core import _KirschtorteEngine
 from allegro.classes.species import Species
 from allegro.utils.shell_colors import bcolors
 from allegro.utils import records_count_finder
-from allegro.scorers.scorer_factory import ScorerFactory
 from allegro.classes.guide_container_factory import GuideContainerFactory
 
 class KirschtorteCython:
     def __init__(
         self, 
         beta, 
-        track, 
-        precluster, 
+        track,
+        multiplicity,
+        monophonic_threshold,
+        preclustering,
         seed_length,
         mismatched_allowed_after_seed,
         early_stopping_patience,
-        scorer_name, 
-        # cas_variant, 
-        # guide_length, 
         input_directory,
-        guide_settings,
         output_directory, 
-        input_species_path_column,
-        multiplicity, 
-        monophonic_threshold, 
         input_species_csv_file_path,
+        input_species_path_column,
         enable_solver_diagnostics):
 
-        # self.cas_variant = cas_variant
         self.multiplicity = multiplicity
-        self.guide_settings = guide_settings
         self.input_directory = input_directory
         self.input_species_path_column = input_species_path_column
         self.species_df = pandas.read_csv(input_species_csv_file_path)
@@ -43,11 +36,10 @@ class KirschtorteCython:
         
         # Instantiate the C++ engine
         self.engine = _KirschtorteEngine(
-            precluster, 
+            preclustering, 
             beta, 
             seed_length,
-            # guide_length, 
-            multiplicity,
+            self.multiplicity,
             self.clusters, 
             monophonic_threshold, 
             early_stopping_patience,
@@ -58,12 +50,6 @@ class KirschtorteCython:
 
         # To translate indices back to legible names later.
         self.guide_origin: dict[int, str] = dict()
-
-        # Instantiate the appropriate scorer.
-        scorer_factory = ScorerFactory()
-        self.scorer = scorer_factory.make_scorer(
-            scorer_name=scorer_name, scorer_settings=guide_settings
-        )
 
         # Instantiate the GuideContainerFactory to assign to each Species.
         # Each Species object tells the factory about its guide source.
@@ -94,7 +80,6 @@ class KirschtorteCython:
             species_object = Species(
                 name=row.species_name,
                 records_path=records_path,
-                guide_scorer=self.scorer,
                 guide_container_factory=self.guide_container_factory)
 
             guide_objects_list: list[Guide] = list()
@@ -145,7 +130,6 @@ class KirschtorteCython:
             species_object = Species(
                 name=row.species_name,
                 records_path=records_path,
-                guide_scorer=self.scorer,
                 guide_container_factory=self.guide_container_factory)
 
             guide_containers_list: list[GuideContainer] = list()
@@ -161,7 +145,7 @@ class KirschtorteCython:
                 sys.exit(1)
 
             for guide_container in guide_containers_list:
-                guide_objects_list: list[Guide] = guide_container.get_cas9_guides()
+                guide_objects_list: list[Guide] = guide_container.get_guides()
 
                 if len(guide_objects_list) < self.multiplicity:
                     print(f'{bcolors.RED}> Warning{bcolors.RESET}: In species {row.species_name}, gene {guide_container.string_id} ' +

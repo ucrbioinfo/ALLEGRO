@@ -8,8 +8,6 @@ from importlib import resources as ir
 
 from allegro.utils.shell_colors import bcolors
 from allegro.scorers.scorer_base import Scorer
-from allegro.utils.guide_finder import GuideFinder
-from allegro.classes.guide_container import GuideContainer
 
 class uCRISPR_scorer(Scorer):
     def __init__(self) -> None:
@@ -81,7 +79,7 @@ class uCRISPR_scorer(Scorer):
         indices_of_uncached_guides: list[int] = list()
 
         if self.use_secondary_memory:
-            cache_path = f"allegro_cache/{guide_container.species_name}.pickle"
+            cache_path = f"allegro_cache/cached_guides.pickle"
             if os.path.exists(cache_path):
                 with open(cache_path, "rb") as f:
                     saved_guides = pickle.load(f)
@@ -110,7 +108,7 @@ class uCRISPR_scorer(Scorer):
                     saved_guides[guides_context_list[indices_of_uncached_guides[idx+i]]] = s
 
             if self.use_secondary_memory:
-                cache_path = f"allegro_cache/{guide_container.species_name}.pickle"
+                cache_path = f"allegro_cache/cached_guides.pickle"
                 with open(cache_path, "wb") as f:
                     pickle.dump(saved_guides, f)
 

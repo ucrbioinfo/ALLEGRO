@@ -10,42 +10,27 @@ import argparse
 from datetime import timedelta
 
 from allegro.utils.shell_colors import bcolors
-from allegro.utils.iupac_codes import iupac_dict
+from allegro.utils.iupac_dict import iupac_dict
 
-def parse_pams(v) -> list[str]:
+def parse_pam(v) -> str:
     if v is None:
-        return []
+        return ''
 
-    # If already a list (e.g. YAML config)
-    if isinstance(v, list):
-        pams = v
-    else:
-        s = str(v).strip()
+    s = str(v).strip()
 
-        # Handle JSON-like list: ["NGG","NAG"]
-        if s.startswith("[") and s.endswith("]"):
-            import ast
-            pams = ast.literal_eval(s)
-        else:
-            # Comma separated
-            pams = s.split(",")
+    normalized = ''
 
-    normalized: list[str] = []
+    pam = str(pam).strip().upper()
 
-    for pam in pams:
-        pam = str(pam).strip().upper()
-        if not pam:
-            continue
-
-        for c in pam:
-            if c not in iupac_dict:
-                print(f'{bcolors.RED}> Error{bcolors.RESET}: Invalid IUPAC code "{c}" in PAM "{pam}". Exiting.')
-                sys.exit(1)
+    for c in pam:
+        if c not in iupac_dict:
+            print(f'{bcolors.RED}> Error{bcolors.RESET}: Invalid IUPAC code "{c}" in PAM "{pam}". Exiting.')
+            sys.exit(1)
 
         normalized.append(pam)
 
-    if not normalized:
-        print(f'{bcolors.RED}> Error{bcolors.RESET}: At least one PAM must be specified. Exiting.')
+    if len(normalized) == 0:
+        print(f'{bcolors.RED}> Error{bcolors.RESET}: PAM must be specified. Exiting.')
         sys.exit(1)
 
     return normalized
@@ -155,7 +140,7 @@ class Configurator:
             except yaml.YAMLError as e:
                 m = re.search(r"line (\d+)", str(e))
                 line_number = m.group(1) if m else "?"
-                print(f"{bcolors.RED}> Error{bcolors.RESET}: Problem reading {self.args.config} (line {line_number})")
+                print(f"{bcolors.RED}> Error{bcolors.RESET}: Problem reading {config_args.config} (line {line_number})")
                 print(e)
                 sys.exit(1)
 
@@ -193,7 +178,7 @@ class Configurator:
         g_design.add_argument("-b", "--beta", type=int, default=0, help="Soft target for max guides; 0 disables beta objective.")
 
         g_scoring.add_argument("-s", "--scorer", type=str, default="dummy", help="Scorer: dummy, ucrispr.")
-        g_scoring.add_argument("-sthresh", "--guide_score_threshold", type=int, default=0, help="Only for ucrispr: discard guides below this.")
+        g_scoring.add_argument("-sthresh", "--guide_score_threshold", type=int, default=0, help="Discard guides below this score.")
 
         g_scoring.add_argument("-gc", "--filter_by_gc", type=coerce_bool, default=True, help="Filter guides by GC range.")
         g_scoring.add_argument("-gcmin", "--gc_min", type=float, default=0.4, help="Minimum GC fraction.")
@@ -213,7 +198,7 @@ class Configurator:
         g_output.add_argument("-od", "--output_directory", type=str, default="data/output/", help="Output base directory.")
         g_adv.add_argument("-esp", "--early_stopping_patience", type=int, default=60, help="ILP early-stopping patience (seconds).")
         g_adv.add_argument("-esd", "--enable_solver_diagnostics", type=coerce_bool, default=True, help="Try to diagnose infeasible instances.")
-        g_adv.add_argument("--pams", type=parse_pams, default=["NGG"], help='PAM(s). Accepts "NGG", "NGG,NG", or ["NGG","NG"].')
+        g_adv.add_argument("--pam", type=parse_pams, default="NGG", help='PAM. Accepts "NGG".')
         g_adv.add_argument("-pl", "--protospacer_length", type=int, default=20, help='Protospacer length. Defaults to 20.')
         g_adv.add_argument("--mp_threshold", type=int, default=0, help="Preselect guides that hit <= this many targets.")
         g_adv.add_argument("--align_solution_to_input", type=coerce_bool, default=True, help="Align output guides back to where they came from for CSV report. Requires Bowtie v1.")
@@ -329,8 +314,8 @@ class Configurator:
                 print(f'{bcolors.RED}> Error{bcolors.RESET}: Cannot have more than 5 non-ACTG IUPAC codes in pattern "{pattern_to_exclude}" due to the exponential number of combinations. Remove it and retry. Exiting.')
                 sys.exit(1)
             
-            if len(pattern_to_exclude) > len(self.protospacer_pattern):
-                print(f'{bcolors.ORANGE}> Warning{bcolors.RESET}: Pattern "{pattern_to_exclude}" is longer than the length of your protospacer ({self.protospacer_pattern} – {len(pattern_to_exclude)} vs. {len(self.protospacer_pattern)}). Ignoring this pattern.')
+            if len(pattern_to_exclude) > self.args.protospacer_length:
+                print(f'{bcolors.ORANGE}> Warning{bcolors.RESET}: Pattern "{pattern_to_exclude}" is longer than the length of your protospacer ({self.protospacer_pattern} – {len(pattern_to_exclude)} vs. {protospacer_length}). Ignoring this pattern.')
                 bad_patterns.add(pattern_to_exclude)
                 continue
 

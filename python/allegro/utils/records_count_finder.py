@@ -1,4 +1,3 @@
-# Functions imported by ALLEGRO. No need to run it manually.
 import os
 import multiprocessing
 
