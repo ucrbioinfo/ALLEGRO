@@ -16,24 +16,18 @@ def parse_pam(v) -> str:
     if v is None:
         return ''
 
-    s = str(v).strip()
+    pam = str(v).strip().upper()
 
-    normalized = ''
-
-    pam = str(pam).strip().upper()
+    if len(pam) == 0:
+        print(f'{bcolors.RED}> Error{bcolors.RESET}: PAM must be specified. Exiting.')
+        sys.exit(1)
 
     for c in pam:
         if c not in iupac_dict:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Invalid IUPAC code "{c}" in PAM "{pam}". Exiting.')
             sys.exit(1)
 
-        normalized.append(pam)
-
-    if len(normalized) == 0:
-        print(f'{bcolors.RED}> Error{bcolors.RESET}: PAM must be specified. Exiting.')
-        sys.exit(1)
-
-    return normalized
+    return pam
 
 def require_on_path(binary_name: str, hint: str = "") -> None:
     if shutil.which(binary_name) is not None:
@@ -198,7 +192,7 @@ class Configurator:
         g_output.add_argument("-od", "--output_directory", type=str, default="data/output/", help="Output base directory.")
         g_adv.add_argument("-esp", "--early_stopping_patience", type=int, default=60, help="ILP early-stopping patience (seconds).")
         g_adv.add_argument("-esd", "--enable_solver_diagnostics", type=coerce_bool, default=True, help="Try to diagnose infeasible instances.")
-        g_adv.add_argument("--pam", type=parse_pams, default="NGG", help='PAM. Accepts "NGG".')
+        g_adv.add_argument("--pam", type=parse_pam, default="NGG", help='PAM. Accepts "NGG".')
         g_adv.add_argument("-pl", "--protospacer_length", type=int, default=20, help='Protospacer length. Defaults to 20.')
         g_adv.add_argument("--mp_threshold", type=int, default=0, help="Preselect guides that hit <= this many targets.")
         g_adv.add_argument("--align_solution_to_input", type=coerce_bool, default=True, help="Align output guides back to where they came from for CSV report. Requires Bowtie v1.")

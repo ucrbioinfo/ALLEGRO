@@ -290,9 +290,9 @@ class OfftargetFinder:
         """
         mm = str(int(num_of_mismatches))
 
-        idx_base = os.path.join(_index_dir, f"{that_species_name}_{gene_or_genome_str}_idx")
-        reads_fq = os.path.join(_reads_dir, f"{this_species_name}_reads.fq")
-        alignments_sam = os.path.join(_alignments_dir, f"{this_species_name}_against_{that_species_name}_{mm}mm_alignment.sam")
+        idx_base = os.path.join(self._index_dir, f"{that_species_name}_{gene_or_genome_str}_idx")
+        reads_fq = os.path.join(self._reads_dir, f"{this_species_name}_reads.fq")
+        alignments_sam = os.path.join(self._alignments_dir, f"{this_species_name}_against_{that_species_name}_{mm}mm_alignment.sam")
 
         bowtie_command = [
             "bowtie",
@@ -355,7 +355,7 @@ class OfftargetFinder:
         df_mm_genomic.drop(columns=["idk", "mapping_quality"], inplace=True)
 
         try:
-            os.remove(aln_sam)
+            os.remove(alignments_sam)
         except FileNotFoundError:
             pass
 
