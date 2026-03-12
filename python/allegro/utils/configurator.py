@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from allegro.utils.iupac import iupac_dict
 from allegro.utils.shell_colors import bcolors
-from allegro.utils.scorer_factory import scorer_names
+from allegro.scorers.scorer_factory import scorer_names
 
 def normalize_scorer(scorer: str) -> str:
     normalized_scorer = scorer.strip().lower()

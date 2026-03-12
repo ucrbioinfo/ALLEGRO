@@ -4,8 +4,8 @@ import sys
 import pandas
 import subprocess
 
+from allegro.utils.iupac import expand_pam
 from allegro.utils.shell_colors import bcolors
-from allegro.utils.iupac import expand_iupac_sequence
 
 def reverse_complement(string: str) -> str:
     s = ''
@@ -159,7 +159,7 @@ class OfftargetFinder:
         cls._index_dir_cache = index_dir
         cls._reads_dir_cache = reads_dir
         cls._alignments_dir_cache = alignments_dir
-        cls._expanded_pams_cache = expand_iupac_sequence(pam)
+        cls._expanded_pams_cache = expand_pam(pam)
         cls._protospacer_length_cache = protospacer_length
         cls._initialized = True
     

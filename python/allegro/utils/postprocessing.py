@@ -34,7 +34,7 @@ def _init_offtarget_worker(
     global _WORKER_SEED_REGION_IS_N_UPSTREAM_OF_PAM
     global _WORKER_EXPERIMENT_NAME
 
-    OfftargetFinder.initialize(output_directory, protospacer_length, pam)
+    OfftargetFinder.initialize(None, protospacer_length, pam)
 
     _WORKER_EXPERIMENT_NAME = experiment_name
     _WORKER_SPECIES_TO_FILE = species_to_file
@@ -162,7 +162,6 @@ def find_targets(
     all_targets['target_species'] = target_species
     all_targets['is_off_target'] = '1'
     all_targets['self_off_targets'] = '0'
-    all_targets['orthologous_to'] = 'N/A'
 
     on_targets = pandas.merge(
         output_library[output_library['target'] == target_species],
@@ -185,6 +184,7 @@ def find_targets(
         suffixes=('', '_new')
     )
 
+    all_targets['orthologous_to'] = 'N/A'
     all_targets['is_off_target'] = merged_df['is_off_target_new'].combine_first(all_targets['is_off_target'])
     all_targets['orthologous_to'] = merged_df['orthologous_to'].combine_first(all_targets['orthologous_to'])
     all_targets = all_targets[cols]
@@ -227,7 +227,7 @@ def report_offtargets(
     solution_path = os.path.join(output_directory, experiment_name + '.csv')
     gene_or_genome_str = 'genome' if 'genome' in input_species_offtarget_column else 'genes'
     
-    OfftargetFinder.initialize(output_directory, protospacer_length, pam)
+    OfftargetFinder.initialize(None, protospacer_length, pam)
     OTF = OfftargetFinder()
 
     created_dfs: list[pandas.DataFrame] = list()

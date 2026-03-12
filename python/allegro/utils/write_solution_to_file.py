@@ -5,6 +5,7 @@ import pandas
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+from allegro.utils.iupac import expand_pam
 from allegro.utils.shell_colors import bcolors
 from allegro.utils.guide_finder import align_guides_to_seq_bowtie
 
@@ -190,10 +191,13 @@ def align_solution_to_input_bowtie(
             print('Dev error in utils/write_solution_to_file.py. Not your fault. Just bad coding.')
 
     library = list(solution_dict.keys())
+
+    expanded_pam_list = expand_pam(pam)
+
     with open(output_align_temp_path, 'w') as f:
         for g in library:
-            for n in ['AGG', 'CGG', 'TGG', 'GGG']:
-                f.write(f'>{g}{n}\n{g}{n}\n')
+            for p in expanded_pam_list:
+                f.write(f'>{g}{p}\n{g}{p}\n')
 
     total_time_elapsed = 0.0
     print(f'{bcolors.BLUE}>{bcolors.RESET} Aligning the library against the input species to generate the final report...')

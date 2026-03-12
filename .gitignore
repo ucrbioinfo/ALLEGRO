@@ -2,6 +2,7 @@
 __pycache__
 data/cache/
 data/output/
+allegro_cache/
 cached_guides.pickle
 .pytest_cache/
 test.*
