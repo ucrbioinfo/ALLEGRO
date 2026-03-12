@@ -1,26 +1,13 @@
 import os
+import re
 import sys
 import pandas
 import subprocess
 
 from allegro.utils.shell_colors import bcolors
+from allegro.utils.iupac import expand_iupac_sequence
 
-def reverse_complement(string):
-    """
-    Compute the reverse complement of a DNA sequence.
-
-    This function:
-      * Uppercases the input.
-      * Uses the DNA complement rules A<->T and C<->G.
-      * Reverses the complemented string.
-
-    Args:
-        string (str): DNA sequence consisting of characters A/C/G/T (case-insensitive).
-
-    Returns:
-        str: Reverse-complemented sequence.
-    """
-    
+def reverse_complement(string: str) -> str:
     s = ''
     for c in string.upper():
         if c == 'A': s += 'T'
@@ -28,16 +15,14 @@ def reverse_complement(string):
         elif c == 'G': s += 'C'
         elif c == 'T': s += 'A'
         else:
-            print(f'{bcolors.RED}>{bcolors.RESET} Sequence {string} contains non-standard ({c}) base.')
-            print(f'{bcolors.RED}>{bcolors.RESET} Exiting.')
+            print(f'{bcolors.RED}>{bcolors.RESET} Sequence {string} contains non-standard ({c}) base. Exiting.')
             sys.exit(1)
     return s[::-1]
 
 def check_if_file_with_cached_index_was_modified(
     cache_index_dir: str,
     index_base_name: str,
-    file_path: str
-) -> bool | str:
+    file_path: str) -> bool | str:
     """
     Determine whether a FASTA file has changed since a cached Bowtie index was created.
     """
@@ -95,59 +80,88 @@ def record_creation_date(cache_index: str, index_base_name: str, file_path: str)
         record_file.write(str(modified_time))
 
 class OfftargetFinder:
-    _self = None
-    _base_path = None
-    _cache_path = None
+    _initialized: bool = False
+    _base_path_cache: str = ''
+    _cache_path_cache: str = ''
+    _index_dir_cache: str = ''
+    _reads_dir_cache: str = ''
+    _alignments_dir_cache: str = ''
+    _protospacer_length_cache: int = 0
+    _expanded_pams_cache: list[str] = list()
+    _pam_degenerate_offsets_cache: list[int] = list()
 
-    # Singleton
-    def __new__(self):
-        """
-        Create or return the singleton instance.
-
-        OfftargetFinder is implemented as a singleton so that:
-          * The working directory base path is captured once.
-          * Bowtie cache directories are created once and reused across calls.
-
-        Returns:
-            OfftargetFinder: The singleton instance.
-        """
-        if self._self is None:
-            self._self = super().__new__(self)
-        return self._self
-    
     def __init__(self) -> None:
-        """
-        Initialize cache paths and ensure Bowtie cache directories exist.
+        if not self.__class__._initialized:
+            raise RuntimeError(
+                'OfftargetFinder has not been initialized. '
+                'Call OfftargetFinder.initialize(base_path, protospacer_length, pam) first.'
+            )
 
-        Sets:
-          * `_base_path` to the current working directory (os.getcwd()).
-          * `_cache_path` to `allegro_cache/bowtie`.
+    @property
+    def base_path(self) -> str:
+        return self.__class__._base_path_cache
 
-        Creates (if missing) the following directories under `_cache_path`:
-          * index/       cached Bowtie index files (.ebwt)
-          * reads/       generated FASTQ "reads" from guide sequences
-          * alignments/  temporary Bowtie alignment outputs (.sam)
+    @property
+    def cache_path(self) -> str:
+        return self.__class__._cache_path_cache
 
-        Side Effects:
-            Creates directories on disk.
-        """
-        if self._base_path is None:
-            self._base_path = os.getcwd()
+    @property
+    def index_dir(self) -> str:
+        return self.__class__._index_dir_cache
 
-        if self._cache_path is None:
-            self._cache_path = os.path.join("allegro_cache", "bowtie")
+    @property
+    def reads_dir(self) -> str:
+        return self.__class__._reads_dir_cache
 
-        index_dir = os.path.join(self._base_path, self._cache_path, "index")
-        reads_dir = os.path.join(self._base_path, self._cache_path, "reads")
-        alignments_dir = os.path.join(self._base_path, self._cache_path, "alignments")
+    @property
+    def alignments_dir(self) -> str:
+        return self.__class__._alignments_dir_cache
 
-        self._index_dir = index_dir
-        self._reads_dir = reads_dir
-        self._alignments_dir = alignments_dir
+    @property
+    def protospacer_length(self) -> int:
+        return self.__class__._protospacer_length_cache
+
+    @property
+    def expanded_pams(self) -> list[str]:
+        return self.__class__._expanded_pams_cache
+
+    @property
+    def pam_degenerate_offsets(self) -> list[int]:
+        return self.__class__._pam_degenerate_offsets_cache
+
+    @classmethod
+    def initialize(cls, base_path: str | None, protospacer_length: int, pam: str) -> None:
+        if base_path is None:
+            base_path = os.getcwd()
+
+        base_path = os.path.abspath(base_path)
+
+        if cls._initialized and cls._base_path_cache == base_path:
+            return
+
+        cache_path = os.path.join('allegro_cache', 'bowtie')
+
+        index_dir = os.path.join(base_path, cache_path, 'index')
+        reads_dir = os.path.join(base_path, cache_path, 'reads')
+        alignments_dir = os.path.join(base_path, cache_path, 'alignments')
 
         os.makedirs(index_dir, exist_ok=True)
         os.makedirs(reads_dir, exist_ok=True)
         os.makedirs(alignments_dir, exist_ok=True)
+
+        cls._pam_degenerate_offsets_cache = [
+            idx for idx, c in enumerate(pam.upper())
+            if c not in {'A', 'C', 'G', 'T'}
+        ]
+
+        cls._base_path_cache = base_path
+        cls._cache_path_cache = cache_path
+        cls._index_dir_cache = index_dir
+        cls._reads_dir_cache = reads_dir
+        cls._alignments_dir_cache = alignments_dir
+        cls._expanded_pams_cache = expand_iupac_sequence(pam)
+        cls._protospacer_length_cache = protospacer_length
+        cls._initialized = True
     
     def purge_cached_index(self, index_base_name: str) -> None:
         """
@@ -161,14 +175,7 @@ class OfftargetFinder:
             {index_base_name}.4.ebwt
             {index_base_name}.rev.1.ebwt
             {index_base_name}.rev.2.ebwt
-
-        Args:
-            index_base_name (str): Index basename used when building the Bowtie index.
-
-        Returns:
-            None
         """
-        index_dir = os.path.join(self._base_path, self._cache_path, "index")
 
         suffixes = [
             ".1.ebwt",
@@ -181,47 +188,27 @@ class OfftargetFinder:
 
         for suffix in suffixes:
             try:
-                os.remove(os.path.join(index_dir, f"{index_base_name}{suffix}"))
+                os.remove(os.path.join(self.index_dir, f"{index_base_name}{suffix}"))
             except FileNotFoundError:
                 pass
 
     def write_guides_as_reads(self, species_name: str, guide_seqs_list: list[str]) -> None:
         """
         Write guide sequences as synthetic FASTQ reads for Bowtie alignment.
-
-        For each protospacer in `guide_seqs_list`, this function generates
-        4 sequences by appending each possible 'NGG' PAM instantiation:
-
-            AGG, CGG, TGG, GGG
-
-        These sequences are then written as FASTQ reads to:
-
-            {cache_path}/reads/{species_name}_reads.fq
-
-        Each read is assigned a dummy quality string of 'I' characters.
-
-        Args:
-            species_name (str): Species name used to name the FASTQ file.
-            guide_seqs_list (list[str]): List of protospacer sequences (typically length 20).
-
-        Returns:
-            None
-
-        Side Effects:
-            Writes/overwrites a FASTQ file on disk.
         """
         guides_w_pam = dict()
 
         for seq in guide_seqs_list:
-            with_pam = [seq + pam for pam in ['AGG', 'CGG', 'TGG', 'GGG']]
+            with_pam = [seq + pam for pam in self.expanded_pams]
 
             for wp in with_pam:
                 guides_w_pam[wp] = seq
 
-        reads_path = f'{self._cache_path}/reads/{species_name}_reads.fq'
+        reads_path = os.path.join(self.reads_dir, f'{species_name}_reads.fq')
         with open(reads_path, 'w') as f:
             for idx, guide in enumerate(guides_w_pam.keys()):
-                f.write(f'@READ_{idx+1}\n{guide}\n+\nIIIIIIIIIIIIIIIIIIIIIII\n')
+                I_str = 'I' * len(guide)
+                f.write(f'@READ_{idx+1}\n{guide}\n+\n{I_str}\n')
 
     def run_bowtie_build(self, species_name: str, path_to_background_fasta: str, gene_or_genome_str: str) -> str:
         """
@@ -232,9 +219,9 @@ class OfftargetFinder:
         """
         index_base_name = f"{species_name}_{gene_or_genome_str}_idx"
 
-        index_dir = os.path.join(self._base_path, self._cache_path, "index")
+        index_dir = os.path.join(self.base_path, self.cache_path, "index")
         idx_base = os.path.join(index_dir, index_base_name)
-        fasta_path = os.path.join(self._base_path, path_to_background_fasta)
+        fasta_path = os.path.join(self.base_path, path_to_background_fasta)
 
         one_exists = os.path.exists(f"{idx_base}.1.ebwt")
         two_exists = os.path.exists(f"{idx_base}.2.ebwt")
@@ -290,9 +277,9 @@ class OfftargetFinder:
         """
         mm = str(int(num_of_mismatches))
 
-        idx_base = os.path.join(self._index_dir, f"{that_species_name}_{gene_or_genome_str}_idx")
-        reads_fq = os.path.join(self._reads_dir, f"{this_species_name}_reads.fq")
-        alignments_sam = os.path.join(self._alignments_dir, f"{this_species_name}_against_{that_species_name}_{mm}mm_alignment.sam")
+        idx_base = os.path.join(self.index_dir, f"{that_species_name}_{gene_or_genome_str}_idx")
+        reads_fq = os.path.join(self.reads_dir, f"{this_species_name}_reads.fq")
+        alignments_bowtie = os.path.join(self.alignments_dir, f"{this_species_name}_against_{that_species_name}_{mm}mm_alignment.sam")
 
         bowtie_command = [
             "bowtie",
@@ -301,7 +288,7 @@ class OfftargetFinder:
             "--quiet",
             "-x", idx_base,
             reads_fq,
-            alignments_sam,
+            alignments_bowtie,
         ]
 
         process = subprocess.Popen(bowtie_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -315,10 +302,27 @@ class OfftargetFinder:
                 print(stdout_bt.decode(errors="replace"))
             sys.exit(1)
 
-        df_mm_genomic = pandas.read_csv(
-            alignments_sam,
-            sep="\t",
-            names=[
+        try:
+            df_mm_genomic = pandas.read_csv(
+                alignments_bowtie,
+                sep="\t",
+                names=[
+                    "query_name",
+                    "strand",
+                    "reference_name",
+                    "start_position",
+                    "aligned_seq",
+                    "mapping_quality",
+                    "idk",
+                    "mismatch",
+                ],
+            )
+        except pandas.errors.EmptyDataError:
+            try:
+                os.remove(alignments_sam)
+            except FileNotFoundError:
+                pass
+            return pandas.DataFrame(columns=[
                 "query_name",
                 "strand",
                 "reference_name",
@@ -327,13 +331,12 @@ class OfftargetFinder:
                 "mapping_quality",
                 "idk",
                 "mismatch",
-            ],
-        )
+            ])
 
-        if len(df_mm_genomic) == 0:
+        if df_mm_genomic.empty:
             # Clean up temp file if it exists.
             try:
-                os.remove(aln_sam)
+                os.remove(alignments_bowtie)
             except FileNotFoundError:
                 pass
             return df_mm_genomic
@@ -346,16 +349,34 @@ class OfftargetFinder:
             else:
                 guide_w_pam.append(aligned)
 
-        df_mm_genomic["pam"] = [s[-3:] for s in guide_w_pam]
-        df_mm_genomic["sequence"] = [s[:-3] for s in guide_w_pam]
+        df_mm_genomic["pam"] = [s[self.protospacer_length:] for s in guide_w_pam]
+        df_mm_genomic["sequence"] = [s[:self.protospacer_length] for s in guide_w_pam]
 
-        # Remove mismatches occurring at the N base of the NGG PAM
+        # Remove mismatches occurring at the first PAM base.
         df_mm_genomic["mismatch"] = df_mm_genomic["mismatch"].fillna("N/A")
-        df_mm_genomic = df_mm_genomic[~df_mm_genomic["mismatch"].str.contains("20:", na=False)]
-        df_mm_genomic.drop(columns=["idk", "mapping_quality"], inplace=True)
+        pam_degenerate_positions = {
+            self.protospacer_length + offset
+            for offset in self.pam_degenerate_offsets
+        }
+
+        def has_only_allowed_pam_mismatches(mismatch_str: str) -> bool:
+            if mismatch_str == "N/A":
+                return True
+
+            mismatch_positions = [int(num) for num in re.findall(r'\d+', mismatch_str)]
+
+            for pos in mismatch_positions:
+                if pos >= self.protospacer_length and pos not in pam_degenerate_positions:
+                    return False
+
+            return True
+
+        df_mm_genomic = df_mm_genomic[
+            df_mm_genomic["mismatch"].apply(has_only_allowed_pam_mismatches)
+        ]
 
         try:
-            os.remove(alignments_sam)
+            os.remove(alignments_bowtie)
         except FileNotFoundError:
             pass
 

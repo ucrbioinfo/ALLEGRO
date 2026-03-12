@@ -11,21 +11,9 @@ from itertools import product
 
 from allegro.scorers.scorer_base import Scorer
 from allegro.utils.shell_colors import bcolors
-from allegro.utils.iupac_dict import iupac_dict
+from allegro.utils.iupac import iupac_dict, build_pam_regex
 
-def build_pam_regex(pam: str) -> str:
-    pattern = ''
-
-    for c in pam.upper():
-        if c not in iupac_dict:
-            raise ValueError(f'{bcolors.RED}>{bcolors.RESET} Dev error. Unknown IUPAC code: {c}')
-
-        bases = ''.join(iupac_dict[c])
-        pattern += f'[{bases}]'
-
-    return rf'(?=({pattern}))'
-
-def calculate_gc_content(sequence):
+def calculate_gc_content(sequence: str) -> float:
     """
     Compute GC content of a nucleotide sequence.
 
@@ -47,7 +35,7 @@ def calculate_gc_content(sequence):
     
     return (sequence.upper().count('G') + sequence.upper().count('C')) / len(sequence)
 
-def count_kmers(sequence, k):
+def count_kmers(sequence: str, k: int) -> dict[str, int]:
     """
     Count all k-mers in a sequence using a sliding window.
 

@@ -9,10 +9,18 @@ import shutil
 import argparse
 from datetime import timedelta
 
+from allegro.utils.iupac import iupac_dict
 from allegro.utils.shell_colors import bcolors
-from allegro.utils.iupac_dict import iupac_dict
+from allegro.utils.scorer_factory import scorer_names
 
-def parse_pam(v) -> str:
+def normalize_scorer(scorer: str) -> str:
+    normalized_scorer = scorer.strip().lower()
+    if normalized_scorer not in scorer_names:
+        print(f'{bcolors.RED}> Error{bcolors.RESET}: Scorer {scorer} is not supported. Exiting.')
+        sys.exit(1)
+    return normalized_scorer
+
+def parse_pam(v: str) -> str:
     if v is None:
         return ''
 
@@ -161,7 +169,7 @@ class Configurator:
         g_adv     = parser.add_argument_group("Advanced")
 
         g_general.add_argument("--soundcheck", action="store_true", help="Exit after basic sanity checks.")
-        g_general.add_argument("-n", "--experiment_name", type=str, help="Name of the experiment.")
+        g_general.add_argument("-n", "--experiment_name", type=sanitize_filename, help="Name of the experiment.")
 
         g_inputs.add_argument("-id", "--input_directory", type=str, default="data/input/", help="Directory containing input .fna files.")
         g_inputs.add_argument("-isp", "--input_species_path", type=str, default="data/input/manifest.csv", help="CSV mapping species to genome/CDS files.")
@@ -171,7 +179,7 @@ class Configurator:
         g_design.add_argument("-m", "--multiplicity", type=int, default=1, help="Require each target to be hit at least this many times.")
         g_design.add_argument("-b", "--beta", type=int, default=0, help="Soft target for max guides; 0 disables beta objective.")
 
-        g_scoring.add_argument("-s", "--scorer", type=str, default="dummy", help="Scorer: dummy, ucrispr.")
+        g_scoring.add_argument("-s", "--scorer", type=normalize_scorer, default="dummy", help="Scorer: dummy, ucrispr.")
         g_scoring.add_argument("-sthresh", "--guide_score_threshold", type=int, default=0, help="Discard guides below this score.")
 
         g_scoring.add_argument("-gc", "--filter_by_gc", type=coerce_bool, default=True, help="Filter guides by GC range.")
@@ -217,12 +225,6 @@ class Configurator:
         print(f'{bcolors.BLUE}>{bcolors.RESET} All unspecified command-line arguments default to the values in {self.args.config}.')
         
         species_df = None
-
-        # ------------------------------------------------------------------------------
-        #   experiment_name
-        # ------------------------------------------------------------------------------
-        # Bitte benehmen Sie sich
-        self.args.experiment_name = sanitize_filename(self.args.experiment_name)
 
         # ------------------------------------------------------------------------------
         #   input_directory

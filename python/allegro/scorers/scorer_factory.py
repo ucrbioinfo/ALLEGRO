@@ -14,7 +14,7 @@ class ScorerFactory:
     def __init__(self) -> None:
         pass
 
-    def make_scorer(self, scorer_name: str) -> Scorer:
+    def get_scorer(self, scorer_name: str) -> Scorer:
         print(f'{bcolors.BLUE}>{bcolors.RESET} Selected scorer: {scorer_names[scorer_name]}.')
 
         match scorer_name.lower():

@@ -38,7 +38,7 @@ def main() -> int:
 
     # Instantiate the appropriate scorer.
     scorer_factory = ScorerFactory()
-    guide_scorer = scorer_factory.make_scorer(scorer_name=args.scorer)
+    guide_scorer = scorer_factory.get_scorer(scorer_name=args.scorer)
 
     # Initialize which guides should be kept from container sequences.
     GuideFinder.initialize(
@@ -105,7 +105,8 @@ def main() -> int:
             input_species_offtarget_column=args.input_species_offtarget_column,
             num_mismatches=args.report_up_to_n_mismatches,
             seed_region_is_n_upstream_of_pam=args.seed_region_is_n_upstream_of_pam,
-            pam_length=len(args.pam))
+            protospacer_length=args.protospacer_length,
+            pam=args.pam)
     
     config.log_time()
 
