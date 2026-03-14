@@ -1,38 +1,17 @@
 # ===============================================================
 # Basic Settings
 # ===============================================================
-experiment_name: 'testtest'
+experiment_name: 'example_experiment'
 # ---
 
 # ---------------------------------------------------------------
 # Path Settings
 # ---------------------------------------------------------------
 
-# Ignored if Easy Mode input_csv_path_with_guides has a value
-# input_directory: 'data/input/'
-# input_species_path: 'data/input/fifty_example_input_species.csv'
-# input_species_path_column: 'cds_file_name'
-# input_directory: 'data/input/cds/ortho_from_gff'
-# input_species_path: 'data/input/fourdbs_input_species.csv'
-# input_species_path: 'data/input/ascomycota_input_species.csv'
-# input_species_path: 'data/input/bacteria_input.csv'
+input_directory: 'data/input'
 input_species_path: 'data/input/manifest.csv'
-
-# input_species_path_column: 'filename'
-input_directory: 'data/input/'
-# input_species_path: 'data/input/hundred.csv'
-
 input_species_path_column: 'cds_file_name'
-# input_directory: 'data/input/cds/'
-# input_species_path: 'data/input/big_ortho.csv'
 
-# input_species_path_column: 'cds_file_name'
-# input_directory: 'data/input/'
-# input_species_path: 'data/input/2000_track_e1_ortho_no_delim_run8.csv'
-
-# input_directory: data/input/cds/61_genes_ortho_from_gff
-# input_species_path: data/input/61_genes_input_species.csv
-# input_species_path_column: ortho_file_name
 # ---------------------------------------------------------------
 
 pam: 'NGG'
@@ -56,11 +35,6 @@ filter_by_gc: True
 gc_max: 0.7  # Only works if filter_by_gc is True.
 gc_min: 0.3  # Only works if filter_by_gc is True.
 # ---
-
-# ---------------------------------------------------------------
-# Easy Mode - Has priority over Path Settings
-# ---------------------------------------------------------------
-input_csv_path_with_guides: ''  # Default: ''
 
 # ===============================================================
 # Advanced Settings

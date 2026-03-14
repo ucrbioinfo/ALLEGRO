@@ -12,3 +12,4 @@ allegro_bio.egg-info/
 ortools/
 *.sif
 *.sh
+dist/
