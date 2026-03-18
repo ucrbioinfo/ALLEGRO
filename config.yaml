@@ -13,9 +13,12 @@ input_species_path: 'data/input/manifest.csv'
 input_species_path_column: 'cds_file_name'
 
 # ---------------------------------------------------------------
+# Experiment Settings
+# ---------------------------------------------------------------
 
-pam: 'NGG'
+pam: 'NGG' # For example, Cas9 targets NGG and Cas12a targets TTTV
 protospacer_length: 20
+# ---
 
 # String value, default: 'track_e'
 # track_a: any of the fasta records can be targeted. There will be multiplicity targets per fasta record.
@@ -73,7 +76,7 @@ beta: 0  # The final size of the gRNAs set must be <= than this. Think of it as 
 # You may end up excluding most or all guides from the calculation.
 
 # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3568203/#:~:text=For%20vertebrates%2C%20as,of%20these%20species.
-patterns_to_exclude: ['CCC']
+patterns_to_exclude: ['TTTT']
 # ---
 
 # Boolean: True or False. Default: False
