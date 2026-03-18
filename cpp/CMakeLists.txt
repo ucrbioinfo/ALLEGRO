@@ -16,9 +16,10 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(ZLIB REQUIRED)
 
 include(FetchContent)
+include(ExternalProject)
 
 # =========================
-# pybind11 (REQUIRED for kirschtorte glue code)
+# pybind11
 # =========================
 FetchContent_Declare(
   pybind11
@@ -52,37 +53,59 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(or-tools)
 
+# =========================
+# Boost (Mirror)
+# =========================
+FetchContent_Declare(
+  boost_mirror
+  GIT_REPOSITORY https://github.com/AmirUCR/boost-dynamic-bitset-mirror.git
+  GIT_TAG        main
+)
+FetchContent_MakeAvailable(boost_mirror)
+
 # -------------------------
 # 1) kirschtorte Python extension
 # -------------------------
 add_subdirectory(kirschtorte) 
 
 # -------------------------
-# 2) RNAstructure
+# 2) RNAstructure (Mirror)
 # -------------------------
-include(ExternalProject)
-set(RNASTRUCTURE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/uCRISPR/RNAstructure")
-set(RNASTRUCTURE_LIB "${CMAKE_BINARY_DIR}/librnastructure.a")
+FetchContent_Declare(
+  rnastructure_external
+  GIT_REPOSITORY https://github.com/AmirUCR/RNAstructure-mirror.git
+  GIT_TAG        main
+)
+
+# Populate and define paths immediately so they are available for target_include_directories
+FetchContent_GetProperties(rnastructure_external)
+if(NOT rnastructure_external_POPULATED)
+  FetchContent_Populate(rnastructure_external)
+endif()
+
+# Define library path globally
+set(RNA_LIB_PATH "${CMAKE_BINARY_DIR}/librnastructure.a")
 
 ExternalProject_Add(
   rnastructure_build
-  SOURCE_DIR "${RNASTRUCTURE_DIR}"
+  SOURCE_DIR "${rnastructure_external_SOURCE_DIR}"
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE 1
-  BUILD_COMMAND ${CMAKE_COMMAND} -E env CFLAGS=-fPIC CXXFLAGS=-fPIC make scorer
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env CFLAGS=-fPIC CXXFLAGS=-fPIC make EnsembleEnergy
   INSTALL_COMMAND ""
 )
 
 ExternalProject_Add_Step(
   rnastructure_build archive
   DEPENDEES build
-  COMMAND ${CMAKE_COMMAND} -E rm -f "${RNASTRUCTURE_LIB}"
+  COMMAND ${CMAKE_COMMAND} -E rm -f "${RNA_LIB_PATH}"
   COMMAND ${CMAKE_COMMAND} -E env bash -c
-    "cd \"${RNASTRUCTURE_DIR}\" && find . -type f -name '*.o' -not -path './exe/*' | xargs ar rcs \"${RNASTRUCTURE_LIB}\" && ranlib \"${RNASTRUCTURE_LIB}\""
+    "cd \"${rnastructure_external_SOURCE_DIR}\" && find . -type f -name '*.o' -not -path './exe/*' | xargs ar rcs \"${RNA_LIB_PATH}\" && ranlib \"${RNA_LIB_PATH}\""
+  BYPRODUCTS "${RNA_LIB_PATH}"
 )
 
 add_library(rnastructure STATIC IMPORTED GLOBAL)
-set_target_properties(rnastructure PROPERTIES IMPORTED_LOCATION "${RNASTRUCTURE_LIB}")
+set_target_properties(rnastructure PROPERTIES IMPORTED_LOCATION "${RNA_LIB_PATH}")
 add_dependencies(rnastructure rnastructure_build)
 
 # -------------------------
@@ -96,11 +119,15 @@ add_executable(uCRISPR_scorer
 target_include_directories(uCRISPR_scorer PRIVATE
   "uCRISPR"
   "uCRISPR/include"
-  "uCRISPR/RNAstructure"
-  "boost_1_81_0"
+  "${rnastructure_external_SOURCE_DIR}"  # RNAstructure headers
+  "${boost_mirror_SOURCE_DIR}"           # Boost headers from mirror
 )
 
-target_link_libraries(uCRISPR_scorer PRIVATE rnastructure ZLIB::ZLIB Threads::Threads)
+target_link_libraries(uCRISPR_scorer PRIVATE 
+    rnastructure 
+    ZLIB::ZLIB 
+    Threads::Threads
+)
 
 set_target_properties(uCRISPR_scorer PROPERTIES 
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
