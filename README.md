@@ -12,8 +12,6 @@ ALLEGRO (_<ins>Al</ins>gorithm for a <ins>L</ins>inear program <ins>E</ins>nabli
 
 <img width="1034" height="251" alt="image" src="https://github.com/user-attachments/assets/4661f43b-0c4e-462e-94ff-c86b64c3817d" />
 
-**ALLEGRO’s workflow**. **Step (1)** Given the gene sequence or the genome of hundreds to thousands of input species, ALLEGRO extracts Cas9 target sequences. **Step (2)** ALLEGRO builds and solves an (integer) linear program involving millions of variables. **Step (3)** The optimal solution of the linear program determines the sgRNA library with minimal size that covers all targets.
-
 **Overview of the ALLEGRO workflow.** **Step (1)** Given the gene sequence or the genome of hundreds to thousands of input species, ALLEGRO extracts Cas target sequences. **Step (2)** ALLEGRO formulates and solves an (integer) linear program including millions of variables. **Step (3)** The optimal solution of the linear program determines the guide library with minimal size that covers all targets.
 
 # Documentation
