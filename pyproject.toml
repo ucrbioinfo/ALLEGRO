@@ -1,0 +1,42 @@
+[build-system]
+requires = [
+  "setuptools>=69",
+  "wheel",
+  "cmake>=3.20",
+  "pybind11>=2.10", 
+  "patchelf>=0.17; platform_system == 'Linux'"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "allegro-bio"
+version = "1.0.0"
+description = "ALLEGRO: CRISPR guide design tool with ILP/CP-SAT core"
+authors = [{ name = "Amirsadra Mohseni", email = "amohs002@ucr.edu" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { file = "LICENSE" }
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyyaml",
+    "setproctitle",
+    "scipy",
+    "biopython"
+]
+
+[project.scripts]
+allegro = "allegro.main:main"
+
+[tool.setuptools]
+# Ensure setuptools knows where to find the Python source
+package-dir = {"" = "python"}
+
+[tool.setuptools.packages.find]
+where = ["python"]
+include = ["allegro*"]
+
+[tool.setuptools.package-data]
+"allegro" = [
+    "bin/uCRISPR_scorer",
+]

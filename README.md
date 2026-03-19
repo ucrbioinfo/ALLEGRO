@@ -4,7 +4,7 @@
 
 ALLEGRO (_<ins>Al</ins>gorithm for a <ins>L</ins>inear program <ins>E</ins>nabling <ins>G</ins>uide <ins>R</ins>NA <ins>O</ins>ptimization_) is a synthetic biology tool leveraging Google OR-Tools integer linear programming to design the smallest possible gRNA library to fulfill user-specified constraints.
 
-- Design a Cas9 gRNA library for thousands of species simultaneously
+- Design a Cas gRNA library for thousands of species simultaneously
 - Flexible library design using an ensemble of options such as tracks, multiplicity, pre- and post-clustering, guide cutting efficacy prediction, and more
 - Extremely fast and computationally efficient
 - Written in Python, Cython, and C++
@@ -13,6 +13,8 @@ ALLEGRO (_<ins>Al</ins>gorithm for a <ins>L</ins>inear program <ins>E</ins>nabli
 <img width="1034" height="251" alt="image" src="https://github.com/user-attachments/assets/4661f43b-0c4e-462e-94ff-c86b64c3817d" />
 
 **ALLEGRO’s workflow**. **Step (1)** Given the gene sequence or the genome of hundreds to thousands of input species, ALLEGRO extracts Cas9 target sequences. **Step (2)** ALLEGRO builds and solves an (integer) linear program involving millions of variables. **Step (3)** The optimal solution of the linear program determines the sgRNA library with minimal size that covers all targets.
+
+**Overview of the ALLEGRO workflow.** **Step (1)** Given the gene sequence or the genome of hundreds to thousands of input species, ALLEGRO extracts Cas target sequences. **Step (2)** ALLEGRO formulates and solves an (integer) linear program including millions of variables. **Step (3)** The optimal solution of the linear program determines the guide library with minimal size that covers all targets.
 
 # Documentation
 You may find the documentation for ALLEGRO at its [GitHub Wiki](https://github.com/ucrbioinfo/allegro/wiki).
@@ -40,13 +42,3 @@ ALLEGRO has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, an
 ```
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15597071.svg)](https://doi.org/10.5281/zenodo.15597071)
-
-
-
-
-
-
-
-
-
-
