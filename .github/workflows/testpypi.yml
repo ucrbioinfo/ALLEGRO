@@ -36,7 +36,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.17.0
         env:
-          CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp*"
+          CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp* *i686 *ppc64le *s390x"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           
           # IMPORTANT: Ensure build tools are present in the build container
