@@ -492,6 +492,11 @@ class Configurator:
             print(f'{bcolors.RED}> Error{bcolors.RESET}: Protospacer length is too short (< 1). Exiting.')
             sys.exit(1)
 
+        if self.args.scorer == "ucrispr":
+            if self.args.protospacer_length != 20 or self.args.pam != "NGG":
+                print(f'{bcolors.RED}> Error{bcolors.RESET}: uCRISPR scorer only works with protospacer_length of 20 and the NGG PAM. Use the dummy scorer for guides other than Cas9. Exiting.')
+                sys.exit(1)
+
         # ------------------------------------------------------------------------------
 
         # Create the output folder using the output directory and experiment name
