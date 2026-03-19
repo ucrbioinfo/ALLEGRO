@@ -1,0 +1,23 @@
+publish_pypi:
+    name: Publish to PyPI
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    # Only runs if we manually trigger it AND it's on the master branch
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/allegro-bio
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        
