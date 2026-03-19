@@ -394,18 +394,18 @@ namespace Kirschtorte
         if (result_status == operations_research::MPSolver::OPTIMAL)
         {
             std::cout << BLUE << "> " << RESET << "The LP problem has an " << BLUE << "optimal" << RESET << " solution!" << std::endl;
-            log_buffer << "The LP problem has an optimal solution." << std::endl;
+            this->log_buffer << "The LP problem has an optimal solution." << std::endl;
         }
         else if (result_status == operations_research::MPSolver::FEASIBLE)
         {
             std::cout << BLUE << "> " << RESET << "The LP problem has a " << BLUE << "feasible" << RESET << " solution." << std::endl;
-            log_buffer << "The LP problem has a feasible solution." << std::endl;
+            this->log_buffer << "The LP problem has a feasible solution." << std::endl;
         }
         else
         {
             std::cout << RED << "> Status: " << result_status << RESET << std::endl;
             std::cout << RED << "> The LP problem cannot be solved." << RESET << std::endl;
-            log_buffer << "The LP problem cannot be solved. Status: " << result_status << std::endl;
+            this->log_buffer << "The LP problem cannot be solved. Status: " << result_status << std::endl;
 
             if (this->enable_solver_diagnostics)
             {
@@ -435,10 +435,10 @@ namespace Kirschtorte
                         if ((result_status == operations_research::MPSolver::OPTIMAL) || (result_status == operations_research::MPSolver::FEASIBLE))
                         {
                             std::cout << BLUE "\n> " << RESET << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
-                            log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
+                            this->log_buffer << "Relaxing constraint " << constraint->name() << " makes the problem feasible." << std::endl;
 
                             std::cout << BLUE "> " << RESET << "Exiting." << std::endl; 
-                            log_info(log_buffer, output_directory);
+                            log_info(this->log_buffer, this->output_directory);
                             return "ERROR";
                         }
                         else
@@ -451,14 +451,14 @@ namespace Kirschtorte
                 }
 
                 std::cout << RED << "> Unfortunately " << ORANGE << "ALLEGRO" << RED << " could not find the issue. Possibly more than a single constrait is defective. The LP problem cannot be solved. You can try iteratively removing genes and/or species and resolving." << RESET << std::endl;
-                log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
-                log_info(log_buffer, output_directory);
+                this->log_buffer << "Relaxing each constraint and resolving did not find the issue. The LP problem cannot be solved. Exiting." << std::endl;
+                log_info(this->log_buffer, this->output_directory);
                 return "ERROR";
             }
             else
             {
                 std::cout << RED << "> Exiting. Enable diagnostics in config.yaml to iteratively look for a possibly bad constraint." << RESET << std::endl;
-                log_info(log_buffer, output_directory);
+                log_info(this->log_buffer, output_directory);
                 return "ERROR";
             }
         }
@@ -496,7 +496,7 @@ namespace Kirschtorte
                     std::size_t min_beta = this->objective->Value() + 1;
                     
                     std::cout << BLUE "> " << RESET << "Increasing beta to " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
-                    log_buffer << "Increasing beta " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
+                    this->log_buffer << "Increasing beta " << min_beta << " makes the problem feasible. This may increase if we need to solve the ILP." << std::endl;
                     
                     beta = min_beta;
                     return "OK";
