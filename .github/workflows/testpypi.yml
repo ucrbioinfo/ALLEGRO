@@ -30,14 +30,23 @@ jobs:
         os: [ubuntu-latest] 
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          submodules: true # Just in case you ever switch to submodules
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.17.0
         env:
-          # Skip building for Python < 3.10 and PyPy to match setup.py
           CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp*"
-          # Use a modern manylinux image that supports newer CMake and C++ standards
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          
+          # IMPORTANT: Ensure build tools are present in the build container
+          CIBW_BEFORE_BUILD: "pip install cmake patchelf"
+          
+          # Speed up build and handle the specific Linux environment
+          CIBW_ENVIRONMENT: "CMAKE_BUILD_PARALLEL_LEVEL=2"
+          
+          # Testing: Run a basic import test to ensure the .so linked correctly
+          CIBW_TEST_COMMAND: "python -c 'import allegro; print(\"ALLEGRO successfully installed\")'"
           
       - uses: actions/upload-artifact@v4
         with:
