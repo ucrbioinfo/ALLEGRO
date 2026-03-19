@@ -1,9 +1,0 @@
-.idea/*
-/temp/*
-/genomes/*
-config_local.json
-.project
-.pydevproject
-featurization.pyc
-chopchop.pyc
-/models/inDelphi-model/*.pyc
