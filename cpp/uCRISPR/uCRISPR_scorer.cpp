@@ -20,7 +20,7 @@
 #include <filesystem>
 
 #include "include/uCRISPR_scorer.h"
-#include "RNAstructure/RNA_class/RNA.h"
+#include "RNA_class/RNA.h"
 
 std::mutex mtx; // Mutex to protect shared data.
 

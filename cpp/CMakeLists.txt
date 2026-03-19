@@ -59,7 +59,7 @@ FetchContent_MakeAvailable(or-tools)
 FetchContent_Declare(
   boost_mirror
   GIT_REPOSITORY https://github.com/AmirUCR/boost-dynamic-bitset-mirror.git
-  GIT_TAG        main
+  GIT_TAG        master
 )
 FetchContent_MakeAvailable(boost_mirror)
 
@@ -74,24 +74,23 @@ add_subdirectory(kirschtorte)
 FetchContent_Declare(
   rnastructure_external
   GIT_REPOSITORY https://github.com/AmirUCR/RNAstructure-mirror.git
-  GIT_TAG        main
+  GIT_TAG        master
 )
 
-# Populate and define paths immediately so they are available for target_include_directories
 FetchContent_GetProperties(rnastructure_external)
 if(NOT rnastructure_external_POPULATED)
   FetchContent_Populate(rnastructure_external)
 endif()
 
-# Define library path globally
 set(RNA_LIB_PATH "${CMAKE_BINARY_DIR}/librnastructure.a")
 
 ExternalProject_Add(
   rnastructure_build
   SOURCE_DIR "${rnastructure_external_SOURCE_DIR}"
-  CONFIGURE_COMMAND ""
+  # Create the 'exe' directory before running make
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory "${rnastructure_external_SOURCE_DIR}/exe"
   BUILD_IN_SOURCE 1
-  BUILD_COMMAND ${CMAKE_COMMAND} -E env CFLAGS=-fPIC CXXFLAGS=-fPIC make EnsembleEnergy
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env CFLAGS=-fPIC CXXFLAGS=-fPIC make -j32 EnsembleEnergy
   INSTALL_COMMAND ""
 )
 
@@ -119,8 +118,8 @@ add_executable(uCRISPR_scorer
 target_include_directories(uCRISPR_scorer PRIVATE
   "uCRISPR"
   "uCRISPR/include"
-  "${rnastructure_external_SOURCE_DIR}"  # RNAstructure headers
-  "${boost_mirror_SOURCE_DIR}"           # Boost headers from mirror
+  "${rnastructure_external_SOURCE_DIR}" 
+  "${boost_mirror_SOURCE_DIR}"           
 )
 
 target_link_libraries(uCRISPR_scorer PRIVATE 
