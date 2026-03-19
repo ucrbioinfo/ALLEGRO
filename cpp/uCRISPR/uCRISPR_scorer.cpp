@@ -10,7 +10,6 @@
 // Now directly uses the RNA class from the RNAstructure library.
 //
 // To build this file, run
-// g++ -std=c++17 main.cpp uCRISPR_scorer.cpp RNAstructure/RNA_class/*.o RNAstructure/src/*.o -o uCRISPR_scorer
 //
 #include <cmath>
 #include <mutex>
