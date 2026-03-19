@@ -1,9 +1,58 @@
-publish_pypi:
+name: Build and Publish to PyPI
+
+on:
+  workflow_dispatch: # The ONLY way to trigger this workflow
+
+jobs:
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Build sdist
+        run: pipx run build --sdist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest] 
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.17.0
+        env:
+          CIBW_BUILD: "cp310-manylinux_x86_64 cp311-manylinux_x86_64 cp312-manylinux_x86_64"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_BEFORE_BUILD: "pip install cmake patchelf"
+          CIBW_ENVIRONMENT: "CMAKE_BUILD_PARALLEL_LEVEL=2"
+          # This verifies the C++ extension works inside the container
+          CIBW_TEST_COMMAND: "python -c 'import allegro; print(\"ALLEGRO successfully installed\")'"
+          
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+  publish_pypi:
     name: Publish to PyPI
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    # Only runs if we manually trigger it AND it's on the master branch
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master'
+    # Only runs if it's the master branch
+    if: github.ref == 'refs/heads/master'
     environment:
       name: pypi
       url: https://pypi.org/p/allegro-bio
