@@ -49,7 +49,9 @@ set(USE_DOTNET_8 OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
   or-tools
-  URL https://github.com/google/or-tools/archive/refs/tags/v9.11.tar.gz
+  GIT_REPOSITORY https://github.com/google/or-tools.git
+  GIT_TAG        v9.11
+  GIT_SHALLOW    TRUE  # only downloads the specific version, not full history
 )
 FetchContent_MakeAvailable(or-tools)
 
