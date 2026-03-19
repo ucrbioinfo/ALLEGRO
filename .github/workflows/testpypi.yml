@@ -31,20 +31,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true # Just in case you ever switch to submodules
+          submodules: true # Just in case
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.17.0
         env:
-          CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp* *i686 *ppc64le *s390x"
+          # This tells cibuildwheel to ONLY build CPython 3.10+ for manylinux x86_64
+          CIBW_BUILD: "cp310-manylinux_x86_64 cp311-manylinux_x86_64 cp312-manylinux_x86_64"
+          
+          # Force the specific image for the x86_64 target
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           
-          # IMPORTANT: Ensure build tools are present in the build container
+          # Ensure no other architectures (like ARM) are accidentally triggered
+          CIBW_ARCHS_LINUX: "x86_64"
+          
           CIBW_BEFORE_BUILD: "pip install cmake patchelf"
-          
-          # Speed up build and handle the specific Linux environment
           CIBW_ENVIRONMENT: "CMAKE_BUILD_PARALLEL_LEVEL=2"
-          
+
           # Testing: Run a basic import test to ensure the .so linked correctly
           CIBW_TEST_COMMAND: "python -c 'import allegro; print(\"ALLEGRO successfully installed\")'"
           
