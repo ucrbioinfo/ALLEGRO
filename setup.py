@@ -58,10 +58,19 @@ class CMakeBuild(build_ext):
                 try: 
                     subprocess.check_call([strip, "--strip-unneeded", str(path)])
                 except Exception: pass
+        
+        data_tables_src = build_dir / "_deps" / "rnastructure_external-src" / "data_tables"
+        data_tables_dst = pkg_stage / "scorers" / "uCRISPR" / "RNAstructure" / "data_tables"
+        if data_tables_src.exists():
+            if data_tables_dst.exists():
+                shutil.rmtree(data_tables_dst)
+            shutil.copytree(data_tables_src, data_tables_dst)
+        else:
+            raise RuntimeError(f"data_tables not found at {data_tables_src}")
 
 setup(
     name="allegro-bio",
-    version="1.0.0",
+    version="1.0.1",
     description="ALLEGRO: CRISPR guide design tool with ILP/CP-SAT core",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -70,6 +79,8 @@ setup(
     include_package_data=True,
     package_data={
         "allegro": [
+            "scorers/uCRISPR/RNAstructure/data_tables/*",
+            "scorers/uCRISPR/RNAstructure/data_tables/**/*",
             "bin/uCRISPR_scorer",
         ],
     },

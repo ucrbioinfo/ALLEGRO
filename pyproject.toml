@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "allegro-bio"
-version = "1.0.0"
+version = "1.0.1"
 description = "ALLEGRO: CRISPR guide design tool with ILP/CP-SAT core"
 authors = [{ name = "Amirsadra Mohseni", email = "amohs002@ucr.edu" }]
 requires-python = ">=3.10"
@@ -38,5 +38,6 @@ include = ["allegro*"]
 
 [tool.setuptools.package-data]
 "allegro" = [
+    "scorers/uCRISPR/RNAstructure/data_tables/**/*",
     "bin/uCRISPR_scorer",
 ]
