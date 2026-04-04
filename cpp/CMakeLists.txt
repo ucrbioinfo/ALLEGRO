@@ -105,6 +105,14 @@ ExternalProject_Add_Step(
   BYPRODUCTS "${RNA_LIB_PATH}"
 )
 
+ExternalProject_Add_Step(
+    rnastructure_build copy_data_tables
+    DEPENDEES build
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${rnastructure_external_SOURCE_DIR}/data_tables"
+        "${CMAKE_SOURCE_DIR}/allegro/scorers/uCRISPR/RNAstructure/data_tables"
+)
+
 add_library(rnastructure STATIC IMPORTED GLOBAL)
 set_target_properties(rnastructure PROPERTIES IMPORTED_LOCATION "${RNA_LIB_PATH}")
 add_dependencies(rnastructure rnastructure_build)

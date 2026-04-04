@@ -7,6 +7,7 @@ include cpp/CMakeLists.txt
 recursive-include cpp *.cpp *.h *.hpp
 recursive-include cpp/kirschtorte *
 recursive-include cpp/uCRISPR *
+recursive-include python/allegro/scorers/uCRISPR/RNAstructure/data_tables *
 
 # Python Package & Resources
 recursive-include python/allegro *.py
