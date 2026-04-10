@@ -7,7 +7,6 @@ ALLEGRO (_<ins>Al</ins>gorithm for a <ins>L</ins>inear program <ins>E</ins>nabli
 - Design a Cas gRNA library for thousands of species simultaneously
 - Flexible library design using an ensemble of options such as tracks, multiplicity, pre- and post-clustering, guide cutting efficacy prediction, and more
 - Extremely fast and computationally efficient
-- Written in Python, Cython, and C++
 - Provides an interactive, Anthropic AI-powered assistant available [here](https://github.com/AmirUCR/Agentic-ALLEGRO)
 - Published in [_Nucleic Acids Research_, Volume 53, Issue 15, 28 August 2025, gkaf783](https://doi.org/10.1093/nar/gkaf783)
 
